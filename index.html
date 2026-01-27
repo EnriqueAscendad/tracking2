@@ -166,6 +166,13 @@
             font-size: 14px;
             word-break: break-all;
             font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            line-height: 1.6;
         }
 
         .params-grid {
@@ -433,7 +440,7 @@
                 <div class="info-box">
                     <div class="info-label">Sample Tracking URL</div>
                     <div class="info-value" style="margin-bottom: 10px;">
-                        https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG456
+https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG456
                     </div>
                     <button class="copy-btn" onclick="loadTestUrl()">Load Sample URL</button>
                 </div>
@@ -472,7 +479,19 @@
 
         // Display current URL
         function displayCurrentUrl() {
-            document.getElementById('currentUrl').textContent = window.location.href;
+            const url = window.location.href;
+            const urlParts = url.split('?');
+            
+            if (urlParts.length === 1) {
+                // No parameters
+                document.getElementById('currentUrl').textContent = url;
+            } else {
+                // Format with parameters on separate lines
+                const baseUrl = urlParts[0];
+                const params = urlParts[1].split('&');
+                const formattedUrl = baseUrl + '?\n  ' + params.join('\n  &');
+                document.getElementById('currentUrl').textContent = formattedUrl;
+            }
         }
 
         // Display parameters
@@ -482,8 +501,14 @@
             const priorityContainer = document.getElementById('priorityParamsContainer');
             const prioritySection = document.getElementById('prioritySection');
             
-            // Define priority parameters
-            const priorityKeys = ['click_id', 'offer_id', 'publisher_id', 'dvp', 'dvun'];
+            // Define priority parameters (including mapped/renamed ones)
+            const priorityKeys = [
+                'click_id', 
+                'offer_id', 'offer',  // offer_id gets renamed to offer
+                'publisher_id', 'aff_id_plain',  // publisher_id gets renamed to aff_id_plain
+                'dvp', 
+                'dvun'
+            ];
             
             // Separate priority and regular parameters
             const priorityParams = {};
@@ -641,7 +666,7 @@
         // Load test URL
         function loadTestUrl() {
             const testUrl = window.location.origin + window.location.pathname + 
-                '?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG456&source=google&sub_source=search&placement=top&app_name=TestApp&app_id=com.test.app&site=example.com&creative=banner_001&idfa=12345-67890&gaid=ABCDE-FGHIJ&custom1=value1&dvp=Mellon&dvun=Mairon&custom2=value2&custom3=value3&custom4=value4&custom5=value5&custom6=value6&custom7=value7&custom8=value8&user_ip=192.168.1.1&user_agent=Mozilla/5.0&user_language=en-US';
+                '?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG456&source=google&sub_source=search&placement=top&app_name=TestApp&custom1=value1&dvp=Mellon&dvun=Mairon';
             window.location.href = testUrl;
         }
 

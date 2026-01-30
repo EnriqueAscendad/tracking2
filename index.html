@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URL Parameter Tracker</title>
+    <title>Ad Tracker Pro - URL Parameter Testing Tool</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
     <style>
         * {
             margin: 0;
@@ -626,9 +627,9 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔍 URL Parameter Tracker</h1>
-            <p>Track and analyze URL query parameters and redirect chains</p>
-            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v1.0.1</p>
+            <h1>🔍 Ad Tracker Pro</h1>
+            <p>Professional URL parameter testing and tracking analysis</p>
+            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v1.0.5</p>
         </div>
 
         <div class="content">
@@ -716,10 +717,15 @@
 
             <!-- Redirect Chain Section -->
             <div class="section">
-                <div class="section-title">🔗 Redirect Chain</div>
+                <div class="section-title">
+                    <span>🔗 Redirect Chain</span>
+                    <button class="copy-btn" onclick="clearRedirectHistory()" style="padding: 6px 12px; font-size: 11px;">Clear History</button>
+                </div>
                 <div class="note">
                     <strong>Note about Redirect Tracking:</strong>
                     Due to browser security restrictions, this tool can only track redirects that happen within the same page (client-side redirects). Server-side redirects (HTTP 301/302) cannot be tracked from the browser. To track full redirect chains including server-side redirects, you would need a server-side solution or browser extension.
+                    <br><br>
+                    <strong>Session Storage:</strong> Redirect history is stored per browser session. Opening the same URL in different tabs will share the redirect chain history. Click "Clear History" to reset.
                 </div>
                 <div id="redirectContainer"></div>
             </div>
@@ -956,6 +962,21 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                     </div>
                 `).join('') +
             '</div>';
+        }
+
+        // Clear redirect history
+        function clearRedirectHistory() {
+            redirectChain = [];
+            sessionStorage.removeItem('redirectChain');
+            displayRedirectChain();
+            
+            // Show confirmation
+            const container = document.getElementById('redirectContainer');
+            container.innerHTML = '<div class="empty-state" style="color: #11998e;">✓ Redirect history cleared</div>';
+            
+            setTimeout(() => {
+                displayRedirectChain();
+            }, 2000);
         }
 
         // Copy to clipboard

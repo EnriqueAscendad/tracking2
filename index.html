@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL Parameter Tracker</title>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -629,7 +628,7 @@
         <div class="header">
             <h1>🔍 URL Parameter Tracker</h1>
             <p>Track and analyze URL query parameters and redirect chains</p>
-            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v1.0.0</p>
+            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v1.0.1</p>
         </div>
 
         <div class="content">
@@ -1060,23 +1059,24 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                 return;
             }
             
-            // Check if QRCode library is loaded
-            if (typeof QRCode === 'undefined') {
-                qrContainer.innerHTML = '<div style="padding: 20px; color: #e74c3c; font-size: 14px;">QR Code library failed to load. Please refresh the page.</div>';
-                console.error('QRCode library not loaded');
-                return;
-            }
-            
             try {
-                // Generate new QR code
-                new QRCode(qrContainer, {
-                    text: currentUrl,
-                    width: 200,
-                    height: 200,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
+                // Use Google Charts API to generate QR code
+                const encodedUrl = encodeURIComponent(currentUrl);
+                const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}`;
+                
+                // Create image element
+                const img = document.createElement('img');
+                img.src = qrImageUrl;
+                img.alt = 'QR Code';
+                img.style.maxWidth = '200px';
+                img.style.height = 'auto';
+                
+                // Handle image load error
+                img.onerror = function() {
+                    qrContainer.innerHTML = '<div style="padding: 20px; color: #e74c3c; font-size: 14px;">Error generating QR code. Please check your internet connection.</div>';
+                };
+                
+                qrContainer.appendChild(img);
             } catch (error) {
                 qrContainer.innerHTML = '<div style="padding: 20px; color: #e74c3c; font-size: 14px;">Error generating QR code: ' + error.message + '</div>';
                 console.error('QR Code generation error:', error);

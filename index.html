@@ -48,6 +48,146 @@
             padding: 30px;
         }
 
+        .postback-section {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(17, 153, 142, 0.2);
+        }
+
+        .postback-title {
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .postback-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .postback-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-label {
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .postback-input {
+            padding: 8px 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.95);
+            transition: border-color 0.3s;
+        }
+
+        .postback-input:focus {
+            outline: none;
+            border-color: white;
+        }
+
+        .postback-btn {
+            background: white;
+            color: #11998e;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            transition: transform 0.2s, box-shadow 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: 100%;
+        }
+
+        .postback-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .postback-btn:active {
+            transform: translateY(0);
+        }
+
+        .postback-btn:disabled {
+            background: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .postback-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .postback-status.success {
+            background: rgba(255, 255, 255, 0.95);
+            color: #11998e;
+            display: block;
+        }
+
+        .postback-status.error {
+            background: rgba(255, 255, 255, 0.95);
+            color: #e74c3c;
+            display: block;
+        }
+
+        .postback-url-preview {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 11px;
+            color: white;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            max-height: 60px;
+            overflow-y: auto;
+        }
+
+        .postback-toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 11px;
+            padding: 0;
+            margin-bottom: 8px;
+            text-decoration: underline;
+            opacity: 0.9;
+        }
+
+        .postback-toggle:hover {
+            opacity: 1;
+        }
+
         .section {
             margin-bottom: 30px;
         }
@@ -393,6 +533,45 @@
         </div>
 
         <div class="content">
+            <!-- Postback Section -->
+            <div class="postback-section">
+                <div class="postback-title">🚀 Send Postback</div>
+                <div class="postback-inputs">
+                    <div class="input-group">
+                        <label class="input-label">Event Parameter (Optional)</label>
+                        <input type="text" id="eventParameter" class="postback-input" placeholder="e.g., install, purchase, signup">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Payout (Optional)</label>
+                        <input type="text" id="payout" class="postback-input" placeholder="e.g., 1.50">
+                    </div>
+                </div>
+                <button class="postback-toggle" onclick="togglePostbackUrl()">
+                    <span id="postbackToggleText">▶ Show Postback URL</span>
+                </button>
+                <div class="postback-url-preview" id="postbackUrlPreview" style="display: none;">
+                    Postback URL will be generated from tracking parameters...
+                </div>
+                <button class="postback-btn" id="sendPostbackBtn" onclick="sendPostback()">
+                    Send Postback
+                </button>
+                <div class="postback-status" id="postbackStatus"></div>
+            </div>
+
+            <!-- Priority Parameters Section -->
+            <div class="section" id="prioritySection" style="display: none;">
+                <div class="priority-params">
+                    <div class="priority-params-title">⭐ Key Tracking Parameters</div>
+                    <div id="priorityParamsContainer" class="priority-params-grid"></div>
+                </div>
+            </div>
+
+            <!-- Query Parameters Section -->
+            <div class="section">
+                <div class="section-title">🔖 Query Parameters (<span id="paramCount">0</span>)</div>
+                <div id="paramsContainer"></div>
+            </div>
+
             <!-- Current URL Section -->
             <div class="section">
                 <div class="section-title">
@@ -408,20 +587,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Priority Parameters Section -->
-            <div class="section" id="prioritySection" style="display: none;">
-                <div class="priority-params">
-                    <div class="priority-params-title">⭐ Key Tracking Parameters</div>
-                    <div id="priorityParamsContainer" class="priority-params-grid"></div>
-                </div>
-            </div>
-
-            <!-- Query Parameters Section -->
-            <div class="section">
-                <div class="section-title">🔖 Query Parameters (<span id="paramCount">0</span>)</div>
-                <div id="paramsContainer"></div>
             </div>
 
             <!-- Redirect Chain Section -->
@@ -563,38 +728,40 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             // Display regular parameters
             if (regularCount === 0) {
                 container.innerHTML = '<div class="empty-state">No additional query parameters found</div>';
-                return;
-            }
+            } else {
+                const maxLength = 20;
 
-            const maxLength = 20;
+                container.innerHTML = '<div class="params-grid">' + 
+                    Object.entries(regularParams).map(([key, value]) => {
+                        const needsTruncation = value.length > maxLength;
+                        const displayValue = needsTruncation 
+                            ? `${value.substring(0, 5)}...${value.substring(value.length - 5)}`
+                            : value;
+                        
+                        const valueHtml = needsTruncation
+                            ? `<div class="tooltip">
+                                 <span class="truncated">${escapeHtml(displayValue)}</span>
+                                 <span class="tooltiptext">${escapeHtml(value)}</span>
+                               </div>`
+                            : escapeHtml(value);
 
-            container.innerHTML = '<div class="params-grid">' + 
-                Object.entries(regularParams).map(([key, value]) => {
-                    const needsTruncation = value.length > maxLength;
-                    const displayValue = needsTruncation 
-                        ? `${value.substring(0, 5)}...${value.substring(value.length - 5)}`
-                        : value;
-                    
-                    const valueHtml = needsTruncation
-                        ? `<div class="tooltip">
-                             <span class="truncated">${escapeHtml(displayValue)}</span>
-                             <span class="tooltiptext">${escapeHtml(value)}</span>
-                           </div>`
-                        : escapeHtml(value);
-
-                    return `
-                        <div class="param-card">
-                            <div class="param-name">${escapeHtml(key)}</div>
-                            <div class="param-value">
-                                <div class="param-value-container">
-                                    <div class="param-value-text">${valueHtml}</div>
-                                    <button class="param-copy-btn" onclick="copyParamValue('${escapeHtml(key).replace(/'/g, "\\'")}', '${escapeHtml(value).replace(/'/g, "\\'")}', this)">Copy</button>
+                        return `
+                            <div class="param-card">
+                                <div class="param-name">${escapeHtml(key)}</div>
+                                <div class="param-value">
+                                    <div class="param-value-container">
+                                        <div class="param-value-text">${valueHtml}</div>
+                                        <button class="param-copy-btn" onclick="copyParamValue('${escapeHtml(key).replace(/'/g, "\\'")}', '${escapeHtml(value).replace(/'/g, "\\'")}', this)">Copy</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                }).join('') + 
-            '</div>';
+                        `;
+                    }).join('') + 
+                '</div>';
+            }
+            
+            // Update postback preview when params change
+            updatePostbackPreview();
         }
 
         // Display redirect chain
@@ -663,6 +830,20 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             }
         }
 
+        // Toggle postback URL visibility
+        function togglePostbackUrl() {
+            const preview = document.getElementById('postbackUrlPreview');
+            const toggleText = document.getElementById('postbackToggleText');
+            
+            if (preview.style.display === 'none') {
+                preview.style.display = 'block';
+                toggleText.textContent = '▼ Hide Postback URL';
+            } else {
+                preview.style.display = 'none';
+                toggleText.textContent = '▶ Show Postback URL';
+            }
+        }
+
         // Load test URL
         function loadTestUrl() {
             const testUrl = window.location.origin + window.location.pathname + 
@@ -676,7 +857,100 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             displayCurrentUrl();
             displayParams();
             displayRedirectChain();
+            updatePostbackPreview();
+            
+            // Update postback preview when inputs change
+            document.getElementById('eventParameter').addEventListener('input', updatePostbackPreview);
+            document.getElementById('payout').addEventListener('input', updatePostbackPreview);
         });
+
+        // Update postback URL preview
+        function updatePostbackPreview() {
+            const params = getUrlParams();
+            const clickId = params['click_id'] || '{click_id}';
+            const aggregateId = params['aggregate_id'] || '{aggregate_id}';
+            const eventParameter = document.getElementById('eventParameter').value || '{event_parameter}';
+            const payout = document.getElementById('payout').value || '{payout}';
+            
+            const postbackUrl = `https://mordor.aftrad-event.com/api/v1/events?click_id=${encodeURIComponent(clickId)}&aggregate_id=${encodeURIComponent(aggregateId)}&event_parameter=${encodeURIComponent(eventParameter)}&payout=${encodeURIComponent(payout)}&advertiser_id=2`;
+            
+            document.getElementById('postbackUrlPreview').textContent = postbackUrl;
+            
+            // Disable button if required params are missing
+            const btn = document.getElementById('sendPostbackBtn');
+            if (!params['click_id'] && !params['aggregate_id']) {
+                btn.disabled = true;
+                btn.textContent = 'Missing tracking parameters';
+            } else {
+                btn.disabled = false;
+                btn.textContent = 'Send Postback';
+            }
+        }
+
+        // Send postback
+        async function sendPostback() {
+            const params = getUrlParams();
+            const statusDiv = document.getElementById('postbackStatus');
+            const btn = document.getElementById('sendPostbackBtn');
+            
+            // Get required parameters
+            const clickId = params['click_id'];
+            const aggregateId = params['aggregate_id'];
+            
+            if (!clickId && !aggregateId) {
+                statusDiv.className = 'postback-status error';
+                statusDiv.textContent = '❌ Error: Missing click_id or aggregate_id in URL';
+                return;
+            }
+            
+            // Get optional parameters
+            const eventParameter = document.getElementById('eventParameter').value;
+            const payout = document.getElementById('payout').value;
+            
+            // Build postback URL
+            let postbackUrl = `https://mordor.aftrad-event.com/api/v1/events?`;
+            const postbackParams = [];
+            
+            if (clickId) postbackParams.push(`click_id=${encodeURIComponent(clickId)}`);
+            if (aggregateId) postbackParams.push(`aggregate_id=${encodeURIComponent(aggregateId)}`);
+            if (eventParameter) postbackParams.push(`event_parameter=${encodeURIComponent(eventParameter)}`);
+            if (payout) postbackParams.push(`payout=${encodeURIComponent(payout)}`);
+            postbackParams.push('advertiser_id=2');
+            
+            postbackUrl += postbackParams.join('&');
+            
+            // Disable button and show loading
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            statusDiv.className = 'postback-status';
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = '⏳ Sending postback...';
+            
+            try {
+                // Send GET request to postback URL
+                const response = await fetch(postbackUrl, {
+                    method: 'GET',
+                    mode: 'no-cors' // Since we're calling external API
+                });
+                
+                // Note: with no-cors, we can't read the response, but we know the request was sent
+                statusDiv.className = 'postback-status success';
+                statusDiv.textContent = '✅ Postback sent successfully!\n' + postbackUrl;
+                
+            } catch (error) {
+                statusDiv.className = 'postback-status error';
+                statusDiv.textContent = '❌ Error sending postback: ' + error.message;
+            } finally {
+                // Re-enable button
+                btn.disabled = false;
+                btn.textContent = 'Send Postback';
+                
+                // Hide status after 5 seconds
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
     </script>
 </body>
 </html>

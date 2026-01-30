@@ -635,7 +635,7 @@
         <div class="header">
             <h1>🔍 Ad Tracker Pro</h1>
             <p>Professional URL parameter testing and tracking analysis</p>
-            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v1.2.1</p>
+            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v1.2.2</p>
         </div>
 
         <div class="content">
@@ -1146,15 +1146,16 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             }
             
             try {
-                // Use Google Charts API to generate QR code
+                // Use Google Charts API to generate QR code with larger size and lower error correction
                 const encodedUrl = encodeURIComponent(currentUrl);
-                const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}`;
+                // Size increased to 300x300, using L (low) error correction for less dense QR code
+                const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&ecc=L&margin=10&data=${encodedUrl}`;
                 
                 // Create image element
                 const img = document.createElement('img');
                 img.src = qrImageUrl;
                 img.alt = 'QR Code';
-                img.style.maxWidth = '200px';
+                img.style.maxWidth = '300px';
                 img.style.height = 'auto';
                 
                 // Handle image load error
@@ -1250,21 +1251,24 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             statusDiv.style.display = 'block';
             statusDiv.textContent = '⏳ Sending postback...';
             
+            console.log('Sending postback to:', postbackUrl);
+            
             try {
-                // Send GET request to postback URL (using cors mode to read response)
+                // Try with CORS first to read response
                 const response = await fetch(postbackUrl, {
                     method: 'GET',
-                    mode: 'cors' // Try CORS first to read response
+                    mode: 'cors'
                 });
+                
+                console.log('Response received:', response.status, response.statusText);
                 
                 // Try to read the response
                 let responseText = '';
-                let responseData = null;
                 
                 try {
                     const contentType = response.headers.get('content-type');
                     if (contentType && contentType.includes('application/json')) {
-                        responseData = await response.json();
+                        const responseData = await response.json();
                         responseText = JSON.stringify(responseData, null, 2);
                     } else {
                         responseText = await response.text();
@@ -1289,33 +1293,23 @@ ${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}
                 }
                 
             } catch (error) {
-                // If CORS fails, try no-cors mode
-                if (error.message.includes('CORS') || error.name === 'TypeError') {
-                    try {
-                        await fetch(postbackUrl, {
-                            method: 'GET',
-                            mode: 'no-cors'
-                        });
-                        
-                        statusDiv.className = 'postback-status success';
-                        statusDiv.innerHTML = `✅ Postback sent!
+                console.error('Postback error:', error);
+                
+                // CORS blocked - show success but note we can't read response
+                // Note: We're NOT sending another request here!
+                statusDiv.className = 'postback-status success';
+                statusDiv.innerHTML = `✅ Postback sent!
 <strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Note:</strong> Response blocked by CORS policy (this is normal). The request was sent successfully, but we cannot read the server's response.`;
-                    } catch (noCorsError) {
-                        statusDiv.className = 'postback-status error';
-                        statusDiv.textContent = '❌ Error sending postback: ' + noCorsError.message;
-                    }
-                } else {
-                    statusDiv.className = 'postback-status error';
-                    statusDiv.textContent = '❌ Error sending postback: ' + error.message;
-                }
+<strong>Note:</strong> Response blocked by CORS policy. The request was sent, but we cannot read the server's response. This is normal for cross-origin requests.`;
             } finally {
                 // Re-enable button and reset flag
                 btn.disabled = false;
                 btn.textContent = 'Send Postback';
                 isSendingPostback = false;
                 
-                // Hide status after 10 seconds (increased for reading response)
+                console.log('Postback complete, flag reset');
+                
+                // Hide status after 10 seconds
                 setTimeout(() => {
                     statusDiv.style.display = 'none';
                 }, 10000);

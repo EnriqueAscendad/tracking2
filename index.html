@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL Parameter Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -145,6 +146,21 @@
             font-size: 12px;
             font-weight: 600;
             display: none;
+            white-space: pre-wrap;
+            word-break: break-word;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .postback-status strong {
+            display: block;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            color: inherit;
+        }
+
+        .postback-status strong:first-child {
+            margin-top: 4px;
         }
 
         .postback-status.success {
@@ -190,6 +206,89 @@
 
         .section {
             margin-bottom: 30px;
+        }
+
+        .search-container {
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-input::placeholder {
+            color: #999;
+        }
+
+        .param-transformed {
+            position: relative;
+        }
+
+        .transform-badge {
+            display: inline-block;
+            background: #ff9800;
+            color: white;
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .transform-info {
+            font-size: 11px;
+            color: #ff9800;
+            margin-top: 3px;
+            font-style: italic;
+        }
+
+        .qr-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .qr-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .qr-container {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            display: inline-block;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #qrcode {
+            margin: 0 auto;
+        }
+
+        .qr-hint {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .hidden {
+            display: none !important;
         }
 
         .priority-params {
@@ -569,6 +668,15 @@
             <!-- Query Parameters Section -->
             <div class="section">
                 <div class="section-title">🔖 Query Parameters (<span id="paramCount">0</span>)</div>
+                <div class="search-container">
+                    <input 
+                        type="text" 
+                        id="paramSearch" 
+                        class="search-input" 
+                        placeholder="🔍 Search parameters by name or value..."
+                        onkeyup="filterParameters()"
+                    >
+                </div>
                 <div id="paramsContainer"></div>
             </div>
 
@@ -585,6 +693,23 @@
                         <div class="button-group">
                             <button class="copy-btn" onclick="copyToClipboard('currentUrl')">Copy URL</button>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Code Section -->
+            <div class="section" id="qrSection" style="display: none;">
+                <div class="section-title">
+                    <span>📱 QR Code for Tracking URL</span>
+                    <button class="toggle-btn collapsed" onclick="toggleSection('qrContent', this)">▼</button>
+                </div>
+                <div id="qrContent" class="collapsible-content collapsed">
+                    <div class="qr-section">
+                        <div class="qr-title">Scan to test on mobile device</div>
+                        <div class="qr-container">
+                            <div id="qrcode"></div>
+                        </div>
+                        <div class="qr-hint">Scan this QR code with your mobile device to test the tracking URL</div>
                     </div>
                 </div>
             </div>
@@ -674,6 +799,12 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                 'dvp', 
                 'dvun'
             ];
+
+            // Define parameter mapping for transformation indicators
+            const paramMapping = {
+                'offer': 'offer_id',
+                'aff_id_plain': 'publisher_id'
+            };
             
             // Separate priority and regular parameters
             const priorityParams = {};
@@ -709,9 +840,19 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                            </div>`
                         : escapeHtml(value);
 
+                    // Check if this parameter is transformed
+                    const isTransformed = paramMapping.hasOwnProperty(key);
+                    const transformBadge = isTransformed 
+                        ? `<span class="transform-badge">Transformed</span>` 
+                        : '';
+                    const transformInfo = isTransformed 
+                        ? `<div class="transform-info">Originally: ${paramMapping[key]}</div>` 
+                        : '';
+
                     return `
-                        <div class="priority-param-card">
-                            <div class="priority-param-name">${escapeHtml(key)}</div>
+                        <div class="priority-param-card ${isTransformed ? 'param-transformed' : ''}">
+                            <div class="priority-param-name">${escapeHtml(key)}${transformBadge}</div>
+                            ${transformInfo}
                             <div class="priority-param-value">
                                 <div class="param-value-container">
                                     <div class="param-value-text">${valueHtml}</div>
@@ -725,43 +866,77 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                 prioritySection.style.display = 'none';
             }
 
+            // Store regular params globally for filtering
+            window.allRegularParams = regularParams;
+
             // Display regular parameters
-            if (regularCount === 0) {
-                container.innerHTML = '<div class="empty-state">No additional query parameters found</div>';
-            } else {
-                const maxLength = 20;
-
-                container.innerHTML = '<div class="params-grid">' + 
-                    Object.entries(regularParams).map(([key, value]) => {
-                        const needsTruncation = value.length > maxLength;
-                        const displayValue = needsTruncation 
-                            ? `${value.substring(0, 5)}...${value.substring(value.length - 5)}`
-                            : value;
-                        
-                        const valueHtml = needsTruncation
-                            ? `<div class="tooltip">
-                                 <span class="truncated">${escapeHtml(displayValue)}</span>
-                                 <span class="tooltiptext">${escapeHtml(value)}</span>
-                               </div>`
-                            : escapeHtml(value);
-
-                        return `
-                            <div class="param-card">
-                                <div class="param-name">${escapeHtml(key)}</div>
-                                <div class="param-value">
-                                    <div class="param-value-container">
-                                        <div class="param-value-text">${valueHtml}</div>
-                                        <button class="param-copy-btn" onclick="copyParamValue('${escapeHtml(key).replace(/'/g, "\\'")}', '${escapeHtml(value).replace(/'/g, "\\'")}', this)">Copy</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('') + 
-                '</div>';
-            }
+            renderRegularParams(regularParams);
             
             // Update postback preview when params change
             updatePostbackPreview();
+        }
+
+        // Render regular parameters (used by both initial display and filtering)
+        function renderRegularParams(paramsToShow) {
+            const container = document.getElementById('paramsContainer');
+            const paramCount = Object.keys(paramsToShow).length;
+
+            if (paramCount === 0) {
+                container.innerHTML = '<div class="empty-state">No parameters match your search</div>';
+                return;
+            }
+
+            const maxLength = 20;
+
+            container.innerHTML = '<div class="params-grid">' + 
+                Object.entries(paramsToShow).map(([key, value]) => {
+                    const needsTruncation = value.length > maxLength;
+                    const displayValue = needsTruncation 
+                        ? `${value.substring(0, 5)}...${value.substring(value.length - 5)}`
+                        : value;
+                    
+                    const valueHtml = needsTruncation
+                        ? `<div class="tooltip">
+                             <span class="truncated">${escapeHtml(displayValue)}</span>
+                             <span class="tooltiptext">${escapeHtml(value)}</span>
+                           </div>`
+                        : escapeHtml(value);
+
+                    return `
+                        <div class="param-card">
+                            <div class="param-name">${escapeHtml(key)}</div>
+                            <div class="param-value">
+                                <div class="param-value-container">
+                                    <div class="param-value-text">${valueHtml}</div>
+                                    <button class="param-copy-btn" onclick="copyParamValue('${escapeHtml(key).replace(/'/g, "\\'")}', '${escapeHtml(value).replace(/'/g, "\\'")}', this)">Copy</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('') + 
+            '</div>';
+        }
+
+        // Filter parameters based on search input
+        function filterParameters() {
+            const searchTerm = document.getElementById('paramSearch').value.toLowerCase();
+            
+            if (!window.allRegularParams) return;
+
+            if (searchTerm === '') {
+                renderRegularParams(window.allRegularParams);
+                return;
+            }
+
+            const filtered = {};
+            Object.entries(window.allRegularParams).forEach(([key, value]) => {
+                if (key.toLowerCase().includes(searchTerm) || 
+                    value.toLowerCase().includes(searchTerm)) {
+                    filtered[key] = value;
+                }
+            });
+
+            renderRegularParams(filtered);
         }
 
         // Display redirect chain
@@ -858,11 +1033,41 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             displayParams();
             displayRedirectChain();
             updatePostbackPreview();
+            generateQRCode();
             
             // Update postback preview when inputs change
             document.getElementById('eventParameter').addEventListener('input', updatePostbackPreview);
             document.getElementById('payout').addEventListener('input', updatePostbackPreview);
         });
+
+        // Generate QR Code for current URL
+        function generateQRCode() {
+            const currentUrl = window.location.href;
+            const qrSection = document.getElementById('qrSection');
+            const qrContainer = document.getElementById('qrcode');
+            
+            // Only show QR section if there are parameters
+            const params = getUrlParams();
+            if (Object.keys(params).length === 0) {
+                qrSection.style.display = 'none';
+                return;
+            }
+            
+            qrSection.style.display = 'block';
+            
+            // Clear any existing QR code
+            qrContainer.innerHTML = '';
+            
+            // Generate new QR code
+            new QRCode(qrContainer, {
+                text: currentUrl,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
 
         // Update postback URL preview
         function updatePostbackPreview() {
@@ -927,28 +1132,73 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             statusDiv.textContent = '⏳ Sending postback...';
             
             try {
-                // Send GET request to postback URL
+                // Send GET request to postback URL (using cors mode to read response)
                 const response = await fetch(postbackUrl, {
                     method: 'GET',
-                    mode: 'no-cors' // Since we're calling external API
+                    mode: 'cors' // Try CORS first to read response
                 });
                 
-                // Note: with no-cors, we can't read the response, but we know the request was sent
-                statusDiv.className = 'postback-status success';
-                statusDiv.textContent = '✅ Postback sent successfully!\n' + postbackUrl;
+                // Try to read the response
+                let responseText = '';
+                let responseData = null;
+                
+                try {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        responseData = await response.json();
+                        responseText = JSON.stringify(responseData, null, 2);
+                    } else {
+                        responseText = await response.text();
+                    }
+                } catch (parseError) {
+                    responseText = 'Unable to parse response';
+                }
+                
+                // Check response status
+                if (response.ok) {
+                    statusDiv.className = 'postback-status success';
+                    statusDiv.innerHTML = `✅ Postback sent successfully!
+<strong>URL:</strong> ${escapeHtml(postbackUrl)}
+<strong>Status:</strong> ${response.status} ${response.statusText}
+${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}`;
+                } else {
+                    statusDiv.className = 'postback-status error';
+                    statusDiv.innerHTML = `⚠️ Postback sent but received error status
+<strong>URL:</strong> ${escapeHtml(postbackUrl)}
+<strong>Status:</strong> ${response.status} ${response.statusText}
+${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}`;
+                }
                 
             } catch (error) {
-                statusDiv.className = 'postback-status error';
-                statusDiv.textContent = '❌ Error sending postback: ' + error.message;
+                // If CORS fails, try no-cors mode
+                if (error.message.includes('CORS') || error.name === 'TypeError') {
+                    try {
+                        await fetch(postbackUrl, {
+                            method: 'GET',
+                            mode: 'no-cors'
+                        });
+                        
+                        statusDiv.className = 'postback-status success';
+                        statusDiv.innerHTML = `✅ Postback sent!
+<strong>URL:</strong> ${escapeHtml(postbackUrl)}
+<strong>Note:</strong> Response blocked by CORS policy (this is normal). The request was sent successfully, but we cannot read the server's response.`;
+                    } catch (noCorsError) {
+                        statusDiv.className = 'postback-status error';
+                        statusDiv.textContent = '❌ Error sending postback: ' + noCorsError.message;
+                    }
+                } else {
+                    statusDiv.className = 'postback-status error';
+                    statusDiv.textContent = '❌ Error sending postback: ' + error.message;
+                }
             } finally {
                 // Re-enable button
                 btn.disabled = false;
                 btn.textContent = 'Send Postback';
                 
-                // Hide status after 5 seconds
+                // Hide status after 10 seconds (increased for reading response)
                 setTimeout(() => {
                     statusDiv.style.display = 'none';
-                }, 5000);
+                }, 10000);
             }
         }
     </script>

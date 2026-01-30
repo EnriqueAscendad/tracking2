@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL Parameter Tracker</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -699,7 +699,7 @@
             </div>
 
             <!-- QR Code Section -->
-            <div class="section" id="qrSection" style="display: none;">
+            <div class="section" id="qrSection">
                 <div class="section-title">
                     <span>📱 QR Code for Tracking URL</span>
                     <button class="toggle-btn collapsed" onclick="toggleSection('qrContent', this)">▼</button>
@@ -1047,27 +1047,40 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             const qrSection = document.getElementById('qrSection');
             const qrContainer = document.getElementById('qrcode');
             
-            // Only show QR section if there are parameters
-            const params = getUrlParams();
-            if (Object.keys(params).length === 0) {
-                qrSection.style.display = 'none';
-                return;
-            }
-            
+            // Always show the section
             qrSection.style.display = 'block';
             
             // Clear any existing QR code
             qrContainer.innerHTML = '';
             
-            // Generate new QR code
-            new QRCode(qrContainer, {
-                text: currentUrl,
-                width: 200,
-                height: 200,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
+            // Check if we have parameters to encode
+            const params = getUrlParams();
+            if (Object.keys(params).length === 0) {
+                qrContainer.innerHTML = '<div style="padding: 20px; color: #999; font-size: 14px;">Load a URL with parameters to generate QR code</div>';
+                return;
+            }
+            
+            // Check if QRCode library is loaded
+            if (typeof QRCode === 'undefined') {
+                qrContainer.innerHTML = '<div style="padding: 20px; color: #e74c3c; font-size: 14px;">QR Code library failed to load. Please refresh the page.</div>';
+                console.error('QRCode library not loaded');
+                return;
+            }
+            
+            try {
+                // Generate new QR code
+                new QRCode(qrContainer, {
+                    text: currentUrl,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } catch (error) {
+                qrContainer.innerHTML = '<div style="padding: 20px; color: #e74c3c; font-size: 14px;">Error generating QR code: ' + error.message + '</div>';
+                console.error('QR Code generation error:', error);
+            }
         }
 
         // Update postback URL preview

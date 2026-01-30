@@ -101,11 +101,17 @@
             font-family: 'Courier New', monospace;
             background: rgba(255, 255, 255, 0.95);
             transition: border-color 0.3s;
+            list-style: none;
         }
 
         .postback-input:focus {
             outline: none;
             border-color: white;
+        }
+
+        /* Style for datalist options */
+        datalist {
+            font-family: 'Courier New', monospace;
         }
 
         .postback-btn {
@@ -629,7 +635,7 @@
         <div class="header">
             <h1>🔍 Ad Tracker Pro</h1>
             <p>Professional URL parameter testing and tracking analysis</p>
-            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v1.0.5</p>
+            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v1.2.1</p>
         </div>
 
         <div class="content">
@@ -639,20 +645,36 @@
                 <div class="postback-inputs">
                     <div class="input-group">
                         <label class="input-label">Event Parameter (Optional)</label>
-                        <input type="text" id="eventParameter" class="postback-input" placeholder="e.g., install, purchase, signup">
+                        <input 
+                            type="text" 
+                            id="eventParameter" 
+                            class="postback-input" 
+                            placeholder="e.g., install, purchase, signup"
+                            list="eventParameterHistory"
+                            autocomplete="off"
+                        >
+                        <datalist id="eventParameterHistory"></datalist>
                     </div>
                     <div class="input-group">
                         <label class="input-label">Payout (Optional)</label>
-                        <input type="text" id="payout" class="postback-input" placeholder="e.g., 1.50">
+                        <input 
+                            type="text" 
+                            id="payout" 
+                            class="postback-input" 
+                            placeholder="e.g., 1.50"
+                            list="payoutHistory"
+                            autocomplete="off"
+                        >
+                        <datalist id="payoutHistory"></datalist>
                     </div>
                 </div>
-                <button class="postback-toggle" onclick="togglePostbackUrl()">
+                <button class="postback-toggle" type="button" onclick="togglePostbackUrl()">
                     <span id="postbackToggleText">▶ Show Postback URL</span>
                 </button>
                 <div class="postback-url-preview" id="postbackUrlPreview" style="display: none;">
                     Postback URL will be generated from tracking parameters...
                 </div>
-                <button class="postback-btn" id="sendPostbackBtn" onclick="sendPostback()">
+                <button class="postback-btn" id="sendPostbackBtn" type="button" onclick="sendPostback()">
                     Send Postback
                 </button>
                 <div class="postback-status" id="postbackStatus"></div>
@@ -1055,11 +1077,54 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             displayRedirectChain();
             updatePostbackPreview();
             generateQRCode();
+            loadPostbackHistory();
             
             // Update postback preview when inputs change
             document.getElementById('eventParameter').addEventListener('input', updatePostbackPreview);
             document.getElementById('payout').addEventListener('input', updatePostbackPreview);
         });
+
+        // Load postback history from localStorage
+        function loadPostbackHistory() {
+            try {
+                const eventHistory = JSON.parse(localStorage.getItem('eventParameterHistory') || '[]');
+                const payoutHistory = JSON.parse(localStorage.getItem('payoutHistory') || '[]');
+                
+                // Populate datalists
+                const eventDatalist = document.getElementById('eventParameterHistory');
+                const payoutDatalist = document.getElementById('payoutHistory');
+                
+                eventDatalist.innerHTML = eventHistory.map(item => `<option value="${escapeHtml(item)}">`).join('');
+                payoutDatalist.innerHTML = payoutHistory.map(item => `<option value="${escapeHtml(item)}">`).join('');
+            } catch (error) {
+                console.error('Error loading postback history:', error);
+            }
+        }
+
+        // Save parameter to history
+        function saveToHistory(key, value) {
+            if (!value || value.trim() === '') return;
+            
+            try {
+                let history = JSON.parse(localStorage.getItem(key) || '[]');
+                
+                // Remove if already exists (to move to front)
+                history = history.filter(item => item !== value);
+                
+                // Add to beginning
+                history.unshift(value);
+                
+                // Keep only last 10 items
+                history = history.slice(0, 10);
+                
+                localStorage.setItem(key, JSON.stringify(history));
+                
+                // Reload the datalists
+                loadPostbackHistory();
+            } catch (error) {
+                console.error('Error saving to history:', error);
+            }
+        }
 
         // Generate QR Code for current URL
         function generateQRCode() {
@@ -1128,7 +1193,15 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
         }
 
         // Send postback
+        let isSendingPostback = false; // Prevent double-sends
+        
         async function sendPostback() {
+            // Prevent double-clicking
+            if (isSendingPostback) {
+                console.log('Postback already in progress, ignoring duplicate call');
+                return;
+            }
+            
             const params = getUrlParams();
             const statusDiv = document.getElementById('postbackStatus');
             const btn = document.getElementById('sendPostbackBtn');
@@ -1147,6 +1220,14 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             const eventParameter = document.getElementById('eventParameter').value;
             const payout = document.getElementById('payout').value;
             
+            // Save to history if values are provided
+            if (eventParameter) {
+                saveToHistory('eventParameterHistory', eventParameter);
+            }
+            if (payout) {
+                saveToHistory('payoutHistory', payout);
+            }
+            
             // Build postback URL
             let postbackUrl = `https://mordor.aftrad-event.com/api/v1/events?`;
             const postbackParams = [];
@@ -1158,6 +1239,9 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             postbackParams.push('advertiser_id=2');
             
             postbackUrl += postbackParams.join('&');
+            
+            // Set flag to prevent double-sends
+            isSendingPostback = true;
             
             // Disable button and show loading
             btn.disabled = true;
@@ -1226,9 +1310,10 @@ ${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}
                     statusDiv.textContent = '❌ Error sending postback: ' + error.message;
                 }
             } finally {
-                // Re-enable button
+                // Re-enable button and reset flag
                 btn.disabled = false;
                 btn.textContent = 'Send Postback';
+                isSendingPostback = false;
                 
                 // Hide status after 10 seconds (increased for reading response)
                 setTimeout(() => {

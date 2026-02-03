@@ -243,6 +243,11 @@
             transform: none;
         }
 
+        #sendRejectedPostbackBtn:hover {
+            background: #ff6b6b !important;
+            color: #b71c1c !important;
+        }
+
         .postback-status {
             margin-top: 10px;
             padding: 10px;
@@ -771,6 +776,16 @@
             background: white;
         }
 
+        body.dark-mode #sendRejectedPostbackBtn {
+            background: #ff8a80 !important;
+            color: #c62828 !important;
+        }
+
+        body.dark-mode #sendRejectedPostbackBtn:hover {
+            background: #ff6b6b !important;
+            color: #b71c1c !important;
+        }
+
         body.dark-mode .postback-btn:disabled {
             background: rgba(255, 255, 255, 0.3);
             color: rgba(255, 255, 255, 0.6);
@@ -944,7 +959,7 @@
                     <button class="postback-btn" id="sendPostbackBtn" type="button" onclick="sendPostback()" style="flex: 1;">
                         Send Postback
                     </button>
-                    <button class="postback-btn" id="sendRejectedPostbackBtn" type="button" onclick="sendRejectedPostback()" style="flex: 1; background: #dc3545;">
+                    <button class="postback-btn" id="sendRejectedPostbackBtn" type="button" onclick="sendRejectedPostback()" style="flex: 1; background: #ff8a80; color: #c62828;">
                         Rejected Postback
                     </button>
                 </div>

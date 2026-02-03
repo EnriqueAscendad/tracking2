@@ -1253,6 +1253,12 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             const eventParameter = document.getElementById('eventParameter').value;
             const payout = document.getElementById('payout').value;
 
+            // Debug logging
+            console.log('=== Postback Debug Info ===');
+            console.log('Event Parameter value:', eventParameter);
+            console.log('Event Parameter length:', eventParameter.length);
+            console.log('Payout value:', payout);
+
             // Save to history if values are provided
             if (eventParameter) {
                 saveToHistory('eventParameterHistory', eventParameter);
@@ -1263,6 +1269,7 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
 
             // Get environment configuration
             const config = getPostbackConfig();
+            console.log('Environment config:', config);
 
             // Build postback URL
             let postbackUrl = `${config.baseUrl}?`;
@@ -1270,23 +1277,30 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
 
             if (clickId) postbackParams.push(`click_id=${encodeURIComponent(clickId)}`);
             if (aggregateId) postbackParams.push(`aggregate_id=${encodeURIComponent(aggregateId)}`);
-            if (eventParameter) postbackParams.push(`event_parameter=${encodeURIComponent(eventParameter)}`);
+            if (eventParameter) {
+                console.log('Adding event_parameter to URL:', eventParameter);
+                postbackParams.push(`event_parameter=${encodeURIComponent(eventParameter)}`);
+            } else {
+                console.log('⚠️ Event parameter is empty, not adding to URL');
+            }
             if (payout) postbackParams.push(`payout=${encodeURIComponent(payout)}`);
             postbackParams.push(`advertiser_id=${config.advertiserId}`);
-            
+
+            console.log('All postback params:', postbackParams);
+
             postbackUrl += postbackParams.join('&');
-            
+
             // Set flag to prevent double-sends
             isSendingPostback = true;
-            
+
             // Disable button and show loading
             btn.disabled = true;
             btn.textContent = 'Sending...';
             statusDiv.className = 'postback-status';
             statusDiv.style.display = 'block';
             statusDiv.textContent = '⏳ Sending postback...';
-            
-            console.log('Sending postback to:', postbackUrl);
+
+            console.log('Final postback URL:', postbackUrl);
             
             try {
                 // Try with CORS first to read response
@@ -1377,6 +1391,12 @@ ${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}
             const eventParameter = document.getElementById('eventParameter').value;
             const payout = document.getElementById('payout').value;
 
+            // Debug logging
+            console.log('=== Rejected Postback Debug Info ===');
+            console.log('Event Parameter value:', eventParameter);
+            console.log('Event Parameter length:', eventParameter.length);
+            console.log('Payout value:', payout);
+
             // Save to history if values are provided
             if (eventParameter) {
                 saveToHistory('eventParameterHistory', eventParameter);
@@ -1387,6 +1407,7 @@ ${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}
 
             // Get environment configuration
             const config = getPostbackConfig();
+            console.log('Environment config:', config);
 
             // Build postback URL with is_rejected=1
             let postbackUrl = `${config.baseUrl}?`;
@@ -1394,10 +1415,17 @@ ${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}
 
             if (clickId) postbackParams.push(`click_id=${encodeURIComponent(clickId)}`);
             if (aggregateId) postbackParams.push(`aggregate_id=${encodeURIComponent(aggregateId)}`);
-            if (eventParameter) postbackParams.push(`event_parameter=${encodeURIComponent(eventParameter)}`);
+            if (eventParameter) {
+                console.log('Adding event_parameter to URL:', eventParameter);
+                postbackParams.push(`event_parameter=${encodeURIComponent(eventParameter)}`);
+            } else {
+                console.log('⚠️ Event parameter is empty, not adding to URL');
+            }
             if (payout) postbackParams.push(`payout=${encodeURIComponent(payout)}`);
             postbackParams.push(`advertiser_id=${config.advertiserId}`);
             postbackParams.push('is_rejected=1'); // Add rejected parameter
+
+            console.log('All postback params:', postbackParams);
 
             postbackUrl += postbackParams.join('&');
 
@@ -1411,7 +1439,7 @@ ${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}
             statusDiv.style.display = 'block';
             statusDiv.textContent = '⏳ Sending rejected postback...';
 
-            console.log('Sending rejected postback to:', postbackUrl);
+            console.log('Final rejected postback URL:', postbackUrl);
 
             try {
                 // Try with CORS first to read response

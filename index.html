@@ -642,32 +642,32 @@
             <!-- Postback Section -->
             <div class="postback-section">
                 <div class="postback-title">🚀 Send Postback</div>
-                <div class="postback-inputs">
-                    <div class="input-group">
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <div class="input-group" style="flex: 1;">
                         <label class="input-label">Environment</label>
                         <select id="postbackEnvironment" class="postback-input" style="cursor: pointer;">
                             <option value="mordor-prd" selected>Mordor-PRD (Production)</option>
                             <option value="developer-stg">Developer-STG (Staging)</option>
                         </select>
                     </div>
-                    <div class="input-group">
+                    <div class="input-group" style="flex: 1;">
                         <label class="input-label">Event Parameter (Optional)</label>
-                        <input 
-                            type="text" 
-                            id="eventParameter" 
-                            class="postback-input" 
+                        <input
+                            type="text"
+                            id="eventParameter"
+                            class="postback-input"
                             placeholder="e.g., install, purchase, signup"
                             list="eventParameterHistory"
                             autocomplete="off"
                         >
                         <datalist id="eventParameterHistory"></datalist>
                     </div>
-                    <div class="input-group">
+                    <div class="input-group" style="flex: 0.5;">
                         <label class="input-label">Payout (Optional)</label>
-                        <input 
-                            type="text" 
-                            id="payout" 
-                            class="postback-input" 
+                        <input
+                            type="text"
+                            id="payout"
+                            class="postback-input"
                             placeholder="e.g., 1.50"
                             list="payoutHistory"
                             autocomplete="off"

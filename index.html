@@ -674,9 +674,14 @@
                 <div class="postback-url-preview" id="postbackUrlPreview" style="display: none;">
                     Postback URL will be generated from tracking parameters...
                 </div>
-                <button class="postback-btn" id="sendPostbackBtn" type="button" onclick="sendPostback()">
-                    Send Postback
-                </button>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="postback-btn" id="sendPostbackBtn" type="button" onclick="sendPostback()" style="flex: 1;">
+                        Send Postback
+                    </button>
+                    <button class="postback-btn" id="sendRejectedPostbackBtn" type="button" onclick="sendRejectedPostback()" style="flex: 1; background: #dc3545;">
+                        Rejected Postback
+                    </button>
+                </div>
                 <div class="postback-status" id="postbackStatus"></div>
             </div>
 
@@ -1309,6 +1314,127 @@ ${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}
                 
                 console.log('Postback complete, flag reset');
                 
+                // Hide status after 10 seconds
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 10000);
+            }
+        }
+
+        // Send rejected postback with is_rejected=1 parameter
+        async function sendRejectedPostback() {
+            // Prevent double-clicking
+            if (isSendingPostback) {
+                console.log('Postback already in progress, ignoring duplicate call');
+                return;
+            }
+
+            const params = getUrlParams();
+            const statusDiv = document.getElementById('postbackStatus');
+            const btn = document.getElementById('sendRejectedPostbackBtn');
+
+            // Get required parameters
+            const clickId = params['click_id'];
+            const aggregateId = params['aggregate_id'];
+
+            if (!clickId && !aggregateId) {
+                statusDiv.className = 'postback-status error';
+                statusDiv.textContent = '❌ Error: Missing click_id or aggregate_id in URL';
+                return;
+            }
+
+            // Get optional parameters
+            const eventParameter = document.getElementById('eventParameter').value;
+            const payout = document.getElementById('payout').value;
+
+            // Save to history if values are provided
+            if (eventParameter) {
+                saveToHistory('eventParameterHistory', eventParameter);
+            }
+            if (payout) {
+                saveToHistory('payoutHistory', payout);
+            }
+
+            // Build postback URL with is_rejected=1
+            let postbackUrl = `https://mordor.aftrad-event.com/api/v1/events?`;
+            const postbackParams = [];
+
+            if (clickId) postbackParams.push(`click_id=${encodeURIComponent(clickId)}`);
+            if (aggregateId) postbackParams.push(`aggregate_id=${encodeURIComponent(aggregateId)}`);
+            if (eventParameter) postbackParams.push(`event_parameter=${encodeURIComponent(eventParameter)}`);
+            if (payout) postbackParams.push(`payout=${encodeURIComponent(payout)}`);
+            postbackParams.push('advertiser_id=2');
+            postbackParams.push('is_rejected=1'); // Add rejected parameter
+
+            postbackUrl += postbackParams.join('&');
+
+            // Set flag to prevent double-sends
+            isSendingPostback = true;
+
+            // Disable button and show loading
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            statusDiv.className = 'postback-status';
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = '⏳ Sending rejected postback...';
+
+            console.log('Sending rejected postback to:', postbackUrl);
+
+            try {
+                // Try with CORS first to read response
+                const response = await fetch(postbackUrl, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+
+                console.log('Response received:', response.status, response.statusText);
+
+                // Try to read the response
+                let responseText = '';
+
+                try {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const responseData = await response.json();
+                        responseText = JSON.stringify(responseData, null, 2);
+                    } else {
+                        responseText = await response.text();
+                    }
+                } catch (parseError) {
+                    responseText = 'Unable to parse response';
+                }
+
+                // Check response status
+                if (response.ok) {
+                    statusDiv.className = 'postback-status success';
+                    statusDiv.innerHTML = `✅ Rejected postback sent successfully!
+<strong>URL:</strong> ${escapeHtml(postbackUrl)}
+<strong>Status:</strong> ${response.status} ${response.statusText}
+${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}`;
+                } else {
+                    statusDiv.className = 'postback-status error';
+                    statusDiv.innerHTML = `⚠️ Rejected postback sent but received error status
+<strong>URL:</strong> ${escapeHtml(postbackUrl)}
+<strong>Status:</strong> ${response.status} ${response.statusText}
+${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}`;
+                }
+
+            } catch (error) {
+                console.error('Rejected postback error:', error);
+
+                // CORS blocked - show success but note we can't read response
+                statusDiv.className = 'postback-status success';
+                statusDiv.innerHTML = `✅ Rejected postback sent!
+<strong>URL:</strong> ${escapeHtml(postbackUrl)}
+<strong>Note:</strong> Response blocked by CORS policy. The request was sent, but we cannot read the server's response. This is normal for cross-origin requests.`;
+            } finally {
+                // Re-enable button and reset flag
+                btn.disabled = false;
+                btn.textContent = 'Rejected Postback';
+                isSendingPostback = false;
+
+                console.log('Rejected postback complete, flag reset');
+
                 // Hide status after 10 seconds
                 setTimeout(() => {
                     statusDiv.style.display = 'none';

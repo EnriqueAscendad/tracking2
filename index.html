@@ -865,8 +865,7 @@
                             placeholder="e.g., install, purchase, signup"
                             list="eventParameterHistory"
                             autocomplete="off"
-                            onclick="this.select()"
-                            onfocus="this.select()"
+                            onfocus="handleDatalistFocus(this)"
                         >
                         <datalist id="eventParameterHistory"></datalist>
                     </div>
@@ -879,8 +878,7 @@
                             placeholder="e.g., 1.50"
                             list="payoutHistory"
                             autocomplete="off"
-                            onclick="this.select()"
-                            onfocus="this.select()"
+                            onfocus="handleDatalistFocus(this)"
                         >
                         <datalist id="payoutHistory"></datalist>
                     </div>
@@ -1021,6 +1019,42 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
 
         // Initialize theme on page load
         initTheme();
+
+        // Handle datalist focus to show all options
+        function handleDatalistFocus(input) {
+            const currentValue = input.value;
+
+            // Select all text
+            input.select();
+
+            // If there's a value, temporarily clear it to show all datalist options
+            if (currentValue) {
+                const originalValue = currentValue;
+                input.value = '';
+
+                // Show dropdown by triggering it
+                input.focus();
+
+                // Store the original value so it can be restored if user doesn't select
+                input.dataset.previousValue = originalValue;
+
+                // Listen for when user starts typing or selects
+                input.addEventListener('input', function restoreHandler(e) {
+                    // Remove this handler after first input
+                    input.removeEventListener('input', restoreHandler);
+                    delete input.dataset.previousValue;
+                }, { once: true });
+
+                // If user clicks away without selecting, restore original value
+                input.addEventListener('blur', function blurHandler(e) {
+                    if (input.value === '' && input.dataset.previousValue) {
+                        input.value = input.dataset.previousValue;
+                        delete input.dataset.previousValue;
+                    }
+                    input.removeEventListener('blur', blurHandler);
+                }, { once: true });
+            }
+        }
 
         // Track redirect chain
         let redirectChain = [];

@@ -6,6 +6,30 @@
     <title>Ad Tracker Pro - URL Parameter Testing Tool</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
     <style>
+        :root {
+            /* Light mode colors */
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --section-bg: #f8f9fa;
+            --border-color: #e0e0e0;
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --info-box-bg: #f8f9fa;
+        }
+
+        body.dark-mode {
+            /* Dark mode colors */
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --container-bg: #0f1419;
+            --text-color: #e4e6eb;
+            --section-bg: #1a1d24;
+            --border-color: #2d3748;
+            --card-shadow: rgba(0, 0, 0, 0.5);
+            --info-box-bg: #1a1d24;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,18 +38,20 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.3s ease;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
+            background: var(--container-bg);
             border-radius: 12px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
+            transition: background 0.3s ease;
         }
 
         .header {
@@ -33,6 +59,43 @@
             color: white;
             padding: 20px;
             text-align: center;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            width: 60px;
+            height: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            padding: 2px;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .theme-toggle-slider {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .theme-toggle.dark .theme-toggle-slider {
+            transform: translateX(30px);
         }
 
         .header h1 {
@@ -221,11 +284,13 @@
         .search-input {
             width: 100%;
             padding: 12px 15px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             font-size: 14px;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             transition: border-color 0.3s;
+            background: var(--container-bg);
+            color: var(--text-color);
         }
 
         .search-input:focus {
@@ -345,7 +410,7 @@
         .section-title {
             font-size: 20px;
             font-weight: 600;
-            color: #333;
+            color: var(--text-color);
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid #667eea;
@@ -390,7 +455,7 @@
         }
 
         .info-box {
-            background: #f8f9fa;
+            background: var(--info-box-bg);
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 15px;
@@ -399,7 +464,8 @@
 
         .info-label {
             font-weight: 600;
-            color: #555;
+            color: var(--text-color);
+            opacity: 0.8;
             font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -407,7 +473,6 @@
         }
 
         .info-value {
-            color: #333;
             font-size: 14px;
             word-break: break-all;
             font-family: 'Courier New', monospace;
@@ -541,11 +606,12 @@
         .empty-state {
             text-align: center;
             padding: 40px;
-            color: #999;
+            color: var(--text-color);
+            opacity: 0.6;
         }
 
         .redirect-chain {
-            background: #f8f9fa;
+            background: var(--section-bg);
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 10px;
@@ -628,14 +694,51 @@
             display: block;
             margin-bottom: 5px;
         }
+
+        /* Dark mode specific adjustments */
+        body.dark-mode .redirect-step {
+            border-left-color: #667eea;
+        }
+
+        body.dark-mode .step-url {
+            color: var(--text-color);
+        }
+
+        body.dark-mode .copy-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        body.dark-mode .copy-btn:hover {
+            background: #764ba2;
+        }
+
+        body.dark-mode .toggle-btn {
+            background: var(--section-bg);
+            color: var(--text-color);
+        }
+
+        body.dark-mode .note {
+            background: rgba(255, 193, 7, 0.1);
+            border-left-color: #ffc107;
+            color: #ffecb3;
+        }
+
+        body.dark-mode code {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffecb3;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
+            <div class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+                <div class="theme-toggle-slider" id="themeToggleSlider">☀️</div>
+            </div>
             <h1>🔍 Ad Tracker Pro</h1>
             <p>Professional URL parameter testing and tracking analysis</p>
-            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v1.2.2</p>
+            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v1.3.0 - Full Redirect Chain Tracking</p>
         </div>
 
         <div class="content">
@@ -779,6 +882,39 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
     </div>
 
     <script>
+        // Theme Management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeToggle').classList.add('dark');
+                document.getElementById('themeToggleSlider').textContent = '🌙';
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const toggle = document.getElementById('themeToggle');
+            const slider = document.getElementById('themeToggleSlider');
+
+            body.classList.toggle('dark-mode');
+            toggle.classList.toggle('dark');
+
+            if (body.classList.contains('dark-mode')) {
+                slider.textContent = '🌙';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                slider.textContent = '☀️';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Initialize theme on page load
+        initTheme();
+
         // Track redirect chain
         let redirectChain = [];
         

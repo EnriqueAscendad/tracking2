@@ -696,14 +696,108 @@
         }
 
         /* Dark mode specific adjustments */
+
+        /* Header */
+        body.dark-mode .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+        }
+
+        /* Postback Section */
+        body.dark-mode .postback-section {
+            background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+        }
+
+        body.dark-mode .postback-input {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        body.dark-mode .postback-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        body.dark-mode .postback-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        body.dark-mode .postback-input option {
+            background: #1a1d24;
+            color: white;
+        }
+
+        body.dark-mode .postback-btn {
+            background: rgba(255, 255, 255, 0.95);
+            color: #047857;
+        }
+
+        body.dark-mode .postback-btn:hover {
+            background: white;
+        }
+
+        body.dark-mode .postback-btn:disabled {
+            background: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Priority Parameters */
+        body.dark-mode .priority-params {
+            background: linear-gradient(135deg, #7c2d12 0%, #991b1b 100%);
+        }
+
+        body.dark-mode .priority-param-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: #dc2626;
+        }
+
+        body.dark-mode .priority-param-name {
+            color: #fca5a5;
+        }
+
+        body.dark-mode .priority-param-value {
+            color: white;
+        }
+
+        /* Parameter List Items */
+        body.dark-mode .param-box {
+            background: var(--section-bg);
+            border-left-color: #667eea;
+        }
+
+        body.dark-mode .param-name {
+            color: #a78bfa;
+        }
+
+        body.dark-mode .param-value {
+            color: var(--text-color);
+        }
+
+        body.dark-mode .param-copy-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        body.dark-mode .param-copy-btn:hover {
+            background: #764ba2;
+        }
+
+        /* Redirect Chain */
         body.dark-mode .redirect-step {
             border-left-color: #667eea;
+            background: var(--section-bg);
         }
 
         body.dark-mode .step-url {
             color: var(--text-color);
         }
 
+        body.dark-mode .step-number {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Copy Buttons */
         body.dark-mode .copy-btn {
             background: #667eea;
             color: white;
@@ -713,11 +807,18 @@
             background: #764ba2;
         }
 
+        /* Toggle Buttons */
         body.dark-mode .toggle-btn {
             background: var(--section-bg);
             color: var(--text-color);
+            border-color: var(--border-color);
         }
 
+        body.dark-mode .toggle-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        /* Notes and Warnings */
         body.dark-mode .note {
             background: rgba(255, 193, 7, 0.1);
             border-left-color: #ffc107;
@@ -727,6 +828,8 @@
         body.dark-mode code {
             background: rgba(255, 255, 255, 0.1);
             color: #ffecb3;
+            padding: 2px 6px;
+            border-radius: 3px;
         }
     </style>
 </head>

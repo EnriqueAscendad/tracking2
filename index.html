@@ -148,6 +148,12 @@
             gap: 4px;
         }
 
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
         .input-label {
             color: white;
             font-size: 11px;
@@ -157,7 +163,7 @@
         }
 
         .postback-input {
-            padding: 8px 10px;
+            padding: 8px 30px 8px 10px;
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 6px;
             font-size: 13px;
@@ -165,6 +171,35 @@
             background: rgba(255, 255, 255, 0.95);
             transition: border-color 0.3s;
             list-style: none;
+            flex: 1;
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 6px;
+            background: rgba(0, 0, 0, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+            transition: all 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .clear-btn:hover {
+            background: rgba(0, 0, 0, 0.3);
+            color: #333;
+        }
+
+        .clear-btn.visible {
+            display: flex;
         }
 
         .postback-input:focus {
@@ -741,6 +776,16 @@
             color: rgba(255, 255, 255, 0.6);
         }
 
+        body.dark-mode .clear-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        body.dark-mode .clear-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
         /* Priority Parameters */
         body.dark-mode .priority-params {
             background: linear-gradient(135deg, #7c2d12 0%, #991b1b 100%);
@@ -857,30 +902,36 @@
                         </select>
                     </div>
                     <div class="input-group" style="flex: 1;">
-                        <label class="input-label">Event Parameter (Optional) - <span style="font-size: 10px; opacity: 0.8;">Double-click to clear</span></label>
-                        <input
-                            type="text"
-                            id="eventParameter"
-                            class="postback-input"
-                            placeholder="e.g., install, purchase, signup"
-                            list="eventParameterHistory"
-                            autocomplete="off"
-                            ondblclick="this.value=''; this.focus();"
-                        >
-                        <datalist id="eventParameterHistory"></datalist>
+                        <label class="input-label">Event Parameter (Optional)</label>
+                        <div class="input-wrapper">
+                            <input
+                                type="text"
+                                id="eventParameter"
+                                class="postback-input"
+                                placeholder="e.g., install, purchase, signup"
+                                list="eventParameterHistory"
+                                autocomplete="off"
+                                oninput="toggleClearBtn(this)"
+                            >
+                            <button type="button" class="clear-btn" onclick="clearInput('eventParameter')" title="Clear">✕</button>
+                            <datalist id="eventParameterHistory"></datalist>
+                        </div>
                     </div>
                     <div class="input-group" style="flex: 0.5;">
-                        <label class="input-label">Payout (Optional) - <span style="font-size: 10px; opacity: 0.8;">Double-click to clear</span></label>
-                        <input
-                            type="text"
-                            id="payout"
-                            class="postback-input"
-                            placeholder="e.g., 1.50"
-                            list="payoutHistory"
-                            autocomplete="off"
-                            ondblclick="this.value=''; this.focus();"
-                        >
-                        <datalist id="payoutHistory"></datalist>
+                        <label class="input-label">Payout (Optional)</label>
+                        <div class="input-wrapper">
+                            <input
+                                type="text"
+                                id="payout"
+                                class="postback-input"
+                                placeholder="e.g., 1.50"
+                                list="payoutHistory"
+                                autocomplete="off"
+                                oninput="toggleClearBtn(this)"
+                            >
+                            <button type="button" class="clear-btn" onclick="clearInput('payout')" title="Clear">✕</button>
+                            <datalist id="payoutHistory"></datalist>
+                        </div>
                     </div>
                 </div>
                 <button class="postback-toggle" type="button" onclick="togglePostbackUrl()">
@@ -1019,6 +1070,32 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
 
         // Initialize theme on page load
         initTheme();
+
+        // Toggle clear button visibility based on input content
+        function toggleClearBtn(input) {
+            const clearBtn = input.parentElement.querySelector('.clear-btn');
+            if (input.value.length > 0) {
+                clearBtn.classList.add('visible');
+            } else {
+                clearBtn.classList.remove('visible');
+            }
+        }
+
+        // Clear input and focus
+        function clearInput(inputId) {
+            const input = document.getElementById(inputId);
+            input.value = '';
+            input.focus();
+            toggleClearBtn(input);
+        }
+
+        // Initialize clear buttons visibility on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const eventInput = document.getElementById('eventParameter');
+            const payoutInput = document.getElementById('payout');
+            if (eventInput) toggleClearBtn(eventInput);
+            if (payoutInput) toggleClearBtn(payoutInput);
+        });
 
         // Track redirect chain
         let redirectChain = [];

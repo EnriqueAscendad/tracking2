@@ -443,28 +443,71 @@
         // Initialize theme on page load
         initTheme();
 
-        // Extract offer_id from URL
+        // Extract offer_id from URL (supports placeholders)
         function extractOfferId(url) {
             try {
-                const urlObj = new URL(url);
-                const offerId = urlObj.searchParams.get('offer_id') ||
-                               urlObj.searchParams.get('offer') ||
-                               urlObj.searchParams.get('o');
-                return offerId || null;
+                // Try URL parsing first
+                try {
+                    const urlObj = new URL(url);
+                    const offerId = urlObj.searchParams.get('offer_id') ||
+                                   urlObj.searchParams.get('offer') ||
+                                   urlObj.searchParams.get('o');
+                    if (offerId) return offerId;
+                } catch (e) {
+                    // URL parsing failed, try regex
+                }
+
+                // Fallback to regex for URLs with placeholders
+                const patterns = [
+                    /[?&]offer_id=([^&]+)/,
+                    /[?&]offer=([^&]+)/,
+                    /[?&]o=([^&]+)/
+                ];
+
+                for (const pattern of patterns) {
+                    const match = url.match(pattern);
+                    if (match && match[1]) {
+                        return decodeURIComponent(match[1]);
+                    }
+                }
+
+                return null;
             } catch (e) {
                 return null;
             }
         }
 
-        // Extract publisher_id from URL
+        // Extract publisher_id from URL (supports placeholders)
         function extractPublisherId(url) {
             try {
-                const urlObj = new URL(url);
-                const publisherId = urlObj.searchParams.get('publisher_id') ||
-                                   urlObj.searchParams.get('pub_id') ||
-                                   urlObj.searchParams.get('aff_id') ||
-                                   urlObj.searchParams.get('p');
-                return publisherId || null;
+                // Try URL parsing first
+                try {
+                    const urlObj = new URL(url);
+                    const publisherId = urlObj.searchParams.get('publisher_id') ||
+                                       urlObj.searchParams.get('pub_id') ||
+                                       urlObj.searchParams.get('aff_id') ||
+                                       urlObj.searchParams.get('p');
+                    if (publisherId) return publisherId;
+                } catch (e) {
+                    // URL parsing failed, try regex
+                }
+
+                // Fallback to regex for URLs with placeholders
+                const patterns = [
+                    /[?&]publisher_id=([^&]+)/,
+                    /[?&]pub_id=([^&]+)/,
+                    /[?&]aff_id=([^&]+)/,
+                    /[?&]p=([^&]+)/
+                ];
+
+                for (const pattern of patterns) {
+                    const match = url.match(pattern);
+                    if (match && match[1]) {
+                        return decodeURIComponent(match[1]);
+                    }
+                }
+
+                return null;
             } catch (e) {
                 return null;
             }
@@ -505,11 +548,9 @@
                 return;
             }
 
-            // Validate URL
-            try {
-                new URL(url);
-            } catch (e) {
-                alert('⚠️ Invalid URL. Please enter a valid URL with protocol (http:// or https://)');
+            // Basic URL validation (allow placeholders like {click_id})
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                alert('⚠️ URL must start with http:// or https://');
                 return;
             }
 
@@ -526,11 +567,9 @@
                 return;
             }
 
-            // Validate URL
-            try {
-                new URL(url);
-            } catch (e) {
-                alert('⚠️ Invalid URL. Please enter a valid URL');
+            // Basic URL validation (allow placeholders like {click_id})
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                alert('⚠️ URL must start with http:// or https://');
                 return;
             }
 

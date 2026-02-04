@@ -382,13 +382,13 @@
                 </div>
 
                 <div class="button-group">
-                    <button class="btn btn-primary" onclick="openTrackingUrl()">
+                    <button type="button" class="btn btn-primary" onclick="openTrackingUrl(event); return false;">
                         🚀 Test Tracking URL
                     </button>
-                    <button class="btn btn-secondary" onclick="saveCurrentUrl()">
+                    <button type="button" class="btn btn-secondary" onclick="saveCurrentUrl()">
                         💾 Save URL
                     </button>
-                    <button class="btn btn-secondary" onclick="clearUrl()">
+                    <button type="button" class="btn btn-secondary" onclick="clearUrl()">
                         🗑️ Clear
                     </button>
                 </div>
@@ -540,22 +540,32 @@
         }
 
         // Open tracking URL
-        function openTrackingUrl() {
+        function openTrackingUrl(event) {
+            // Prevent default behavior
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
             const url = document.getElementById('trackingUrl').value.trim();
 
             if (!url) {
                 alert('⚠️ Please enter a tracking URL first');
-                return;
+                return false;
             }
 
             // Basic URL validation (allow placeholders like {click_id})
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
                 alert('⚠️ URL must start with http:// or https://');
-                return;
+                return false;
             }
 
+            console.log('Opening tracking URL:', url);
+
             // Open URL in new tab
-            window.open(url, '_blank');
+            window.open(url, '_blank', 'noopener,noreferrer');
+
+            return false;
         }
 
         // Save current URL

@@ -349,6 +349,10 @@
                     <div class="stat-value" id="totalOffers">0</div>
                     <div class="stat-label">Different Offers</div>
                 </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                    <div class="stat-value" id="totalPublishers">0</div>
+                    <div class="stat-label">Different Publishers</div>
+                </div>
             </div>
 
             <!-- URL Configuration -->
@@ -363,7 +367,8 @@
                         oninput="updateOfferIdDisplay()"
                     >
                     <div class="offer-id-display" id="offerIdDisplay">
-                        <strong>Offer ID:</strong> <span id="offerIdValue">Not detected</span>
+                        <strong>Offer ID:</strong> <span id="offerIdValue">Not detected</span> |
+                        <strong>Publisher ID:</strong> <span id="publisherIdValue">Not detected</span>
                     </div>
                 </div>
 
@@ -440,18 +445,40 @@
             }
         }
 
-        // Update offer ID display
+        // Extract publisher_id from URL
+        function extractPublisherId(url) {
+            try {
+                const urlObj = new URL(url);
+                const publisherId = urlObj.searchParams.get('publisher_id') || urlObj.searchParams.get('pub_id') || urlObj.searchParams.get('aff_id');
+                return publisherId || null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Update offer ID and publisher ID display
         function updateOfferIdDisplay() {
             const url = document.getElementById('trackingUrl').value;
             const offerId = extractOfferId(url);
-            const displayElement = document.getElementById('offerIdValue');
+            const publisherId = extractPublisherId(url);
+
+            const offerDisplayElement = document.getElementById('offerIdValue');
+            const publisherDisplayElement = document.getElementById('publisherIdValue');
 
             if (offerId) {
-                displayElement.textContent = offerId;
-                displayElement.style.color = '#28a745';
+                offerDisplayElement.textContent = offerId;
+                offerDisplayElement.style.color = '#28a745';
             } else {
-                displayElement.textContent = 'Not detected';
-                displayElement.style.color = '#dc3545';
+                offerDisplayElement.textContent = 'Not detected';
+                offerDisplayElement.style.color = '#dc3545';
+            }
+
+            if (publisherId) {
+                publisherDisplayElement.textContent = publisherId;
+                publisherDisplayElement.style.color = '#28a745';
+            } else {
+                publisherDisplayElement.textContent = 'Not detected';
+                publisherDisplayElement.style.color = '#dc3545';
             }
         }
 
@@ -507,6 +534,7 @@
             const urlObj = {
                 url: url,
                 offerId: extractOfferId(url),
+                publisherId: extractPublisherId(url),
                 timestamp: new Date().toISOString(),
                 lastUsed: new Date().toISOString()
             };
@@ -593,7 +621,7 @@
                     <div class="url-card">
                         <div class="url-card-header">
                             <div class="url-card-offer">
-                                Offer ID: ${item.offerId || 'Unknown'}
+                                Offer: ${item.offerId || 'Unknown'} | Publisher: ${item.publisherId || 'Unknown'}
                             </div>
                             <div class="url-card-date">${dateStr}</div>
                         </div>
@@ -616,9 +644,11 @@
             let savedUrls = JSON.parse(localStorage.getItem('trackingUrls') || '[]');
             const totalUrls = savedUrls.length;
             const uniqueOffers = new Set(savedUrls.map(item => item.offerId).filter(id => id !== null)).size;
+            const uniquePublishers = new Set(savedUrls.map(item => item.publisherId).filter(id => id !== null)).size;
 
             document.getElementById('totalUrls').textContent = totalUrls;
             document.getElementById('totalOffers').textContent = uniqueOffers;
+            document.getElementById('totalPublishers').textContent = uniquePublishers;
         }
 
         // Escape HTML

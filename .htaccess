@@ -1,0 +1,142 @@
+# ==============================================================================
+# Security Configuration for Tracking Tools
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Force HTTPS
+# ------------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# HTTP Basic Authentication (RECOMMENDED - Uncomment and configure)
+# ------------------------------------------------------------------------------
+# AuthType Basic
+# AuthName "Restricted Access - Tracking Tools"
+# AuthUserFile /full/path/to/.htpasswd
+# Require valid-user
+
+# To create .htpasswd file, run on server:
+# htpasswd -c .htpasswd username
+
+# ------------------------------------------------------------------------------
+# IP Whitelist (Optional - Uncomment and add your IPs)
+# ------------------------------------------------------------------------------
+# Order Deny,Allow
+# Deny from all
+# Allow from YOUR.IP.ADDRESS
+# Allow from ANOTHER.IP.ADDRESS
+
+# ------------------------------------------------------------------------------
+# Security Headers
+# ------------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header always set X-Frame-Options "DENY"
+
+    # XSS Protection
+    Header always set X-XSS-Protection "1; mode=block"
+
+    # Prevent MIME sniffing
+    Header always set X-Content-Type-Options "nosniff"
+
+    # Referrer Policy
+    Header always set Referrer-Policy "no-referrer"
+
+    # Content Security Policy
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+
+    # Strict Transport Security (HSTS) - Only over HTTPS
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # Remove server signature
+    Header unset Server
+    Header unset X-Powered-By
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# Disable Directory Browsing
+# ------------------------------------------------------------------------------
+Options -Indexes
+
+# ------------------------------------------------------------------------------
+# Disable Server Signature
+# ------------------------------------------------------------------------------
+ServerSignature Off
+
+# ------------------------------------------------------------------------------
+# Rate Limiting (Requires mod_evasive)
+# ------------------------------------------------------------------------------
+<IfModule mod_evasive.c>
+    DOSHashTableSize 3097
+    DOSPageCount 10
+    DOSSiteCount 100
+    DOSPageInterval 1
+    DOSSiteInterval 1
+    DOSBlockingPeriod 30
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# File Access Protection
+# ------------------------------------------------------------------------------
+# Protect .htaccess and .htpasswd
+<FilesMatch "^\.ht">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block access to sensitive files
+<FilesMatch "(^#.*#|\.(bak|conf|dist|fla|in[ci]|log|psd|sh|sql|sw[op])|~)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# ------------------------------------------------------------------------------
+# Prevent Access to Git and Other Version Control
+# ------------------------------------------------------------------------------
+RedirectMatch 404 /\.git
+
+# ------------------------------------------------------------------------------
+# Custom Error Pages (Optional)
+# ------------------------------------------------------------------------------
+# ErrorDocument 401 /error/401.html
+# ErrorDocument 403 /error/403.html
+# ErrorDocument 404 /error/404.html
+# ErrorDocument 500 /error/500.html
+
+# ------------------------------------------------------------------------------
+# Cache Control for Security
+# ------------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    <FilesMatch "\.(html|htm)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires 0
+    </FilesMatch>
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# Prevent Hotlinking (Optional)
+# ------------------------------------------------------------------------------
+# <IfModule mod_rewrite.c>
+#     RewriteEngine on
+#     RewriteCond %{HTTP_REFERER} !^$
+#     RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?yourdomain.com [NC]
+#     RewriteRule \.(jpg|jpeg|png|gif|svg)$ - [F]
+# </IfModule>
+
+# ------------------------------------------------------------------------------
+# Additional Security - Block Common Attack Patterns
+# ------------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Block common exploit attempts
+    RewriteCond %{QUERY_STRING} (<|%3C).*script.*(>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} GLOBALS(=|[|%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} _REQUEST(=|[|%[0-9A-Z]{0,2})
+    RewriteRule ^(.*)$ - [F,L]
+</IfModule>

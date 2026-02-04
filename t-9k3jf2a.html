@@ -1176,17 +1176,19 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             
             // Define priority parameters (including mapped/renamed ones)
             const priorityKeys = [
-                'click_id', 
-                'offer_id', 'offer',  // offer_id gets renamed to offer
-                'publisher_id', 'aff_id_plain',  // publisher_id gets renamed to aff_id_plain
-                'dvp', 
+                'click_id',
+                'offer_id', 'offer', 'o',  // offer_id can also be 'offer' or 'o'
+                'publisher_id', 'aff_id_plain', 'p',  // publisher_id can also be 'aff_id_plain' or 'p'
+                'dvp',
                 'dvun'
             ];
 
             // Define parameter mapping for transformation indicators
             const paramMapping = {
                 'offer': 'offer_id',
-                'aff_id_plain': 'publisher_id'
+                'o': 'offer_id',
+                'aff_id_plain': 'publisher_id',
+                'p': 'publisher_id'
             };
             
             // Separate priority and regular parameters

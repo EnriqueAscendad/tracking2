@@ -447,7 +447,9 @@
         function extractOfferId(url) {
             try {
                 const urlObj = new URL(url);
-                const offerId = urlObj.searchParams.get('offer_id') || urlObj.searchParams.get('offer');
+                const offerId = urlObj.searchParams.get('offer_id') ||
+                               urlObj.searchParams.get('offer') ||
+                               urlObj.searchParams.get('o');
                 return offerId || null;
             } catch (e) {
                 return null;
@@ -458,7 +460,10 @@
         function extractPublisherId(url) {
             try {
                 const urlObj = new URL(url);
-                const publisherId = urlObj.searchParams.get('publisher_id') || urlObj.searchParams.get('pub_id') || urlObj.searchParams.get('aff_id');
+                const publisherId = urlObj.searchParams.get('publisher_id') ||
+                                   urlObj.searchParams.get('pub_id') ||
+                                   urlObj.searchParams.get('aff_id') ||
+                                   urlObj.searchParams.get('p');
                 return publisherId || null;
             } catch (e) {
                 return null;

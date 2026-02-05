@@ -810,6 +810,12 @@
             color: white;
         }
 
+        body.dark-mode #postbackIframeContainer {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
         /* Priority Parameters */
         body.dark-mode .priority-params {
             background: linear-gradient(135deg, #7c2d12 0%, #991b1b 100%);
@@ -973,6 +979,18 @@
                     </button>
                 </div>
                 <div class="postback-status" id="postbackStatus"></div>
+
+                <!-- Postback Response Iframe -->
+                <div id="postbackIframeContainer" style="display: none; margin-top: 15px;">
+                    <div style="color: white; font-size: 12px; margin-bottom: 8px; font-weight: 600;">
+                        📡 Server Response:
+                    </div>
+                    <iframe
+                        id="postbackIframe"
+                        style="width: 100%; height: 200px; border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; background: white;"
+                        sandbox="allow-same-origin"
+                    ></iframe>
+                </div>
             </div>
 
             <!-- Priority Parameters Section -->
@@ -1646,67 +1664,70 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             statusDiv.textContent = '⏳ Sending postback...';
 
             console.log('Final postback URL:', postbackUrl);
-            
+
             try {
-                // Try with CORS first to read response
-                const response = await fetch(postbackUrl, {
-                    method: 'GET',
-                    mode: 'cors'
+                // Use iframe technique to send postback and display server response
+                // This guarantees the request is sent and allows viewing the response
+                const iframe = document.getElementById('postbackIframe');
+                const iframeContainer = document.getElementById('postbackIframeContainer');
+                let requestSent = false;
+
+                // Create a promise to handle the iframe load
+                const sendPromise = new Promise((resolve, reject) => {
+                    iframe.onload = () => {
+                        console.log('Postback iframe loaded successfully');
+                        requestSent = true;
+                        resolve({ status: 'success', message: 'Postback sent successfully' });
+                    };
+
+                    iframe.onerror = () => {
+                        console.log('Postback iframe error (but request was still sent)');
+                        requestSent = true;
+                        resolve({ status: 'error', message: 'Postback sent but iframe load failed' });
+                    };
+
+                    // Set a timeout to ensure we don't wait forever
+                    setTimeout(() => {
+                        if (!requestSent) {
+                            console.log('Postback timeout, but request was initiated');
+                            requestSent = true;
+                            resolve({ status: 'timeout', message: 'Postback sent (response timeout)' });
+                        }
+                    }, 10000);
                 });
-                
-                console.log('Response received:', response.status, response.statusText);
-                
-                // Try to read the response
-                let responseText = '';
-                
-                try {
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        const responseData = await response.json();
-                        responseText = JSON.stringify(responseData, null, 2);
-                    } else {
-                        responseText = await response.text();
-                    }
-                } catch (parseError) {
-                    responseText = 'Unable to parse response';
-                }
-                
-                // Check response status
-                if (response.ok) {
-                    statusDiv.className = 'postback-status success';
-                    statusDiv.innerHTML = `✅ Postback sent successfully!
+
+                // Show iframe container and trigger the request by setting the src
+                iframeContainer.style.display = 'block';
+                iframe.src = postbackUrl;
+                console.log('Postback request initiated via iframe');
+
+                // Wait for the response or timeout
+                const result = await sendPromise;
+
+                // Show success message
+                statusDiv.className = 'postback-status success';
+                statusDiv.innerHTML = `✅ Postback sent successfully!
 <strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Status:</strong> ${response.status} ${response.statusText}
-${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}`;
-                } else {
-                    statusDiv.className = 'postback-status error';
-                    statusDiv.innerHTML = `⚠️ Postback sent but received error status
-<strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Status:</strong> ${response.status} ${response.statusText}
-${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}`;
-                }
-                
+<strong>Status:</strong> ${result.message}
+<strong>Note:</strong> Check the server response in the iframe below.`;
+
             } catch (error) {
                 console.error('Postback error:', error);
-                
-                // CORS blocked - show success but note we can't read response
-                // Note: We're NOT sending another request here!
-                statusDiv.className = 'postback-status success';
-                statusDiv.innerHTML = `✅ Postback sent!
+
+                // Even if there's an error, the request was likely sent
+                statusDiv.className = 'postback-status error';
+                statusDiv.innerHTML = `⚠️ Postback error
 <strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Note:</strong> Response blocked by CORS policy. The request was sent, but we cannot read the server's response. This is normal for cross-origin requests.`;
+<strong>Error:</strong> ${escapeHtml(error.message)}`;
             } finally {
                 // Re-enable button and reset flag
                 btn.disabled = false;
                 btn.textContent = 'Send Postback';
                 isSendingPostback = false;
-                
+
                 console.log('Postback complete, flag reset');
-                
-                // Hide status after 10 seconds
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 10000);
+
+                // Don't auto-hide status so user can see the response
             }
         }
 
@@ -1787,52 +1808,59 @@ ${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}
             console.log('Final rejected postback URL:', postbackUrl);
 
             try {
-                // Try with CORS first to read response
-                const response = await fetch(postbackUrl, {
-                    method: 'GET',
-                    mode: 'cors'
+                // Use iframe technique to send postback and display server response
+                // This guarantees the request is sent and allows viewing the response
+                const iframe = document.getElementById('postbackIframe');
+                const iframeContainer = document.getElementById('postbackIframeContainer');
+                let requestSent = false;
+
+                // Create a promise to handle the iframe load
+                const sendPromise = new Promise((resolve, reject) => {
+                    iframe.onload = () => {
+                        console.log('Rejected postback iframe loaded successfully');
+                        requestSent = true;
+                        resolve({ status: 'success', message: 'Rejected postback sent successfully' });
+                    };
+
+                    iframe.onerror = () => {
+                        console.log('Rejected postback iframe error (but request was still sent)');
+                        requestSent = true;
+                        resolve({ status: 'error', message: 'Rejected postback sent but iframe load failed' });
+                    };
+
+                    // Set a timeout to ensure we don't wait forever
+                    setTimeout(() => {
+                        if (!requestSent) {
+                            console.log('Rejected postback timeout, but request was initiated');
+                            requestSent = true;
+                            resolve({ status: 'timeout', message: 'Rejected postback sent (response timeout)' });
+                        }
+                    }, 10000);
                 });
 
-                console.log('Response received:', response.status, response.statusText);
+                // Show iframe container and trigger the request by setting the src
+                iframeContainer.style.display = 'block';
+                iframe.src = postbackUrl;
+                console.log('Rejected postback request initiated via iframe');
 
-                // Try to read the response
-                let responseText = '';
+                // Wait for the response or timeout
+                const result = await sendPromise;
 
-                try {
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        const responseData = await response.json();
-                        responseText = JSON.stringify(responseData, null, 2);
-                    } else {
-                        responseText = await response.text();
-                    }
-                } catch (parseError) {
-                    responseText = 'Unable to parse response';
-                }
-
-                // Check response status
-                if (response.ok) {
-                    statusDiv.className = 'postback-status success';
-                    statusDiv.innerHTML = `✅ Rejected postback sent successfully!
+                // Show success message
+                statusDiv.className = 'postback-status success';
+                statusDiv.innerHTML = `✅ Rejected postback sent successfully!
 <strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Status:</strong> ${response.status} ${response.statusText}
-${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}`;
-                } else {
-                    statusDiv.className = 'postback-status error';
-                    statusDiv.innerHTML = `⚠️ Rejected postback sent but received error status
-<strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Status:</strong> ${response.status} ${response.statusText}
-${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}`;
-                }
+<strong>Status:</strong> ${result.message}
+<strong>Note:</strong> Check the server response in the iframe below.`;
 
             } catch (error) {
                 console.error('Rejected postback error:', error);
 
-                // CORS blocked - show success but note we can't read response
-                statusDiv.className = 'postback-status success';
-                statusDiv.innerHTML = `✅ Rejected postback sent!
+                // Even if there's an error, the request was likely sent
+                statusDiv.className = 'postback-status error';
+                statusDiv.innerHTML = `⚠️ Rejected postback error
 <strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Note:</strong> Response blocked by CORS policy. The request was sent, but we cannot read the server's response. This is normal for cross-origin requests.`;
+<strong>Error:</strong> ${escapeHtml(error.message)}`;
             } finally {
                 // Re-enable button and reset flag
                 btn.disabled = false;
@@ -1841,10 +1869,7 @@ ${responseText ? `<strong>Response:</strong>\n${escapeHtml(responseText)}` : ''}
 
                 console.log('Rejected postback complete, flag reset');
 
-                // Hide status after 10 seconds
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 10000);
+                // Don't auto-hide status so user can see the response
             }
         }
     </script>

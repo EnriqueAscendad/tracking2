@@ -88,8 +88,10 @@ Para obtener un certificado SSL gratuito:
 tracking2/
 ├── t-9k3jf2a.html      # Tracker principal (antes index.html)
 ├── i-7m2kd8x.html      # Impression page (antes impression.html)
+├── f-5k8jd2w.html      # Fallback page (antes fallback.html)
 ├── index.html          # Original (puedes eliminarlo si usas el renombrado)
 ├── impression.html     # Original (puedes eliminarlo si usas el renombrado)
+├── fallback.html       # Original (puedes eliminarlo si usas el renombrado)
 ├── robots.txt          # Bloquea bots
 ├── .htaccess           # Configuración de seguridad
 ├── .htpasswd           # Contraseñas (crear con htpasswd)
@@ -119,6 +121,7 @@ tracking2/
 ### Con archivos renombrados:
 - Tracker: `https://tudominio.com/t-9k3jf2a.html`
 - Impression: `https://tudominio.com/i-7m2kd8x.html`
+- Fallback: `https://tudominio.com/f-5k8jd2w.html`
 
 ### Con autenticación HTTP configurada:
 Al acceder, el navegador pedirá usuario y contraseña.

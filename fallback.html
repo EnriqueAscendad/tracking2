@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fallback - URL Parameters</title>
+
+    <!-- Security Meta Tags -->
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-card: #ffffff;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+            --accent-color: #007bff;
+            --accent-hover: #0056b3;
+            --success-color: #28a745;
+            --info-color: #17a2b8;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-card: #252525;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border-color: #404040;
+            --accent-color: #4a9eff;
+            --accent-hover: #357abd;
+            --success-color: #3dbd5d;
+            --info-color: #20b8d0;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-secondary);
+            transform: translateY(-2px);
+        }
+
+        .info-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .info-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+        }
+
+        .params-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .params-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .params-count {
+            background: var(--accent-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: normal;
+        }
+
+        .params-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .params-table thead {
+            background: var(--bg-secondary);
+        }
+
+        .params-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .params-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .params-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .params-table tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .param-name {
+            font-weight: 600;
+            color: var(--info-color);
+            font-family: 'Courier New', monospace;
+        }
+
+        .param-value {
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .copy-btn.copied {
+            background: var(--success-color);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .full-url {
+            background: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            margin-top: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .copy-all-btn {
+            margin-top: 15px;
+            background: var(--success-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .copy-all-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .params-table {
+                font-size: 0.9rem;
+            }
+
+            .params-table th,
+            .params-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔗 Fallback Page</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+        </div>
+
+        <div class="info-section">
+            <h2>📊 Page Information</h2>
+            <div class="info-item">
+                <span class="info-label">Timestamp:</span>
+                <span class="info-value" id="timestamp"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Full URL:</span>
+            </div>
+            <div class="full-url" id="fullUrl"></div>
+        </div>
+
+        <div class="params-section">
+            <h2>
+                🔍 URL Parameters
+                <span class="params-count" id="paramsCount">0</span>
+            </h2>
+
+            <div id="paramsContainer"></div>
+
+            <button class="copy-all-btn" onclick="copyAllParams()" id="copyAllBtn" style="display: none;">
+                📋 Copy All Parameters as JSON
+            </button>
+        </div>
+
+        <div class="footer">
+            <p>⚠️ Internal Testing Tool - For Authorized Use Only</p>
+            <p>Fallback Page • URL Parameter Display</p>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Display current timestamp
+        function displayTimestamp() {
+            const now = new Date();
+            const formatted = now.toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            document.getElementById('timestamp').textContent = formatted;
+        }
+
+        // Display full URL
+        function displayFullUrl() {
+            const fullUrl = window.location.href;
+            document.getElementById('fullUrl').textContent = fullUrl;
+        }
+
+        // Extract and display URL parameters
+        function displayUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const paramsContainer = document.getElementById('paramsContainer');
+            const paramsCount = document.getElementById('paramsCount');
+            const copyAllBtn = document.getElementById('copyAllBtn');
+
+            const params = [];
+            urlParams.forEach((value, key) => {
+                params.push({ key, value });
+            });
+
+            paramsCount.textContent = params.length;
+
+            if (params.length === 0) {
+                paramsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No URL parameters found</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">
+                            Try accessing this page with query parameters:<br>
+                            <code>?param1=value1&param2=value2</code>
+                        </p>
+                    </div>
+                `;
+                copyAllBtn.style.display = 'none';
+                return;
+            }
+
+            // Create table
+            let tableHTML = `
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">Parameter</th>
+                            <th style="width: 55%;">Value</th>
+                            <th style="width: 15%; text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            params.forEach((param, index) => {
+                tableHTML += `
+                    <tr>
+                        <td><span class="param-name">${escapeHtml(param.key)}</span></td>
+                        <td><span class="param-value">${escapeHtml(param.value)}</span></td>
+                        <td style="text-align: center;">
+                            <button class="copy-btn" onclick="copyToClipboard('${escapeHtml(param.value)}', this)">
+                                Copy
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            paramsContainer.innerHTML = tableHTML;
+            copyAllBtn.style.display = 'block';
+        }
+
+        // Copy individual value to clipboard
+        function copyToClipboard(text, button) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                button.textContent = '✓ Copied';
+                button.classList.add('copied');
+
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+                button.textContent = '✗ Failed';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            }
+
+            document.body.removeChild(textarea);
+        }
+
+        // Copy all parameters as JSON
+        function copyAllParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const paramsObj = {};
+
+            urlParams.forEach((value, key) => {
+                paramsObj[key] = value;
+            });
+
+            const json = JSON.stringify(paramsObj, null, 2);
+            const textarea = document.createElement('textarea');
+            textarea.value = json;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                const button = document.getElementById('copyAllBtn');
+                button.textContent = '✓ Copied to Clipboard!';
+
+                setTimeout(() => {
+                    button.textContent = '📋 Copy All Parameters as JSON';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            }
+
+            document.body.removeChild(textarea);
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+            displayTimestamp();
+            displayFullUrl();
+            displayUrlParameters();
+        });
+    </script>
+</body>
+</html>

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="version" content="2.1.0">
     <title>Ad Tracker Pro - URL Parameter Testing Tool</title>
 
     <!-- Security Meta Tags -->
@@ -810,12 +811,6 @@
             color: white;
         }
 
-        body.dark-mode #postbackIframeContainer {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 12px;
-            border-radius: 8px;
-        }
-
         /* Priority Parameters */
         body.dark-mode .priority-params {
             background: linear-gradient(135deg, #7c2d12 0%, #991b1b 100%);
@@ -916,7 +911,7 @@
             </div>
             <h1>🔍 Ad Tracker Pro</h1>
             <p>Professional URL parameter testing and tracking analysis</p>
-            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v1.3.0 - Full Redirect Chain Tracking</p>
+            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v2.1.0 - Popup Window Postback</p>
         </div>
 
         <div class="content">
@@ -979,18 +974,6 @@
                     </button>
                 </div>
                 <div class="postback-status" id="postbackStatus"></div>
-
-                <!-- Postback Response Iframe -->
-                <div id="postbackIframeContainer" style="display: none; margin-top: 15px;">
-                    <div style="color: white; font-size: 12px; margin-bottom: 8px; font-weight: 600;">
-                        📡 Server Response:
-                    </div>
-                    <iframe
-                        id="postbackIframe"
-                        style="width: 100%; height: 200px; border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; background: white;"
-                        sandbox="allow-same-origin"
-                    ></iframe>
-                </div>
             </div>
 
             <!-- Priority Parameters Section -->
@@ -1666,59 +1649,38 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             console.log('Final postback URL:', postbackUrl);
 
             try {
-                // Use iframe technique to send postback and display server response
-                // This guarantees the request is sent and allows viewing the response
-                const iframe = document.getElementById('postbackIframe');
-                const iframeContainer = document.getElementById('postbackIframeContainer');
-                let requestSent = false;
+                // Open postback in a popup window to send the request and view response
+                // This avoids X-Frame-Options blocking issues and guarantees delivery
+                const windowFeatures = 'width=800,height=600,resizable=yes,scrollbars=yes,status=yes';
+                const postbackWindow = window.open(postbackUrl, 'PostbackResponse', windowFeatures);
 
-                // Create a promise to handle the iframe load
-                const sendPromise = new Promise((resolve, reject) => {
-                    iframe.onload = () => {
-                        console.log('Postback iframe loaded successfully');
-                        requestSent = true;
-                        resolve({ status: 'success', message: 'Postback sent successfully' });
-                    };
+                if (postbackWindow) {
+                    console.log('Postback window opened successfully');
 
-                    iframe.onerror = () => {
-                        console.log('Postback iframe error (but request was still sent)');
-                        requestSent = true;
-                        resolve({ status: 'error', message: 'Postback sent but iframe load failed' });
-                    };
-
-                    // Set a timeout to ensure we don't wait forever
-                    setTimeout(() => {
-                        if (!requestSent) {
-                            console.log('Postback timeout, but request was initiated');
-                            requestSent = true;
-                            resolve({ status: 'timeout', message: 'Postback sent (response timeout)' });
-                        }
-                    }, 10000);
-                });
-
-                // Show iframe container and trigger the request by setting the src
-                iframeContainer.style.display = 'block';
-                iframe.src = postbackUrl;
-                console.log('Postback request initiated via iframe');
-
-                // Wait for the response or timeout
-                const result = await sendPromise;
-
-                // Show success message
-                statusDiv.className = 'postback-status success';
-                statusDiv.innerHTML = `✅ Postback sent successfully!
+                    // Show success message
+                    statusDiv.className = 'postback-status success';
+                    statusDiv.innerHTML = `✅ Postback sent successfully!
 <strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Status:</strong> ${result.message}
-<strong>Note:</strong> Check the server response in the iframe below.`;
+<strong>Status:</strong> Request sent and opened in popup window
+<strong>Note:</strong> Check the popup window for the server response.`;
+                } else {
+                    // Popup was blocked
+                    console.warn('Popup was blocked by browser');
+                    statusDiv.className = 'postback-status error';
+                    statusDiv.innerHTML = `⚠️ Popup blocked by browser
+<strong>URL:</strong> ${escapeHtml(postbackUrl)}
+<strong>Action:</strong> Please allow popups for this site and try again, or <a href="${escapeHtml(postbackUrl)}" target="_blank" style="color: #11998e; text-decoration: underline;">click here to open manually</a>.`;
+                }
 
             } catch (error) {
                 console.error('Postback error:', error);
 
-                // Even if there's an error, the request was likely sent
+                // Show error with manual link
                 statusDiv.className = 'postback-status error';
                 statusDiv.innerHTML = `⚠️ Postback error
 <strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Error:</strong> ${escapeHtml(error.message)}`;
+<strong>Error:</strong> ${escapeHtml(error.message)}
+<strong>Action:</strong> <a href="${escapeHtml(postbackUrl)}" target="_blank" style="color: #e74c3c; text-decoration: underline;">Click here to send manually</a>`;
             } finally {
                 // Re-enable button and reset flag
                 btn.disabled = false;
@@ -1727,7 +1689,10 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
 
                 console.log('Postback complete, flag reset');
 
-                // Don't auto-hide status so user can see the response
+                // Hide status after 15 seconds
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 15000);
             }
         }
 
@@ -1808,59 +1773,38 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             console.log('Final rejected postback URL:', postbackUrl);
 
             try {
-                // Use iframe technique to send postback and display server response
-                // This guarantees the request is sent and allows viewing the response
-                const iframe = document.getElementById('postbackIframe');
-                const iframeContainer = document.getElementById('postbackIframeContainer');
-                let requestSent = false;
+                // Open postback in a popup window to send the request and view response
+                // This avoids X-Frame-Options blocking issues and guarantees delivery
+                const windowFeatures = 'width=800,height=600,resizable=yes,scrollbars=yes,status=yes';
+                const postbackWindow = window.open(postbackUrl, 'RejectedPostbackResponse', windowFeatures);
 
-                // Create a promise to handle the iframe load
-                const sendPromise = new Promise((resolve, reject) => {
-                    iframe.onload = () => {
-                        console.log('Rejected postback iframe loaded successfully');
-                        requestSent = true;
-                        resolve({ status: 'success', message: 'Rejected postback sent successfully' });
-                    };
+                if (postbackWindow) {
+                    console.log('Rejected postback window opened successfully');
 
-                    iframe.onerror = () => {
-                        console.log('Rejected postback iframe error (but request was still sent)');
-                        requestSent = true;
-                        resolve({ status: 'error', message: 'Rejected postback sent but iframe load failed' });
-                    };
-
-                    // Set a timeout to ensure we don't wait forever
-                    setTimeout(() => {
-                        if (!requestSent) {
-                            console.log('Rejected postback timeout, but request was initiated');
-                            requestSent = true;
-                            resolve({ status: 'timeout', message: 'Rejected postback sent (response timeout)' });
-                        }
-                    }, 10000);
-                });
-
-                // Show iframe container and trigger the request by setting the src
-                iframeContainer.style.display = 'block';
-                iframe.src = postbackUrl;
-                console.log('Rejected postback request initiated via iframe');
-
-                // Wait for the response or timeout
-                const result = await sendPromise;
-
-                // Show success message
-                statusDiv.className = 'postback-status success';
-                statusDiv.innerHTML = `✅ Rejected postback sent successfully!
+                    // Show success message
+                    statusDiv.className = 'postback-status success';
+                    statusDiv.innerHTML = `✅ Rejected postback sent successfully!
 <strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Status:</strong> ${result.message}
-<strong>Note:</strong> Check the server response in the iframe below.`;
+<strong>Status:</strong> Request sent and opened in popup window
+<strong>Note:</strong> Check the popup window for the server response.`;
+                } else {
+                    // Popup was blocked
+                    console.warn('Popup was blocked by browser');
+                    statusDiv.className = 'postback-status error';
+                    statusDiv.innerHTML = `⚠️ Popup blocked by browser
+<strong>URL:</strong> ${escapeHtml(postbackUrl)}
+<strong>Action:</strong> Please allow popups for this site and try again, or <a href="${escapeHtml(postbackUrl)}" target="_blank" style="color: #11998e; text-decoration: underline;">click here to open manually</a>.`;
+                }
 
             } catch (error) {
                 console.error('Rejected postback error:', error);
 
-                // Even if there's an error, the request was likely sent
+                // Show error with manual link
                 statusDiv.className = 'postback-status error';
                 statusDiv.innerHTML = `⚠️ Rejected postback error
 <strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Error:</strong> ${escapeHtml(error.message)}`;
+<strong>Error:</strong> ${escapeHtml(error.message)}
+<strong>Action:</strong> <a href="${escapeHtml(postbackUrl)}" target="_blank" style="color: #e74c3c; text-decoration: underline;">Click here to send manually</a>`;
             } finally {
                 // Re-enable button and reset flag
                 btn.disabled = false;
@@ -1869,7 +1813,10 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
 
                 console.log('Rejected postback complete, flag reset');
 
-                // Don't auto-hide status so user can see the response
+                // Hide status after 15 seconds
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 15000)
             }
         }
     </script>

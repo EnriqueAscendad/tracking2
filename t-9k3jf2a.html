@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="version" content="2.1.0">
+    <meta name="version" content="2.2.0">
     <title>Ad Tracker Pro - URL Parameter Testing Tool</title>
 
     <!-- Security Meta Tags -->
@@ -911,7 +911,7 @@
             </div>
             <h1>🔍 Ad Tracker Pro</h1>
             <p>Professional URL parameter testing and tracking analysis</p>
-            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v2.1.0 - Popup Window Postback</p>
+            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v2.2.0 - Postback Safety Timer</p>
         </div>
 
         <div class="content">
@@ -1819,6 +1819,55 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                 }, 15000)
             }
         }
+
+        // Postback button countdown timer
+        let postbackCountdown = 10;
+        let countdownInterval = null;
+
+        function initPostbackCountdown() {
+            const sendBtn = document.getElementById('sendPostbackBtn');
+            const rejectBtn = document.getElementById('sendRejectedPostbackBtn');
+
+            if (!sendBtn || !rejectBtn) {
+                console.error('Postback buttons not found');
+                return;
+            }
+
+            // Disable buttons initially
+            sendBtn.disabled = true;
+            rejectBtn.disabled = true;
+
+            // Update button text with countdown
+            function updateButtonText() {
+                sendBtn.textContent = `Send Postback (${postbackCountdown}s)`;
+                rejectBtn.textContent = `Rejected Postback (${postbackCountdown}s)`;
+            }
+
+            updateButtonText();
+
+            // Start countdown
+            countdownInterval = setInterval(() => {
+                postbackCountdown--;
+
+                if (postbackCountdown > 0) {
+                    updateButtonText();
+                } else {
+                    // Countdown finished - enable buttons
+                    clearInterval(countdownInterval);
+                    sendBtn.disabled = false;
+                    rejectBtn.disabled = false;
+                    sendBtn.textContent = 'Send Postback';
+                    rejectBtn.textContent = 'Rejected Postback';
+                    console.log('Postback buttons enabled after countdown');
+                }
+            }, 1000);
+        }
+
+        // Initialize countdown when page loads
+        window.addEventListener('load', function() {
+            console.log('Page loaded, starting postback countdown...');
+            initPostbackCountdown();
+        });
     </script>
 </body>
 </html>

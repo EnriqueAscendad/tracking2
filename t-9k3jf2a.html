@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="version" content="2.2.0">
+    <meta name="version" content="2.3.0">
     <title>Ad Tracker Pro - URL Parameter Testing Tool</title>
 
     <!-- Security Meta Tags -->
@@ -911,7 +911,7 @@
             </div>
             <h1>🔍 Ad Tracker Pro</h1>
             <p>Professional URL parameter testing and tracking analysis</p>
-            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v2.2.0 - Postback Safety Timer</p>
+            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v2.3.0 - Auto-Close Popup</p>
         </div>
 
         <div class="content">
@@ -1657,12 +1657,20 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                 if (postbackWindow) {
                     console.log('Postback window opened successfully');
 
+                    // Auto-close popup after 10 seconds
+                    setTimeout(() => {
+                        if (postbackWindow && !postbackWindow.closed) {
+                            postbackWindow.close();
+                            console.log('Postback popup auto-closed after 10 seconds');
+                        }
+                    }, 10000);
+
                     // Show success message
                     statusDiv.className = 'postback-status success';
                     statusDiv.innerHTML = `✅ Postback sent successfully!
 <strong>URL:</strong> ${escapeHtml(postbackUrl)}
 <strong>Status:</strong> Request sent and opened in popup window
-<strong>Note:</strong> Check the popup window for the server response.`;
+<strong>Note:</strong> Popup will auto-close in 10 seconds.`;
                 } else {
                     // Popup was blocked
                     console.warn('Popup was blocked by browser');
@@ -1781,12 +1789,20 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                 if (postbackWindow) {
                     console.log('Rejected postback window opened successfully');
 
+                    // Auto-close popup after 10 seconds
+                    setTimeout(() => {
+                        if (postbackWindow && !postbackWindow.closed) {
+                            postbackWindow.close();
+                            console.log('Rejected postback popup auto-closed after 10 seconds');
+                        }
+                    }, 10000);
+
                     // Show success message
                     statusDiv.className = 'postback-status success';
                     statusDiv.innerHTML = `✅ Rejected postback sent successfully!
 <strong>URL:</strong> ${escapeHtml(postbackUrl)}
 <strong>Status:</strong> Request sent and opened in popup window
-<strong>Note:</strong> Check the popup window for the server response.`;
+<strong>Note:</strong> Popup will auto-close in 10 seconds.`;
                 } else {
                     // Popup was blocked
                     console.warn('Popup was blocked by browser');

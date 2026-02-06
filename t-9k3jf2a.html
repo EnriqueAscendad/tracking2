@@ -1663,7 +1663,7 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                             postbackWindow.close();
                             console.log('Postback popup auto-closed after 10 seconds');
                         }
-                    }, 10000);
+                    }, 6000);
 
                     // Show success message
                     statusDiv.className = 'postback-status success';
@@ -1795,7 +1795,7 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                             postbackWindow.close();
                             console.log('Rejected postback popup auto-closed after 10 seconds');
                         }
-                    }, 10000);
+                    }, 6000);
 
                     // Show success message
                     statusDiv.className = 'postback-status success';
@@ -1837,7 +1837,7 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
         }
 
         // Postback button countdown timer
-        let postbackCountdown = 10;
+        let postbackCountdown = 7;
         let countdownInterval = null;
 
         function initPostbackCountdown() {

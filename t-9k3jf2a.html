@@ -924,6 +924,7 @@
                         <select id="postbackEnvironment" class="postback-input" style="cursor: pointer;">
                             <option value="mordor-prd" selected>Mordor-PRD (Production)</option>
                             <option value="developer-stg">Developer-STG (Staging)</option>
+                            <option value="chameleon-jorge">Chameleon-Jorge</option>
                         </select>
                     </div>
                     <div class="input-group" style="flex: 1;">
@@ -1531,13 +1532,16 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
         // Update postback URL preview
         function updatePostbackPreview() {
             const params = getUrlParams();
+            const config = getPostbackConfig();
             const clickId = params['click_id'] || '{click_id}';
             const aggregateId = params['aggregate_id'] || '{aggregate_id}';
             const eventParameter = document.getElementById('eventParameter').value || '{event_parameter}';
             const payout = document.getElementById('payout').value || '{payout}';
-            
-            const postbackUrl = `https://mordor.aftrad-event.com/api/v1/events?click_id=${encodeURIComponent(clickId)}&aggregate_id=${encodeURIComponent(aggregateId)}&event_parameter=${encodeURIComponent(eventParameter)}&payout=${encodeURIComponent(payout)}&advertiser_id=2`;
-            
+
+            let previewParams = `click_id=${encodeURIComponent(clickId)}&${config.aggregateParam}=${encodeURIComponent(aggregateId)}&event_parameter=${encodeURIComponent(eventParameter)}&payout=${encodeURIComponent(payout)}`;
+            if (config.advertiserId) previewParams += `&advertiser_id=${config.advertiserId}`;
+            const postbackUrl = `${config.baseUrl}?${previewParams}`;
+
             document.getElementById('postbackUrlPreview').textContent = postbackUrl;
             
             // Disable button if required params are missing
@@ -1562,12 +1566,20 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                 'mordor-prd': {
                     baseUrl: 'https://mordor.aftrad-event.com/api/v1/events',
                     advertiserId: '2',
+                    aggregateParam: 'aggregate_id',
                     name: 'Mordor-PRD'
                 },
                 'developer-stg': {
                     baseUrl: 'https://developer.events.staging-mgas.io/api/v1/events',
                     advertiserId: '168',
+                    aggregateParam: 'aggregate_id',
                     name: 'Developer-STG'
+                },
+                'chameleon-jorge': {
+                    baseUrl: 'https://chameleon.aftrad-event.com/api/v1/events',
+                    advertiserId: null,
+                    aggregateParam: 'aggregated_id',
+                    name: 'Chameleon-Jorge'
                 }
             };
 
@@ -1622,7 +1634,7 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             const postbackParams = [];
 
             if (clickId) postbackParams.push(`click_id=${encodeURIComponent(clickId)}`);
-            if (aggregateId) postbackParams.push(`aggregate_id=${encodeURIComponent(aggregateId)}`);
+            if (aggregateId) postbackParams.push(`${config.aggregateParam}=${encodeURIComponent(aggregateId)}`);
             if (eventParameter) {
                 console.log('Adding event_parameter to URL:', eventParameter);
                 postbackParams.push(`event_parameter=${encodeURIComponent(eventParameter)}`);
@@ -1630,7 +1642,7 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                 console.log('⚠️ Event parameter is empty, not adding to URL');
             }
             if (payout) postbackParams.push(`payout=${encodeURIComponent(payout)}`);
-            postbackParams.push(`advertiser_id=${config.advertiserId}`);
+            if (config.advertiserId) postbackParams.push(`advertiser_id=${config.advertiserId}`);
 
             console.log('All postback params:', postbackParams);
 
@@ -1753,7 +1765,7 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             const postbackParams = [];
 
             if (clickId) postbackParams.push(`click_id=${encodeURIComponent(clickId)}`);
-            if (aggregateId) postbackParams.push(`aggregate_id=${encodeURIComponent(aggregateId)}`);
+            if (aggregateId) postbackParams.push(`${config.aggregateParam}=${encodeURIComponent(aggregateId)}`);
             if (eventParameter) {
                 console.log('Adding event_parameter to URL:', eventParameter);
                 postbackParams.push(`event_parameter=${encodeURIComponent(eventParameter)}`);
@@ -1761,7 +1773,7 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                 console.log('⚠️ Event parameter is empty, not adding to URL');
             }
             if (payout) postbackParams.push(`payout=${encodeURIComponent(payout)}`);
-            postbackParams.push(`advertiser_id=${config.advertiserId}`);
+            if (config.advertiserId) postbackParams.push(`advertiser_id=${config.advertiserId}`);
             postbackParams.push('is_rejected=1'); // Add rejected parameter
 
             console.log('All postback params:', postbackParams);

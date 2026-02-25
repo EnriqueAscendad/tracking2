@@ -628,7 +628,7 @@
                 event.stopPropagation();
             }
 
-            const url = document.getElementById('trackingUrl').value.trim();
+            let url = document.getElementById('trackingUrl').value.trim();
 
             if (!url) {
                 alert('⚠️ Please enter a tracking URL first');

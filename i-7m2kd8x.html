@@ -348,6 +348,57 @@
             border-color: #667eea;
         }
 
+        .url-preview-toggle {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .url-preview-toggle:hover {
+            color: #764ba2;
+        }
+
+        .url-preview-arrow {
+            display: inline-block;
+            transition: transform 0.2s;
+            font-style: normal;
+        }
+
+        .url-preview-toggle.open .url-preview-arrow {
+            transform: rotate(90deg);
+        }
+
+        .url-preview-box {
+            display: none;
+            background: var(--section-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--text-color);
+            word-break: break-all;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .url-preview-box.open {
+            display: block;
+        }
+
+        .url-preview-param {
+            color: #667eea;
+            font-weight: 600;
+        }
+
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -459,6 +510,15 @@
                             <option value="Dunedan">Dunedan</option>
                             <option value="Naugrim">Naugrim</option>
                         </select>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="button" class="url-preview-toggle" id="previewToggle" onclick="toggleUrlPreview()">
+                        <span class="url-preview-arrow" id="previewArrow">▶</span> Preview URL
+                    </button>
+                    <div class="url-preview-box" id="urlPreviewBox">
+                        <span id="urlPreviewText">—</span>
                     </div>
                 </div>
 
@@ -852,11 +912,68 @@
             }
         }
 
+        // Build preview URL with macro params substituted
+        function buildPreviewUrl() {
+            let url = document.getElementById('trackingUrl').value.trim();
+            if (!url) return '—';
+
+            const macros = [
+                { id: 'macroAppId',     param: 'app_id' },
+                { id: 'macroSite',      param: 'site' },
+                { id: 'macroSource',    param: 'source' },
+                { id: 'macroSubSource', param: 'sub_source' }
+            ];
+            macros.forEach(macro => {
+                const value = document.getElementById(macro.id).value;
+                if (value) {
+                    url += (url.includes('?') ? '&' : '?') + macro.param + '=' + encodeURIComponent(value);
+                }
+            });
+            return url;
+        }
+
+        function updateUrlPreview() {
+            const box = document.getElementById('urlPreviewBox');
+            if (!box.classList.contains('open')) return;
+
+            const url = buildPreviewUrl();
+            const el = document.getElementById('urlPreviewText');
+
+            if (url === '—') {
+                el.innerHTML = '—';
+                return;
+            }
+
+            // Highlight appended params
+            const qIdx = url.indexOf('?');
+            if (qIdx === -1) {
+                el.textContent = url;
+            } else {
+                const base = url.slice(0, qIdx);
+                const params = url.slice(qIdx);
+                el.innerHTML = escapeHtml(base) + '<span class="url-preview-param">' + escapeHtml(params) + '</span>';
+            }
+        }
+
+        function toggleUrlPreview() {
+            const toggle = document.getElementById('previewToggle');
+            const box = document.getElementById('urlPreviewBox');
+            const isOpen = box.classList.toggle('open');
+            toggle.classList.toggle('open', isOpen);
+            if (isOpen) updateUrlPreview();
+        }
+
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', function() {
             performCleanup(); // Clean old data first
             displaySavedUrls();
             updateStats();
+
+            // Update preview on URL or macro changes
+            document.getElementById('trackingUrl').addEventListener('input', updateUrlPreview);
+            ['macroAppId', 'macroSite', 'macroSource', 'macroSubSource'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateUrlPreview);
+            });
         });
     </script>
 </body>

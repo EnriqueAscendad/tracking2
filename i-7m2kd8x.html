@@ -308,6 +308,46 @@
             font-size: 14px;
         }
 
+        .macro-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .macro-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .macro-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-color);
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .macro-select {
+            padding: 8px 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .macro-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -378,6 +418,47 @@
                     <div class="offer-id-display" id="offerIdDisplay">
                         <strong>Offer ID:</strong> <span id="offerIdValue">Not detected</span> |
                         <strong>Publisher ID:</strong> <span id="publisherIdValue">Not detected</span>
+                    </div>
+                </div>
+
+                <div class="macro-row">
+                    <div class="macro-group">
+                        <label class="macro-label">App ID</label>
+                        <select id="macroAppId" class="macro-select">
+                            <option value="">None</option>
+                            <option value="Sting">Sting</option>
+                            <option value="Glandring">Glandring</option>
+                            <option value="Orcrist">Orcrist</option>
+                            <option value="Narsil">Narsil</option>
+                            <option value="Anduril">Anduril</option>
+                        </select>
+                    </div>
+                    <div class="macro-group">
+                        <label class="macro-label">Site</label>
+                        <select id="macroSite" class="macro-select">
+                            <option value="">None</option>
+                            <option value="Valinor">Valinor</option>
+                            <option value="Endor">Endor</option>
+                            <option value="Arda">Arda</option>
+                        </select>
+                    </div>
+                    <div class="macro-group">
+                        <label class="macro-label">Source</label>
+                        <select id="macroSource" class="macro-select">
+                            <option value="">None</option>
+                            <option value="Eldar">Eldar</option>
+                            <option value="Atani">Atani</option>
+                            <option value="Khazad">Khazad</option>
+                        </select>
+                    </div>
+                    <div class="macro-group">
+                        <label class="macro-label">Sub Source</label>
+                        <select id="macroSubSource" class="macro-select">
+                            <option value="">None</option>
+                            <option value="Noldor">Noldor</option>
+                            <option value="Dunedan">Dunedan</option>
+                            <option value="Naugrim">Naugrim</option>
+                        </select>
                     </div>
                 </div>
 
@@ -559,6 +640,20 @@
                 alert('⚠️ URL must start with http:// or https://');
                 return false;
             }
+
+            // Append macro parameters
+            const macros = [
+                { id: 'macroAppId',     param: 'app_id' },
+                { id: 'macroSite',      param: 'site' },
+                { id: 'macroSource',    param: 'source' },
+                { id: 'macroSubSource', param: 'sub_source' }
+            ];
+            macros.forEach(macro => {
+                const value = document.getElementById(macro.id).value;
+                if (value) {
+                    url += (url.includes('?') ? '&' : '?') + macro.param + '=' + encodeURIComponent(value);
+                }
+            });
 
             console.log('Opening tracking URL:', url);
 

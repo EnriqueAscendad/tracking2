@@ -434,7 +434,7 @@
             border-left: 4px solid #667eea;
             border-radius: 8px;
             padding: 14px 18px;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             flex-wrap: wrap;
@@ -662,21 +662,6 @@
                 </div>
             </div>
 
-            <!-- Impression Source (from current page URL) -->
-            <div class="impression-source" id="impressionSource">
-                <div class="impression-source-item">
-                    <div class="impression-source-label">Offer ID</div>
-                    <div class="impression-source-value not-detected" id="impOfferId">—</div>
-                </div>
-                <div class="impression-source-divider"></div>
-                <div class="impression-source-item">
-                    <div class="impression-source-label">Publisher ID</div>
-                    <div class="impression-source-value not-detected" id="impPublisherId">—</div>
-                </div>
-                <div class="impression-source-divider" id="impExtraDivider" style="display:none;"></div>
-                <div class="impression-source-item" id="impExtraParams" style="display:none;"></div>
-            </div>
-
             <!-- URL Configuration -->
             <div class="section">
                 <div class="section-title">🔗 Configure Tracking URL</div>
@@ -782,6 +767,20 @@
 
                 <!-- Tab: URL Parameters -->
                 <div id="tab-params" class="tab-content">
+                    <!-- Impression Source (from current page URL) -->
+                    <div class="impression-source" id="impressionSource">
+                        <div class="impression-source-item">
+                            <div class="impression-source-label">Offer ID</div>
+                            <div class="impression-source-value not-detected" id="impOfferId">—</div>
+                        </div>
+                        <div class="impression-source-divider"></div>
+                        <div class="impression-source-item">
+                            <div class="impression-source-label">Publisher ID</div>
+                            <div class="impression-source-value not-detected" id="impPublisherId">—</div>
+                        </div>
+                        <div class="impression-source-divider" id="impExtraDivider" style="display:none;"></div>
+                        <div class="impression-source-item" id="impExtraParams" style="display:none;"></div>
+                    </div>
                     <input
                         type="text"
                         id="urlParamSearch"

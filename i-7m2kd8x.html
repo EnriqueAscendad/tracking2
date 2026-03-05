@@ -1268,19 +1268,31 @@
             return { params, macroSet };
         }
 
-        function renderUrlParams(searchTerm) {
-            const container = document.getElementById('urlParamsContainer');
+        // Cached params for the current tracking URL (rebuilt on URL/macro change)
+        let _cachedParams = {};
+        let _cachedMacroSet = new Set();
+
+        function renderUrlParams() {
             const { params, macroSet } = buildUrlParamsMap();
-            const keys = Object.keys(params);
+            _cachedParams = params;
+            _cachedMacroSet = macroSet;
+            filterUrlParams();
+        }
+
+        function filterUrlParams() {
+            const container = document.getElementById('urlParamsContainer');
+            const keys = Object.keys(_cachedParams);
 
             if (keys.length === 0) {
                 container.innerHTML = '<div class="empty-state">Enter a tracking URL above to see its parameters here.</div>';
                 return;
             }
 
-            const term = (searchTerm !== undefined ? searchTerm : (document.getElementById('urlParamSearch').value || '')).toLowerCase();
+            const term = document.getElementById('urlParamSearch').value.toLowerCase().trim();
             const filtered = term
-                ? keys.filter(k => k.toLowerCase().includes(term) || params[k].toLowerCase().includes(term))
+                ? keys.filter(k =>
+                    k.toLowerCase().includes(term) ||
+                    String(_cachedParams[k]).toLowerCase().includes(term))
                 : keys;
 
             if (filtered.length === 0) {
@@ -1290,9 +1302,8 @@
 
             container.innerHTML = '<div class="params-grid">' +
                 filtered.map(key => {
-                    const value = params[key];
-                    const isMacro = macroSet.has(key);
-                    const badge = isMacro ? '<span class="param-macro-badge">macro</span>' : '';
+                    const value = _cachedParams[key];
+                    const badge = _cachedMacroSet.has(key) ? '<span class="param-macro-badge">macro</span>' : '';
                     return `
                         <div class="param-card">
                             <div class="param-name">${escapeHtml(key)}${badge}</div>
@@ -1306,11 +1317,6 @@
                     `;
                 }).join('') +
             '</div>';
-        }
-
-        function filterUrlParams() {
-            const term = document.getElementById('urlParamSearch').value.toLowerCase();
-            renderUrlParams(term);
         }
 
         // --- Impression Source (from current page URL) ---

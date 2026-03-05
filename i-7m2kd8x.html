@@ -426,6 +426,213 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
+        /* --- Impression Source --- */
+        .impression-source {
+            background: var(--section-bg);
+            border: 2px solid var(--border-color);
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 18px;
+        }
+
+        .impression-source-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #667eea;
+            margin-bottom: 2px;
+        }
+
+        .impression-source-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-color);
+            font-family: 'Courier New', monospace;
+        }
+
+        .impression-source-value.not-detected {
+            font-size: 13px;
+            font-weight: 400;
+            opacity: 0.45;
+        }
+
+        .impression-source-item {
+            display: flex;
+            flex-direction: column;
+            min-width: 100px;
+        }
+
+        .impression-source-divider {
+            width: 1px;
+            height: 36px;
+            background: var(--border-color);
+            flex-shrink: 0;
+        }
+
+        /* --- Tabs --- */
+        .tabs-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 0;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .tab-btn {
+            background: var(--section-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn + .tab-btn {
+            border-left: 2px solid var(--border-color);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-btn:not(.active):hover {
+            background: var(--border-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* --- URL Params tab --- */
+        .url-param-search {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            transition: border-color 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .url-param-search:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .url-param-search::placeholder {
+            color: #999;
+        }
+
+        body.dark-mode .url-param-search::placeholder {
+            color: #666;
+        }
+
+        .params-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .params-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .params-grid { grid-template-columns: 1fr; }
+        }
+
+        .param-card {
+            background: var(--section-bg);
+            padding: 12px 14px;
+            border-radius: 8px;
+            border-left: 4px solid #764ba2;
+        }
+
+        .param-name {
+            font-weight: 600;
+            color: #764ba2;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .param-value {
+            color: var(--text-color);
+            font-size: 13px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+        }
+
+        .param-value-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .param-value-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .param-copy-btn {
+            background: #764ba2;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: background 0.2s;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .param-copy-btn:hover {
+            background: #5f3a82;
+        }
+
+        .param-copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .param-macro-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-left: 5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -453,6 +660,21 @@
                     <div class="stat-value" id="totalPublishers">0</div>
                     <div class="stat-label">Different Publishers</div>
                 </div>
+            </div>
+
+            <!-- Impression Source (from current page URL) -->
+            <div class="impression-source" id="impressionSource">
+                <div class="impression-source-item">
+                    <div class="impression-source-label">Offer ID</div>
+                    <div class="impression-source-value not-detected" id="impOfferId">—</div>
+                </div>
+                <div class="impression-source-divider"></div>
+                <div class="impression-source-item">
+                    <div class="impression-source-label">Publisher ID</div>
+                    <div class="impression-source-value not-detected" id="impPublisherId">—</div>
+                </div>
+                <div class="impression-source-divider" id="impExtraDivider" style="display:none;"></div>
+                <div class="impression-source-item" id="impExtraParams" style="display:none;"></div>
             </div>
 
             <!-- URL Configuration -->
@@ -535,16 +757,41 @@
                 </div>
             </div>
 
-            <!-- Saved URLs -->
+            <!-- Tabbed Section: Saved URLs / URL Parameters -->
             <div class="section">
-                <div class="section-title">
-                    📚 Saved Tracking URLs
-                    <button class="btn-small btn-delete" onclick="clearAllUrls()" style="margin-left: auto;">
+                <div class="tabs-header">
+                    <div class="tab-nav">
+                        <button type="button" class="tab-btn active" id="tabBtnSaved" onclick="switchTab('saved')">
+                            📚 Saved URLs
+                        </button>
+                        <button type="button" class="tab-btn" id="tabBtnParams" onclick="switchTab('params')">
+                            🔖 URL Parameters
+                        </button>
+                    </div>
+                    <button type="button" class="btn-small btn-delete" id="clearAllBtn" onclick="clearAllUrls()" style="margin-left: auto;">
                         Clear All
                     </button>
                 </div>
-                <div class="saved-urls" id="savedUrlsContainer">
-                    <div class="empty-state">No saved URLs yet. Save a URL to see it here.</div>
+
+                <!-- Tab: Saved Tracking URLs -->
+                <div id="tab-saved" class="tab-content active">
+                    <div class="saved-urls" id="savedUrlsContainer">
+                        <div class="empty-state">No saved URLs yet. Save a URL to see it here.</div>
+                    </div>
+                </div>
+
+                <!-- Tab: URL Parameters -->
+                <div id="tab-params" class="tab-content">
+                    <input
+                        type="text"
+                        id="urlParamSearch"
+                        class="url-param-search"
+                        placeholder="🔍 Search parameters by name or value..."
+                        oninput="filterUrlParams()"
+                    >
+                    <div id="urlParamsContainer">
+                        <div class="empty-state">Enter a tracking URL above to see its parameters here.</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -831,7 +1078,7 @@
             // Sort by last used
             savedUrls.sort((a, b) => new Date(b.lastUsed) - new Date(a.lastUsed));
 
-            container.innerHTML = savedUrls.map(item => {
+            container.innerHTML = savedUrls.map((item, index) => {
                 const date = new Date(item.timestamp);
                 const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 
@@ -845,16 +1092,19 @@
                         </div>
                         <div class="url-card-url">${escapeHtml(item.url)}</div>
                         <div class="url-card-actions">
-                            <button class="btn-small btn-use" onclick="useSavedUrl('${escapeHtml(item.url).replace(/'/g, "\\'")}')">
+                            <button type="button" class="btn-small btn-use" data-index="${index}" data-action="use">
                                 Use
                             </button>
-                            <button class="btn-small btn-delete" onclick="deleteSavedUrl('${escapeHtml(item.url).replace(/'/g, "\\'")}')">
+                            <button type="button" class="btn-small btn-delete" data-index="${index}" data-action="delete">
                                 Delete
                             </button>
                         </div>
                     </div>
                 `;
             }).join('');
+
+            // Store sorted URLs for event delegation
+            container._savedUrls = savedUrls;
         }
 
         // Update stats
@@ -963,16 +1213,198 @@
             if (isOpen) updateUrlPreview();
         }
 
+        // --- Tab Management ---
+        function switchTab(tab) {
+            const isSaved = tab === 'saved';
+            document.getElementById('tab-saved').classList.toggle('active', isSaved);
+            document.getElementById('tab-params').classList.toggle('active', !isSaved);
+            document.getElementById('tabBtnSaved').classList.toggle('active', isSaved);
+            document.getElementById('tabBtnParams').classList.toggle('active', !isSaved);
+            document.getElementById('clearAllBtn').style.display = isSaved ? '' : 'none';
+            if (!isSaved) renderUrlParams();
+        }
+
+        // --- URL Parameters Tab ---
+        const MACRO_PARAMS = new Set(['app_id', 'site', 'source', 'sub_source']);
+
+        function buildUrlParamsMap() {
+            const baseUrl = document.getElementById('trackingUrl').value.trim();
+            const params = {};
+            const macroSet = new Set();
+
+            if (!baseUrl) return { params, macroSet };
+
+            // Parse base URL params
+            try {
+                const qIdx = baseUrl.indexOf('?');
+                if (qIdx !== -1) {
+                    const qs = baseUrl.slice(qIdx + 1);
+                    qs.split('&').forEach(pair => {
+                        const eq = pair.indexOf('=');
+                        const key = eq === -1 ? decodeURIComponent(pair) : decodeURIComponent(pair.slice(0, eq));
+                        const val = eq === -1 ? '' : decodeURIComponent(pair.slice(eq + 1).replace(/\+/g, ' '));
+                        if (key) params[key] = val;
+                    });
+                }
+            } catch (e) { /* ignore malformed */ }
+
+            // Append macro selections
+            const macros = [
+                { id: 'macroAppId',     param: 'app_id' },
+                { id: 'macroSite',      param: 'site' },
+                { id: 'macroSource',    param: 'source' },
+                { id: 'macroSubSource', param: 'sub_source' }
+            ];
+            macros.forEach(m => {
+                const value = document.getElementById(m.id).value;
+                if (value) {
+                    params[m.param] = value;
+                    macroSet.add(m.param);
+                }
+            });
+
+            return { params, macroSet };
+        }
+
+        function renderUrlParams(searchTerm) {
+            const container = document.getElementById('urlParamsContainer');
+            const { params, macroSet } = buildUrlParamsMap();
+            const keys = Object.keys(params);
+
+            if (keys.length === 0) {
+                container.innerHTML = '<div class="empty-state">Enter a tracking URL above to see its parameters here.</div>';
+                return;
+            }
+
+            const term = (searchTerm !== undefined ? searchTerm : (document.getElementById('urlParamSearch').value || '')).toLowerCase();
+            const filtered = term
+                ? keys.filter(k => k.toLowerCase().includes(term) || params[k].toLowerCase().includes(term))
+                : keys;
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state">No parameters match your search.</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="params-grid">' +
+                filtered.map(key => {
+                    const value = params[key];
+                    const isMacro = macroSet.has(key);
+                    const badge = isMacro ? '<span class="param-macro-badge">macro</span>' : '';
+                    return `
+                        <div class="param-card">
+                            <div class="param-name">${escapeHtml(key)}${badge}</div>
+                            <div class="param-value">
+                                <div class="param-value-container">
+                                    <div class="param-value-text">${escapeHtml(value) || '<em style="opacity:0.5">empty</em>'}</div>
+                                    <button type="button" class="param-copy-btn" data-key="${escapeHtml(key)}" data-value="${escapeHtml(value)}">Copy</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('') +
+            '</div>';
+        }
+
+        function filterUrlParams() {
+            const term = document.getElementById('urlParamSearch').value.toLowerCase();
+            renderUrlParams(term);
+        }
+
+        // --- Impression Source (from current page URL) ---
+        function initImpressionSource() {
+            const search = window.location.search;
+            if (!search || search === '?') return;
+
+            const offerId    = extractOfferId(window.location.href);
+            const publisherId = extractPublisherId(window.location.href);
+
+            const offerEl     = document.getElementById('impOfferId');
+            const publisherEl = document.getElementById('impPublisherId');
+
+            if (offerId) {
+                offerEl.textContent = offerId;
+                offerEl.classList.remove('not-detected');
+            }
+            if (publisherId) {
+                publisherEl.textContent = publisherId;
+                publisherEl.classList.remove('not-detected');
+            }
+
+            // Collect remaining params (excluding offer/publisher keys already shown)
+            const knownKeys = new Set([
+                'offer_id','offer','o',
+                'publisher_id','pub_id','aff_id','p'
+            ]);
+            const extra = [];
+            try {
+                new URLSearchParams(search).forEach((val, key) => {
+                    if (!knownKeys.has(key)) extra.push({ key, val });
+                });
+            } catch(e) {}
+
+            if (extra.length > 0) {
+                const container = document.getElementById('impExtraParams');
+                container.innerHTML = extra.map(({ key, val }) =>
+                    `<div style="margin-bottom:4px;">
+                        <div class="impression-source-label">${escapeHtml(key)}</div>
+                        <div class="impression-source-value" style="font-size:13px;">${escapeHtml(val) || '<em style="opacity:.5">empty</em>'}</div>
+                    </div>`
+                ).join('');
+                container.style.display = '';
+                document.getElementById('impExtraDivider').style.display = '';
+            }
+        }
+
+        // Copy param value handler (event delegation on params container)
+        function initParamsCopyHandler() {
+            document.getElementById('urlParamsContainer').addEventListener('click', function(e) {
+                const btn = e.target.closest('button.param-copy-btn');
+                if (!btn) return;
+                const value = btn.dataset.value;
+                navigator.clipboard.writeText(value).then(() => {
+                    const orig = btn.textContent;
+                    btn.textContent = '✓';
+                    setTimeout(() => { btn.textContent = orig; }, 1200);
+                }).catch(() => {});
+            });
+        }
+
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', function() {
             performCleanup(); // Clean old data first
             displaySavedUrls();
             updateStats();
+            initImpressionSource();
+            initParamsCopyHandler();
 
-            // Update preview on URL or macro changes
-            document.getElementById('trackingUrl').addEventListener('input', updateUrlPreview);
+            // Update preview and params on URL or macro changes
+            document.getElementById('trackingUrl').addEventListener('input', function() {
+                updateUrlPreview();
+                if (document.getElementById('tab-params').classList.contains('active')) renderUrlParams();
+            });
             ['macroAppId', 'macroSite', 'macroSource', 'macroSubSource'].forEach(id => {
-                document.getElementById(id).addEventListener('change', updateUrlPreview);
+                document.getElementById(id).addEventListener('change', function() {
+                    updateUrlPreview();
+                    if (document.getElementById('tab-params').classList.contains('active')) renderUrlParams();
+                });
+            });
+
+            // Event delegation for saved URL cards (avoids inline onclick URL escaping issues)
+            document.getElementById('savedUrlsContainer').addEventListener('click', function(e) {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                e.preventDefault();
+                e.stopPropagation();
+                const index = parseInt(btn.dataset.index, 10);
+                const urls = this._savedUrls;
+                if (!urls || index < 0 || index >= urls.length) return;
+                const item = urls[index];
+                if (btn.dataset.action === 'use') {
+                    useSavedUrl(item.url);
+                } else if (btn.dataset.action === 'delete') {
+                    deleteSavedUrl(item.url);
+                }
             });
         });
     </script>

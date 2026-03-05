@@ -902,7 +902,10 @@
 
         // Update offer ID and publisher ID display
         function updateOfferIdDisplay() {
-            const url = document.getElementById('trackingUrl').value;
+            const inputUrl = document.getElementById('trackingUrl').value;
+            // Fall back to page URL when the tracking URL input is empty
+            const url = inputUrl || window.location.href;
+
             const offerId = extractOfferId(url);
             const publisherId = extractPublisherId(url);
 
@@ -1324,16 +1327,10 @@
             if (offerId) {
                 offerEl.textContent = offerId;
                 offerEl.classList.remove('not-detected');
-                const offerIdValue = document.getElementById('offerIdValue');
-                offerIdValue.textContent = offerId;
-                offerIdValue.style.color = '#28a745';
             }
             if (publisherId) {
                 publisherEl.textContent = publisherId;
                 publisherEl.classList.remove('not-detected');
-                const publisherIdValue = document.getElementById('publisherIdValue');
-                publisherIdValue.textContent = publisherId;
-                publisherIdValue.style.color = '#28a745';
             }
 
             // Collect remaining params (excluding offer/publisher keys already shown)
@@ -1381,6 +1378,7 @@
             displaySavedUrls();
             updateStats();
             initImpressionSource();
+            updateOfferIdDisplay();
             initParamsCopyHandler();
 
             // Update preview and params on URL or macro changes

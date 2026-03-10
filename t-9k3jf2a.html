@@ -67,7 +67,7 @@
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
+            padding: 8px 20px;
             text-align: center;
             position: relative;
         }
@@ -109,32 +109,32 @@
         }
 
         .header h1 {
-            font-size: 22px;
-            margin-bottom: 5px;
+            font-size: 15px;
+            margin-bottom: 1px;
         }
 
         .header p {
             opacity: 0.9;
-            font-size: 13px;
+            font-size: 11px;
         }
 
         .content {
-            padding: 30px;
+            padding: 15px 20px;
         }
 
         .postback-section {
             background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            padding: 15px;
+            padding: 10px 12px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             box-shadow: 0 4px 12px rgba(17, 153, 142, 0.2);
         }
 
         .postback-title {
             color: white;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -142,8 +142,8 @@
         .postback-inputs {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 8px;
+            margin-bottom: 8px;
         }
 
         @media (max-width: 768px) {
@@ -226,10 +226,10 @@
             background: white;
             color: #11998e;
             border: none;
-            padding: 10px 20px;
+            padding: 6px 14px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             transition: transform 0.2s, box-shadow 0.3s;
             text-transform: uppercase;
@@ -314,9 +314,10 @@
             cursor: pointer;
             font-size: 11px;
             padding: 0;
-            margin-bottom: 8px;
+            margin-bottom: 0;
             text-decoration: underline;
             opacity: 0.9;
+            white-space: nowrap;
         }
 
         .postback-toggle:hover {
@@ -324,7 +325,7 @@
         }
 
         .section {
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
         .search-container {
@@ -414,30 +415,30 @@
 
         .priority-params {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            padding: 20px;
+            padding: 10px 12px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             box-shadow: 0 4px 12px rgba(240, 147, 251, 0.2);
         }
 
         .priority-params-title {
             color: white;
-            font-size: 16px;
+            font-size: 12px;
             font-weight: 700;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .priority-params-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 8px;
         }
 
         .priority-param-card {
             background: rgba(255, 255, 255, 0.95);
-            padding: 12px;
+            padding: 8px 10px;
             border-radius: 6px;
             border-left: 4px solid #f5576c;
         }
@@ -445,15 +446,15 @@
         .priority-param-name {
             font-weight: 700;
             color: #f5576c;
-            font-size: 13px;
-            margin-bottom: 5px;
+            font-size: 11px;
+            margin-bottom: 3px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .priority-param-value {
             color: #333;
-            font-size: 14px;
+            font-size: 12px;
             font-family: 'Courier New', monospace;
         }
 
@@ -911,14 +912,14 @@
             </div>
             <h1>🔍 Ad Tracker Pro</h1>
             <p>Professional URL parameter testing and tracking analysis</p>
-            <p style="opacity: 0.7; font-size: 11px; margin-top: 5px;">v2.3.0 - Auto-Close Popup</p>
+            <p style="opacity: 0.7; font-size: 10px; margin-top: 1px;">v2.3.0</p>
         </div>
 
         <div class="content">
             <!-- Postback Section -->
             <div class="postback-section">
                 <div class="postback-title">🚀 Send Postback</div>
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                     <div class="input-group" style="flex: 1;">
                         <label class="input-label">Environment</label>
                         <select id="postbackEnvironment" class="postback-input" style="cursor: pointer;">
@@ -961,19 +962,19 @@
                         </div>
                     </div>
                 </div>
-                <button class="postback-toggle" type="button" onclick="togglePostbackUrl()">
-                    <span id="postbackToggleText">▶ Show Postback URL</span>
-                </button>
-                <div class="postback-url-preview" id="postbackUrlPreview" style="display: none;">
-                    Postback URL will be generated from tracking parameters...
-                </div>
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="postback-toggle" type="button" onclick="togglePostbackUrl()">
+                        <span id="postbackToggleText">▶ Show Postback URL</span>
+                    </button>
                     <button class="postback-btn" id="sendPostbackBtn" type="button" onclick="sendPostback()" style="flex: 1;">
                         Send Postback
                     </button>
                     <button class="postback-btn" id="sendRejectedPostbackBtn" type="button" onclick="sendRejectedPostback()" style="flex: 1; background: #ff8a80; color: #c62828;">
                         Rejected Postback
                     </button>
+                </div>
+                <div class="postback-url-preview" id="postbackUrlPreview" style="display: none; margin-top: 6px;">
+                    Postback URL will be generated from tracking parameters...
                 </div>
                 <div class="postback-status" id="postbackStatus"></div>
             </div>
@@ -1179,17 +1180,19 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             
             // Define priority parameters (including mapped/renamed ones)
             const priorityKeys = [
-                'click_id',
-                'offer_id', 'offer', 'o',  // offer_id can also be 'offer' or 'o'
-                'publisher_id', 'aff_id_plain', 'p',  // publisher_id can also be 'aff_id_plain' or 'p'
+                'click_id', 'clickid',  // click_id aliases
+                'offer_id', 'offer', 'o',  // offer_id aliases
+                'publisher_id', 'pid', 'aff_id_plain', 'p',  // publisher_id aliases
                 'dvp',
                 'dvun'
             ];
 
             // Define parameter mapping for transformation indicators
             const paramMapping = {
+                'clickid': 'click_id',
                 'offer': 'offer_id',
                 'o': 'offer_id',
+                'pid': 'publisher_id',
                 'aff_id_plain': 'publisher_id',
                 'p': 'publisher_id'
             };

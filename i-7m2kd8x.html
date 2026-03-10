@@ -1387,6 +1387,13 @@
             updateOfferIdDisplay();
             initParamsCopyHandler();
 
+            // Pre-fill search from page URL parameter (e.g. ?search=custom)
+            const _pageSearch = new URLSearchParams(window.location.search).get('search');
+            if (_pageSearch) {
+                document.getElementById('urlParamSearch').value = _pageSearch;
+                switchTab('params'); // switches tab and triggers renderUrlParams() → filterUrlParams()
+            }
+
             // Update preview and params on URL or macro changes
             document.getElementById('trackingUrl').addEventListener('input', function() {
                 updateUrlPreview();

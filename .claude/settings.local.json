@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(open /Users/Enrique/workspace/tracking2/tracking2/t-9k3jf2a.html)"
+    ]
+  }
+}

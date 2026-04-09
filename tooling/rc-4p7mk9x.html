@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="version" content="1.0.0">
+    <title>Retention Calculator</title>
+
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <meta name="googlebot" content="noindex, nofollow">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+
+    <style>
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --section-bg: #f8f9fa;
+            --border-color: #e0e0e0;
+            --input-bg: #ffffff;
+        }
+
+        body.dark-mode {
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --container-bg: #0f1419;
+            --text-color: #e4e6eb;
+            --section-bg: #1a1d24;
+            --border-color: #2d3748;
+            --input-bg: #1a1d24;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            background: var(--container-bg);
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        body.dark-mode .header { background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); }
+
+        .header h1 { font-size: 15px; margin-bottom: 1px; }
+        .header p  { opacity: 0.9; font-size: 11px; }
+
+        .type-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.5);
+            color: white; font-size: 10px; font-weight: 700;
+            padding: 2px 10px; border-radius: 20px;
+            letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px;
+        }
+
+        .theme-toggle {
+            position: absolute; top: 50%; transform: translateY(-50%); right: 20px;
+            background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px; width: 60px; height: 30px;
+            cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; padding: 2px;
+        }
+
+        .theme-toggle:hover { background: rgba(255,255,255,0.3); }
+
+        .theme-toggle-slider {
+            width: 24px; height: 24px; background: white; border-radius: 50%;
+            transition: transform 0.3s;
+            display: flex; align-items: center; justify-content: center; font-size: 12px;
+        }
+
+        .theme-toggle.dark .theme-toggle-slider { transform: translateX(30px); }
+
+        /* ── Layout ── */
+        .content { padding: 16px 20px; }
+        .section  { margin-bottom: 18px; }
+
+        .section-title {
+            font-size: 11px; font-weight: 700;
+            color: var(--text-color); opacity: 0.6;
+            margin-bottom: 10px; padding-bottom: 6px;
+            border-bottom: 2px solid #667eea;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* ── Form elements ── */
+        .form-row {
+            display: flex; gap: 10px; align-items: flex-end;
+            flex-wrap: wrap; margin-bottom: 8px;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 3px; }
+
+        .form-group label {
+            font-size: 10px; font-weight: 700;
+            color: var(--text-color); opacity: 0.6;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            padding: 7px 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px; font-size: 13px; font-family: inherit;
+            background: var(--input-bg); color: var(--text-color);
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus { outline: none; border-color: #667eea; }
+
+        .form-input.num  { width: 90px; }
+        .form-input.wide { width: 130px; }
+
+        .field-divider {
+            border: none; border-top: 1px dashed var(--border-color); margin: 10px 0;
+        }
+
+        /* ── Toggle switch ── */
+        .toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+        .toggle-row input[type="checkbox"] {
+            width: 34px; height: 18px; appearance: none; -webkit-appearance: none;
+            background: var(--border-color); border-radius: 20px;
+            position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0;
+        }
+
+        .toggle-row input[type="checkbox"]:checked { background: #667eea; }
+
+        .toggle-row input[type="checkbox"]::after {
+            content: ''; position: absolute;
+            width: 14px; height: 14px; background: white; border-radius: 50%;
+            top: 2px; left: 2px; transition: transform 0.2s;
+        }
+
+        .toggle-row input[type="checkbox"]:checked::after { transform: translateX(16px); }
+
+        .toggle-row span {
+            font-size: 12px; font-weight: 700; color: var(--text-color);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        /* ── Subsections ── */
+        .subsection {
+            background: var(--section-bg);
+            border-left: 3px solid #667eea;
+            border-radius: 0 6px 6px 0;
+            padding: 10px 12px; margin-top: 6px;
+        }
+
+        .subsection.card-sub { border-left-color: #764ba2; }
+
+        .sub-title {
+            font-size: 10px; font-weight: 700; color: #667eea;
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+        }
+
+        .sub-title.card-color { color: #764ba2; }
+
+        /* ── Inline hint ── */
+        .inline-hint {
+            align-self: center;
+            padding-top: 16px;
+            font-size: 11px;
+            color: var(--text-color);
+            opacity: 0.55;
+        }
+
+        .inline-hint strong { font-weight: 700; }
+        .inline-hint .hl-blue  { color: #667eea; opacity: 1; }
+        .inline-hint .hl-purple { color: #764ba2; opacity: 1; }
+
+        /* ── Buttons ── */
+        .calc-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none;
+            padding: 10px 32px; border-radius: 8px;
+            cursor: pointer; font-size: 13px; font-weight: 700;
+            transition: opacity 0.2s; letter-spacing: 0.3px;
+        }
+
+        .calc-btn:hover { opacity: 0.88; }
+        .calc-btn:active { transform: scale(0.97); }
+
+        /* ── Stats grid ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+
+        .stat-card {
+            background: var(--section-bg);
+            border-radius: 8px;
+            padding: 12px 14px;
+            text-align: center;
+            border-top: 3px solid #667eea;
+        }
+
+        .stat-card.c-total   { border-top-color: #667eea; }
+        .stat-card.c-retain  { border-top-color: #ef4444; }
+        .stat-card.c-avail   { border-top-color: #10b981; }
+        .stat-card.c-report  { border-top-color: #764ba2; }
+        .stat-card.c-buffer  { border-top-color: #f59e0b; }
+        .stat-card.c-payout  { border-top-color: #06b6d4; }
+
+        .stat-value {
+            font-size: 22px; font-weight: 800;
+            color: var(--text-color); font-family: 'Courier New', monospace;
+        }
+
+        .stat-label {
+            font-size: 10px; font-weight: 700;
+            color: var(--text-color); opacity: 0.5;
+            text-transform: uppercase; letter-spacing: 0.4px;
+            margin-top: 3px;
+        }
+
+        .stat-sub {
+            font-size: 11px; color: var(--text-color); opacity: 0.4;
+            margin-top: 1px; font-family: 'Courier New', monospace;
+        }
+
+        /* ── Progression table ── */
+        .prog-wrap { overflow-x: auto; }
+
+        .prog-table {
+            width: 100%; border-collapse: collapse;
+            font-size: 12px; font-family: 'Courier New', monospace;
+        }
+
+        .prog-table th {
+            text-align: left; padding: 6px 10px;
+            font-size: 10px; font-weight: 700;
+            color: var(--text-color); opacity: 0.5;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .prog-table td {
+            padding: 4px 10px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+            white-space: nowrap;
+        }
+
+        .prog-table tbody tr:hover td { background: rgba(102,126,234,0.04); }
+
+        .prog-table tr.row-retain td { background: rgba(239,68,68,0.07); }
+        .prog-table tr.row-retain td:first-child { border-left: 3px solid #ef4444; padding-left: 7px; }
+
+        .prog-table tr.row-report td { background: rgba(118,75,162,0.07); }
+        .prog-table tr.row-report td:first-child { border-left: 3px solid #764ba2; padding-left: 7px; }
+
+        .prog-table tr:not(.row-retain):not(.row-report) td:first-child { padding-left: 10px; }
+
+        .badge {
+            display: inline-block; padding: 1px 7px;
+            border-radius: 10px; font-size: 10px; font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .b-kept     { background: rgba(16,185,129,0.15); color: #059669; }
+        .b-retain   { background: rgba(239,68,68,0.15);  color: #dc2626; }
+        .b-report   { background: rgba(118,75,162,0.15); color: #764ba2; }
+        .b-waiting  { background: rgba(245,158,11,0.15); color: #d97706; }
+        .b-skip     { color: var(--text-color); opacity: 0.3; }
+
+        .prog-limit-note {
+            text-align: center; padding: 10px;
+            font-size: 11px; color: var(--text-color); opacity: 0.45;
+            font-style: italic; border-top: 1px dashed var(--border-color); margin-top: 4px;
+        }
+
+        .output-empty {
+            text-align: center; padding: 30px;
+            color: var(--text-color); opacity: 0.4; font-size: 13px;
+        }
+
+        .error-note {
+            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+            color: #dc2626; padding: 8px 12px; border-radius: 6px;
+            font-size: 12px; margin-top: 8px;
+        }
+
+        /* ── Legend ── */
+        .legend {
+            display: flex; gap: 14px; flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .legend-item {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 11px; color: var(--text-color); opacity: 0.65;
+        }
+
+        .legend-dot {
+            width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+        }
+
+        .ld-retain { background: rgba(239,68,68,0.5); }
+        .ld-report { background: rgba(118,75,162,0.5); }
+        .ld-kept   { background: rgba(16,185,129,0.5); }
+    </style>
+</head>
+<body>
+
+
+<div class="container">
+
+    <div class="header">
+        <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+            <div class="theme-toggle-slider" id="themeSlider">☀️</div>
+        </div>
+        <h1>Retention Calculator</h1>
+        <p>Percentage retention and minimum payout simulation</p>
+        <span class="type-badge">Retention</span>
+    </div>
+
+    <div class="content">
+
+        <!-- ── Configuration ── -->
+        <div class="section">
+            <div class="section-title">Configuration</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Total Events to Simulate</label>
+                    <input type="number" id="totalEvents" class="form-input num" value="100" min="1" max="10000">
+                </div>
+                <div class="form-group">
+                    <label>Min Events to Retain</label>
+                    <input type="number" id="minRetain" class="form-input num" value="0" min="0" max="10000">
+                </div>
+                <div class="inline-hint">→ first <strong class="hl-blue" id="minRetainLabel">0</strong> events always retained</div>
+            </div>
+
+            <hr class="field-divider">
+
+            <!-- Percentage Retention -->
+            <div class="toggle-row">
+                <input type="checkbox" id="enablePct" onchange="onTogglePct()">
+                <span>Percentage Retention</span>
+            </div>
+            <div id="pctConfig" class="subsection" style="display:none; margin-bottom:10px;">
+                <div class="sub-title">Retention Settings</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Retention %</label>
+                        <input type="number" id="retentionPct" class="form-input num" value="10"
+                               min="1" max="99" step="1" oninput="onPctChange()">
+                    </div>
+                    <div class="inline-hint">
+                        → 1 retained per <strong class="hl-blue" id="pctIntervalLabel">10.00</strong> events (~<span id="pctEffLabel">10.00</span>%)
+                    </div>
+                </div>
+            </div>
+
+            <hr class="field-divider">
+
+            <!-- Minimum Payout -->
+            <div class="toggle-row">
+                <input type="checkbox" id="enablePayout" onchange="onTogglePayout()">
+                <span>Minimum Payout</span>
+            </div>
+            <div id="payoutConfig" class="subsection card-sub" style="display:none; margin-bottom:10px;">
+                <div class="sub-title card-color">Payout Settings</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Original Offer Payout ($)</label>
+                        <input type="number" id="origPayout" class="form-input wide" value="5"
+                               min="0.01" step="0.01" oninput="onPayoutChange()">
+                    </div>
+                    <div class="form-group">
+                        <label>Secondary Offer Payout ($)</label>
+                        <input type="number" id="secPayout" class="form-input wide" value="1"
+                               min="0.01" step="0.01" oninput="onPayoutChange()">
+                    </div>
+                    <div class="inline-hint">
+                        → <strong class="hl-purple" id="payoutRatioLabel">5</strong> events per affiliate conversion at
+                        <strong class="hl-purple" id="payoutAmountLabel">$5.00</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Calculate button ── -->
+        <div style="display:flex; justify-content:center; margin-bottom:18px;">
+            <button class="calc-btn" onclick="calculate()">Calculate</button>
+        </div>
+
+        <!-- ── Output ── -->
+        <div id="outputSection" style="display:none;">
+
+            <!-- Summary -->
+            <div class="section">
+                <div class="section-title">Summary</div>
+                <div class="stats-grid" id="statsGrid"></div>
+            </div>
+
+            <!-- Progression -->
+            <div class="section">
+                <div class="section-title">Event Progression</div>
+                <div class="legend" id="progLegend"></div>
+                <div class="prog-wrap">
+                    <table class="prog-table">
+                        <thead id="progHead"></thead>
+                        <tbody id="progBody"></tbody>
+                    </table>
+                </div>
+                <div id="progNote"></div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') calculate();
+    });
+
+    /* ── Theme ── */
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const tog = document.getElementById('themeToggle');
+        const sl  = document.getElementById('themeSlider');
+        if (document.body.classList.contains('dark-mode')) {
+            tog.classList.add('dark'); sl.textContent = '🌙';
+        } else {
+            tog.classList.remove('dark'); sl.textContent = '☀️';
+        }
+    }
+
+    /* ── Toggle sections ── */
+    function onTogglePct() {
+        const enabled = document.getElementById('enablePct').checked;
+        document.getElementById('pctConfig').style.display = enabled ? 'block' : 'none';
+        onPctChange();
+    }
+
+    function onTogglePayout() {
+        const enabled = document.getElementById('enablePayout').checked;
+        document.getElementById('payoutConfig').style.display = enabled ? 'block' : 'none';
+        onPayoutChange();
+    }
+
+    /* ── Live hints ── */
+    document.getElementById('minRetain').addEventListener('input', function() {
+        document.getElementById('minRetainLabel').textContent = parseInt(this.value) || 0;
+    });
+
+    function onPctChange() {
+        const pct = parseFloat(document.getElementById('retentionPct').value) || 10;
+        const threshold = 100 / Math.max(0.01, Math.min(99.99, pct));
+        document.getElementById('pctIntervalLabel').textContent = threshold.toFixed(2);
+        document.getElementById('pctEffLabel').textContent = pct.toFixed(2);
+    }
+
+    function onPayoutChange() {
+        const orig = parseFloat(document.getElementById('origPayout').value) || 5;
+        const sec  = parseFloat(document.getElementById('secPayout').value)  || 1;
+        const ratio = Math.ceil(orig / Math.max(0.001, sec));
+        document.getElementById('payoutRatioLabel').textContent = ratio;
+        document.getElementById('payoutAmountLabel').textContent = '$' + orig.toFixed(2);
+    }
+
+    /* ── Formatting helpers ── */
+    function fmtMoney(n) {
+        return '$' + n.toFixed(2);
+    }
+
+    function fmtPct(n, total) {
+        if (!total) return '';
+        return ' (' + Math.round(n / total * 100) + '%)';
+    }
+
+    /* ── Main calculation ── */
+    function calculate() {
+        const enablePct    = document.getElementById('enablePct').checked;
+        const enablePayout = document.getElementById('enablePayout').checked;
+        const totalEvents  = Math.max(1, Math.min(10000, parseInt(document.getElementById('totalEvents').value) || 100));
+        const minRetain    = Math.max(0, Math.min(10000, parseInt(document.getElementById('minRetain').value) || 0));
+
+        if (!enablePct && !enablePayout) {
+            document.getElementById('outputSection').style.display = 'none';
+            alert('Enable at least one calculation mode.');
+            return;
+        }
+
+        // Pct config — use floor-based check to avoid floating point accumulation
+        let pctRate = 0;
+        if (enablePct) {
+            const pct = parseFloat(document.getElementById('retentionPct').value) || 10;
+            pctRate = Math.max(0.0001, Math.min(99.9999, pct)) / 100;
+        }
+
+        // Payout config
+        let payoutRatio = 0;
+        let origPayout  = 0;
+        if (enablePayout) {
+            origPayout  = parseFloat(document.getElementById('origPayout').value) || 5;
+            const sec   = parseFloat(document.getElementById('secPayout').value)  || 1;
+            payoutRatio = Math.ceil(origPayout / Math.max(0.001, sec));
+        }
+
+        // Simulate
+        const MAX_ROWS = 100;
+        let retainedCount = 0;
+        let availableCount = 0;
+        let reportedCount  = 0;
+        let payoutBuffer   = 0;
+        let totalPayout    = 0;
+        const rows = [];
+
+        for (let i = 1; i <= totalEvents; i++) {
+            let isRetained = false;
+            let isReported = false;
+            let bufferDisplay = 0; // buffer value to show (pre-reset for reported events)
+
+            // Minimum retain — first N events are always retained regardless of other rules
+            if (i <= minRetain) {
+                isRetained = true;
+                retainedCount++;
+            }
+
+            // Percentage retention — floor-based: retain event i when the integer part
+            // of (i × rate) increases. No floating point accumulation → exact results.
+            if (!isRetained && enablePct && Math.floor(i * pctRate) > Math.floor((i - 1) * pctRate)) {
+                isRetained = true;
+                retainedCount++;
+            }
+
+            // Payout (only for non-retained events)
+            if (!isRetained && enablePayout) {
+                payoutBuffer++;
+                bufferDisplay = payoutBuffer; // store before possible reset
+                if (payoutBuffer >= payoutRatio) {
+                    isReported    = true;
+                    reportedCount++;
+                    totalPayout  += origPayout;
+                    payoutBuffer  = 0;
+                }
+            }
+
+            if (i <= MAX_ROWS) {
+                rows.push({
+                    event: i,
+                    isRetained,
+                    isMinRetain: i <= minRetain,
+                    isReported,
+                    bufferDisplay, // payoutRatio when isReported, current buffer otherwise
+                    payoutBufferAfter: payoutBuffer,
+                    retainedRunning:  retainedCount,
+                    availableRunning: availableCount + (isRetained ? 0 : 1),
+                    reportedRunning:  reportedCount,
+                    totalPayoutRunning: totalPayout
+                });
+            }
+
+            if (!isRetained) availableCount++;
+        }
+
+        renderSummary({ totalEvents, retainedCount, availableCount, reportedCount,
+                        totalPayout, payoutBuffer, payoutRatio, origPayout,
+                        enablePct, enablePayout });
+
+        renderProgression(rows, { enablePct, enablePayout, payoutRatio, origPayout,
+                                  totalEvents, MAX_ROWS, minRetain });
+
+        document.getElementById('outputSection').style.display = 'block';
+        document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    /* ── Render summary cards ── */
+    function renderSummary(s) {
+        const cards = [];
+
+        cards.push({ cls: 'c-total', value: s.totalEvents, label: 'Total Events', sub: '' });
+
+        if (s.enablePct) {
+            cards.push({
+                cls: 'c-retain',
+                value: s.retainedCount,
+                label: 'Retained',
+                sub: fmtPct(s.retainedCount, s.totalEvents)
+            });
+            cards.push({
+                cls: 'c-avail',
+                value: s.availableCount,
+                label: s.enablePayout ? 'Available (not retained)' : 'Not Retained',
+                sub: fmtPct(s.availableCount, s.totalEvents)
+            });
+        }
+
+        if (s.enablePayout) {
+            cards.push({
+                cls: 'c-report',
+                value: s.reportedCount,
+                label: 'Reported to Affiliate',
+                sub: s.enablePct
+                    ? fmtPct(s.reportedCount, s.availableCount) + ' of available'
+                    : fmtPct(s.reportedCount, s.totalEvents)
+            });
+            cards.push({
+                cls: 'c-buffer',
+                value: s.payoutBuffer + ' / ' + s.payoutRatio,
+                label: 'Remaining in Buffer',
+                sub: 'not yet reported'
+            });
+            cards.push({
+                cls: 'c-payout',
+                value: fmtMoney(s.totalPayout),
+                label: 'Total Affiliate Payout',
+                sub: s.reportedCount > 0 ? fmtMoney(s.origPayout) + ' × ' + s.reportedCount : ''
+            });
+        }
+
+        document.getElementById('statsGrid').innerHTML = cards.map(c => `
+            <div class="stat-card ${c.cls}">
+                <div class="stat-value">${c.value}</div>
+                <div class="stat-label">${c.label}</div>
+                ${c.sub ? `<div class="stat-sub">${c.sub}</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    /* ── Render progression table ── */
+    function renderProgression(rows, opts) {
+        const { enablePct, enablePayout, payoutRatio, origPayout, totalEvents, MAX_ROWS, minRetain } = opts;
+
+        // Legend
+        const legendItems = [];
+        if (enablePct) {
+            legendItems.push('<div class="legend-item"><div class="legend-dot ld-retain"></div>Retained event</div>');
+        }
+        if (enablePayout) {
+            legendItems.push('<div class="legend-item"><div class="legend-dot ld-report"></div>Conversion reported to affiliate</div>');
+        }
+        if (enablePct || enablePayout) {
+            legendItems.push('<div class="legend-item"><div class="legend-dot ld-kept"></div>Normal event</div>');
+        }
+        document.getElementById('progLegend').innerHTML = legendItems.join('');
+
+        // Headers
+        const headers = ['<th>#</th>'];
+        if (enablePct)    headers.push('<th>% Status</th>');
+        if (enablePayout) headers.push('<th>Buffer</th>', '<th>Affiliate</th>');
+        if (enablePct)    headers.push('<th>Retained ∑</th>', '<th>Retained %</th>');
+        if (enablePct && enablePayout) headers.push('<th>Available ∑</th>');
+        if (enablePayout) {
+            headers.push('<th>Reported ∑</th>');
+            headers.push('<th>Payout ∑</th>');
+        } else if (enablePct) {
+            headers.push('<th>Not Retained ∑</th>');
+        }
+
+        document.getElementById('progHead').innerHTML = `<tr>${headers.join('')}</tr>`;
+
+        // Body rows — ASC order (oldest events first)
+        const bodyRows = rows.map(r => {
+            const rowCls = r.isRetained ? 'row-retain' : (r.isReported ? 'row-report' : '');
+
+            const cells = [`<td>${r.event}</td>`];
+
+            if (enablePct) {
+                cells.push(`<td>${r.isRetained
+                    ? (r.isMinRetain
+                        ? '<span class="badge b-retain">min</span>'
+                        : '<span class="badge b-retain">retained</span>')
+                    : '<span class="badge b-kept">kept</span>'
+                }</td>`);
+            }
+
+            if (enablePayout) {
+                // Buffer column
+                if (r.isRetained) {
+                    cells.push(`<td><span class="badge b-skip">—</span></td>`);
+                } else {
+                    const bufVal = r.isReported ? payoutRatio : r.bufferDisplay;
+                    cells.push(`<td>${bufVal} / ${payoutRatio}</td>`);
+                }
+
+                // Affiliate status column
+                if (r.isRetained) {
+                    cells.push(`<td><span class="badge b-skip">—</span></td>`);
+                } else if (r.isReported) {
+                    cells.push(`<td><span class="badge b-report">reported</span> <span style="font-size:10px;opacity:0.6">${fmtMoney(origPayout)}</span></td>`);
+                } else {
+                    cells.push(`<td><span class="badge b-waiting">waiting</span></td>`);
+                }
+            }
+
+            if (enablePct) {
+                const pctCum = (r.retainedRunning / r.event * 100).toFixed(1);
+                cells.push(`<td>${r.retainedRunning}</td>`);
+                cells.push(`<td>${pctCum}%</td>`);
+            }
+
+            if (enablePct && enablePayout) {
+                cells.push(`<td>${r.availableRunning}</td>`);
+            }
+
+            if (enablePayout) {
+                cells.push(`<td>${r.reportedRunning}</td>`);
+                cells.push(`<td>${fmtMoney(r.totalPayoutRunning)}</td>`);
+            } else if (enablePct) {
+                cells.push(`<td>${r.availableRunning}</td>`);
+            }
+
+            return `<tr class="${rowCls}">${cells.join('')}</tr>`;
+        }).join('');
+
+        document.getElementById('progBody').innerHTML = bodyRows;
+
+        // Limit note
+        const noteEl = document.getElementById('progNote');
+        if (totalEvents > MAX_ROWS) {
+            noteEl.innerHTML = `<div class="prog-limit-note">
+                Showing first ${MAX_ROWS} of ${totalEvents} events.
+                Full totals are reflected in the summary above.
+            </div>`;
+        } else {
+            noteEl.innerHTML = '';
+        }
+    }
+</script>
+</body>
+</html>

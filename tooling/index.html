@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tooling Hub</title>
+
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <meta name="googlebot" content="noindex, nofollow">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+
+    <style>
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --section-bg: #f8f9fa;
+            --border-color: #e0e0e0;
+            --card-hover-shadow: rgba(102,126,234,0.2);
+        }
+        body.dark-mode {
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --container-bg: #0f1419;
+            --text-color: #e4e6eb;
+            --section-bg: #1a1d24;
+            --border-color: #2d3748;
+            --card-hover-shadow: rgba(102,126,234,0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-color);
+            padding: 24px;
+            transition: background 0.3s;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        .header {
+            background: var(--container-bg);
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .header-text { flex: 1; }
+        .header h1 { font-size: 1.8rem; font-weight: 700; color: var(--text-color); }
+        .header p  { font-size: 0.95rem; color: #888; margin-top: 4px; }
+        body.dark-mode .header p { color: #aaa; }
+
+        .type-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .theme-toggle {
+            width: 56px; height: 28px;
+            background: var(--section-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        .theme-toggle-slider {
+            position: absolute;
+            top: 1px; left: 1px;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: transform 0.3s;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px;
+        }
+        .theme-toggle.dark .theme-toggle-slider { transform: translateX(28px); }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        .tool-card {
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 24px 20px;
+            text-decoration: none;
+            color: var(--text-color);
+            display: block;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px var(--card-hover-shadow);
+        }
+        .tool-icon { font-size: 2rem; margin-bottom: 12px; }
+        .tool-name { font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: var(--text-color); }
+        .tool-desc { font-size: 0.85rem; color: #888; line-height: 1.4; }
+        body.dark-mode .tool-desc { color: #aaa; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="header-text">
+            <h1>Tooling Hub</h1>
+            <p>Internal platform tools</p>
+        </div>
+        <span class="type-badge">Internal</span>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+            <div class="theme-toggle-slider" id="themeSlider">☀️</div>
+        </button>
+    </div>
+
+    <p class="section-title">Available tools</p>
+
+    <div class="tool-grid">
+        <a href="ht-3n9kx2p.html" class="tool-card">
+            <div class="tool-icon">🎛️</div>
+            <div class="tool-name">Hypertargeting Builder</div>
+            <div class="tool-desc">Describe targeting rules in natural language and get the visual AND/OR tree</div>
+        </a>
+        <a href="mc-2k8fd9x.html" class="tool-card">
+            <div class="tool-icon">📊</div>
+            <div class="tool-name">Macro Calculator</div>
+            <div class="tool-desc">Simulate possible output values for platform URL macro functions</div>
+        </a>
+        <a href="rc-4p7mk9x.html" class="tool-card">
+            <div class="tool-icon">📈</div>
+            <div class="tool-name">Retention Calculator</div>
+            <div class="tool-desc">Percentage retention and minimum payout simulation</div>
+        </a>
+        <a href="mu-9x4kp2r.html" class="tool-card">
+            <div class="tool-icon">🔗</div>
+            <div class="tool-name">MMP URL Validator</div>
+            <div class="tool-desc">Validate and inspect MMP tracking URLs for correctness and parameter completeness</div>
+        </a>
+    </div>
+</div>
+
+<script>
+    (function() {
+        var savedTheme = localStorage.getItem('tooling_hub_theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeToggle').classList.add('dark');
+            document.getElementById('themeSlider').textContent = '🌙';
+        }
+    })();
+
+    function toggleTheme() {
+        var isDark = document.body.classList.toggle('dark-mode');
+        var toggle = document.getElementById('themeToggle');
+        var slider = document.getElementById('themeSlider');
+        toggle.classList.toggle('dark', isDark);
+        slider.textContent = isDark ? '🌙' : '☀️';
+        localStorage.setItem('tooling_hub_theme', isDark ? 'dark' : 'light');
+    }
+</script>
+</body>
+</html>

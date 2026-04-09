@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="version" content="2.0.0">
+    <title>MMP URL Validator</title>
+
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <meta name="googlebot" content="noindex, nofollow">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
+
+    <style>
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --section-bg: #f8f9fa;
+            --border-color: #e0e0e0;
+            --input-bg: #ffffff;
+        }
+        body.dark-mode {
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --container-bg: #0f1419;
+            --text-color: #e4e6eb;
+            --section-bg: #1a1d24;
+            --border-color: #2d3748;
+            --input-bg: #1a1d24;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh; padding: 20px; transition: background 0.3s ease;
+        }
+        .container {
+            max-width: 960px; margin: 0 auto;
+            background: var(--container-bg);
+            border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden; transition: background 0.3s ease;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 8px 20px; text-align: center; position: relative;
+        }
+        body.dark-mode .header { background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); }
+        .header h1 { font-size: 15px; margin-bottom: 1px; }
+        .header p  { opacity: 0.9; font-size: 11px; }
+        .type-badge {
+            display: inline-block; background: rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.5); color: white;
+            font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 20px;
+            letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px;
+        }
+        .theme-toggle {
+            position: absolute; top: 50%; transform: translateY(-50%); right: 20px;
+            background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px; width: 60px; height: 30px; cursor: pointer;
+            transition: all 0.3s; display: flex; align-items: center; padding: 2px;
+        }
+        .theme-toggle:hover { background: rgba(255,255,255,0.3); }
+        .theme-toggle-slider {
+            width: 24px; height: 24px; background: white; border-radius: 50%;
+            transition: transform 0.3s; display: flex; align-items: center;
+            justify-content: center; font-size: 12px;
+        }
+        .theme-toggle.dark .theme-toggle-slider { transform: translateX(30px); }
+        .content { padding: 16px 20px; }
+        .section { margin-bottom: 18px; }
+        .section-title {
+            font-size: 11px; font-weight: 700; color: var(--text-color); opacity: 0.6;
+            margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid #667eea;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; }
+        .form-group label {
+            font-size: 10px; font-weight: 700; color: var(--text-color); opacity: 0.6;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        textarea.form-input {
+            padding: 10px 12px; border: 2px solid var(--border-color); border-radius: 6px;
+            font-size: 11px; font-family: 'Courier New', monospace; background: var(--input-bg);
+            color: var(--text-color); transition: border-color 0.2s; resize: vertical;
+            width: 100%; line-height: 1.6;
+        }
+        textarea.form-input:focus { outline: none; border-color: #667eea; }
+        .calc-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 8px 22px; border-radius: 6px;
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; cursor: pointer; transition: opacity 0.2s;
+        }
+        .calc-btn:hover { opacity: 0.9; }
+        .calc-btn.secondary {
+            background: var(--section-bg); color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+        .calc-btn.secondary:hover { border-color: #667eea; }
+        .btn-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+        .examples-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+        .ex-chip {
+            font-size: 10px; padding: 3px 9px; border: 1px solid var(--border-color);
+            border-radius: 20px; cursor: pointer; color: var(--text-color);
+            background: var(--input-bg); transition: all 0.15s; opacity: 0.7;
+        }
+        .ex-chip:hover { border-color: #667eea; opacity: 1; color: #667eea; }
+
+        /* ── SAVED URLS ── */
+        .saved-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+        .saved-label { font-size: 10px; font-weight: 700; color: var(--text-color); opacity: 0.45;
+            text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+        .saved-chip {
+            font-size: 10px; padding: 3px 6px 3px 9px; border: 1px solid var(--border-color);
+            border-radius: 20px; cursor: pointer; color: var(--text-color);
+            background: var(--input-bg); transition: all 0.15s; opacity: 0.75;
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+        .saved-chip:hover { border-color: #667eea; opacity: 1; }
+        .saved-chip-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .saved-chip-del {
+            font-size: 9px; opacity: 0.5; padding: 0 2px; line-height: 1;
+            transition: opacity 0.15s; flex-shrink: 0;
+        }
+        .saved-chip:hover .saved-chip-del { opacity: 1; color: #dc2626; }
+        .saved-empty { font-size: 10px; color: var(--text-color); opacity: 0.35; font-style: italic; }
+        #saveNameInput {
+            font-size: 11px; padding: 4px 9px; border: 1px solid var(--border-color);
+            border-radius: 6px; background: var(--input-bg); color: var(--text-color);
+            outline: none; width: 180px; transition: border-color 0.2s;
+        }
+        #saveNameInput:focus { border-color: #667eea; }
+
+        /* ── STRUCTURAL ISSUES ── */
+        .struct-issues { margin-bottom: 12px; }
+        .struct-issue {
+            display: flex; align-items: flex-start; gap: 8px;
+            padding: 7px 10px; border-radius: 6px; margin-bottom: 5px;
+            font-size: 11px;
+        }
+        .struct-issue.err  { background: rgba(239,68,68,0.08);  border: 1px solid rgba(239,68,68,0.25); color: #dc2626; }
+        .struct-issue.warn { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); color: #b45309; }
+        .struct-issue.info { background: rgba(102,126,234,0.08);border: 1px solid rgba(102,126,234,0.2); color: #4f46e5; }
+        body.dark-mode .struct-issue.err  { color: #f87171; background: rgba(248,113,113,0.07); }
+        body.dark-mode .struct-issue.warn { color: #fbbf24; background: rgba(251,191,36,0.07); }
+        body.dark-mode .struct-issue.info { color: #a5b4fc; background: rgba(165,180,252,0.07); }
+        .struct-icon { flex-shrink: 0; font-style: normal; }
+
+        /* ── MMP BANNER ── */
+        .mmp-banner {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; border-radius: 8px; margin-bottom: 10px;
+            border: 1px solid var(--border-color); background: var(--section-bg);
+        }
+        .mmp-logo { font-size: 18px; }
+        .mmp-info { flex: 1; min-width: 0; }
+        .mmp-name  { font-size: 13px; font-weight: 700; color: var(--text-color); }
+        .mmp-domain{ font-size: 10px; color: var(--text-color); opacity: 0.5; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .mmp-badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase; color: white; white-space: nowrap; }
+        .url-type-badge {
+            font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+            letter-spacing: 0.5px; text-transform: uppercase; margin-left: 6px;
+        }
+        .utb-click      { background: rgba(34,197,94,0.12);  color: #16a34a; border: 1px solid rgba(34,197,94,0.3); }
+        .utb-impression { background: rgba(102,126,234,0.12);color: #4f46e5; border: 1px solid rgba(102,126,234,0.3); }
+        .utb-unknown    { background: var(--section-bg); color: var(--text-color); border: 1px solid var(--border-color); opacity: 0.7; }
+        body.dark-mode .utb-click      { color: #4ade80; background: rgba(74,222,128,0.08); }
+        body.dark-mode .utb-impression { color: #a5b4fc; background: rgba(165,180,252,0.08); }
+
+        /* ── SUMMARY PILLS ── */
+        .summary-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .summary-pill { font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+        .pill-ok   { background: rgba(34,197,94,0.12);   color: #16a34a; border: 1px solid rgba(34,197,94,0.3); }
+        .pill-miss { background: rgba(239,68,68,0.10);   color: #dc2626; border: 1px solid rgba(239,68,68,0.25); }
+        .pill-warn { background: rgba(245,158,11,0.12);  color: #b45309; border: 1px solid rgba(245,158,11,0.3); }
+        .pill-info { background: rgba(102,126,234,0.10); color: #4f46e5; border: 1px solid rgba(102,126,234,0.25); }
+        body.dark-mode .pill-ok   { color: #4ade80; background: rgba(74,222,128,0.08); }
+        body.dark-mode .pill-miss { color: #f87171; background: rgba(248,113,113,0.08); }
+        body.dark-mode .pill-warn { color: #fbbf24; background: rgba(251,191,36,0.08); }
+        body.dark-mode .pill-info { color: #a5b4fc; background: rgba(165,180,252,0.08); }
+
+        /* ── URL BREAKDOWN ── */
+        .url-breakdown {
+            background: var(--section-bg); border: 1px solid var(--border-color);
+            border-radius: 6px; padding: 10px 12px; margin-bottom: 12px;
+            font-family: 'Courier New', monospace; font-size: 10px;
+            word-break: break-all; line-height: 2; color: var(--text-color);
+        }
+        .url-base { color: #667eea; font-weight: 700; }
+        .url-sep  { opacity: 0.4; }
+        .url-key  { color: #764ba2; }
+        body.dark-mode .url-key { color: #a78bfa; }
+        .url-eq   { opacity: 0.4; }
+
+        /* ── MISSING PARAMS ── */
+        .missing-block { margin-bottom: 12px; }
+        .missing-row {
+            display: grid; grid-template-columns: auto 1fr auto auto;
+            align-items: center; gap: 8px; padding: 7px 10px;
+            border-radius: 6px; background: rgba(239,68,68,0.05);
+            border: 1px solid rgba(239,68,68,0.2); margin-bottom: 5px;
+        }
+        .missing-row.recommended {
+            background: rgba(245,158,11,0.05); border-color: rgba(245,158,11,0.2);
+        }
+        .missing-key  { font-family: monospace; font-size: 11px; font-weight: 700; color: #dc2626; white-space: nowrap; }
+        .missing-row.recommended .missing-key { color: #b45309; }
+        .missing-desc { font-size: 11px; color: var(--text-color); opacity: 0.6; }
+        .missing-macro{ font-family: monospace; font-size: 10px; color: #4f46e5; opacity: 0.9; white-space: nowrap; }
+        body.dark-mode .missing-key { color: #f87171; }
+        body.dark-mode .missing-row.recommended .missing-key { color: #fbbf24; }
+        body.dark-mode .missing-macro { color: #a5b4fc; }
+
+        /* ── PARAMS TABLE ── */
+        .params-table { width: 100%; border-collapse: collapse; }
+        .params-table th {
+            font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--text-color); opacity: 0.5; padding: 6px 8px; text-align: left;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .params-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+        .params-table tr:last-child td { border-bottom: none; }
+        .params-table tr:hover td { background: var(--section-bg); }
+        .param-key { font-family: monospace; font-size: 11px; font-weight: 700; color: #764ba2; white-space: nowrap; }
+        body.dark-mode .param-key { color: #a78bfa; }
+        .param-key.typo { color: #dc2626; text-decoration: underline dotted; }
+        body.dark-mode .param-key.typo { color: #f87171; }
+        .param-val { font-family: monospace; font-size: 11px; color: var(--text-color); word-break: break-all; max-width: 280px; }
+        .param-val.empty       { opacity: 0.35; font-style: italic; }
+        .param-val.placeholder { color: #b45309; }
+        .param-val.wrong-macro { color: #dc2626; }
+        body.dark-mode .param-val.placeholder  { color: #fbbf24; }
+        body.dark-mode .param-val.wrong-macro  { color: #f87171; }
+        .param-hint { font-family: monospace; font-size: 10px; color: #667eea; margin-top: 2px; }
+        body.dark-mode .param-hint { color: #a5b4fc; }
+        .status-badge {
+            font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+            text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;
+        }
+        .badge-req-ok { background: rgba(34,197,94,0.12);  color: #16a34a; border: 1px solid rgba(34,197,94,0.3); }
+        .badge-rec-ok { background: rgba(245,158,11,0.10); color: #b45309; border: 1px solid rgba(245,158,11,0.25); }
+        .badge-extra  { background: var(--section-bg); color: var(--text-color); border: 1px solid var(--border-color); opacity: 0.7; }
+        .badge-typo   { background: rgba(239,68,68,0.10); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); }
+        .badge-wmacro { background: rgba(239,68,68,0.10); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); }
+        body.dark-mode .badge-req-ok { color: #4ade80; background: rgba(74,222,128,0.08); }
+        body.dark-mode .badge-rec-ok { color: #fbbf24; background: rgba(251,191,36,0.08); }
+        body.dark-mode .badge-typo, body.dark-mode .badge-wmacro { color: #f87171; background: rgba(248,113,113,0.08); }
+        .issues-cell { display: flex; flex-direction: column; gap: 3px; }
+        .copy-val-btn {
+            background: none; border: none; cursor: pointer; font-size: 11px;
+            opacity: 0.3; padding: 1px 3px; transition: opacity 0.15s;
+        }
+        .copy-val-btn:hover { opacity: 0.9; }
+
+        /* ── PLACEHOLDERS ── */
+        .result-placeholder { text-align: center; padding: 32px 20px; color: var(--text-color); opacity: 0.3; }
+        .result-placeholder .icon { font-size: 40px; margin-bottom: 8px; }
+        .result-placeholder p { font-size: 12px; }
+        .info-hint { font-size: 11px; color: var(--text-color); opacity: 0.5; margin-top: 4px; font-style: italic; }
+        .raw-notice {
+            font-size: 10px; padding: 5px 10px; border-radius: 5px; margin-bottom: 10px;
+            background: rgba(102,126,234,0.08); border: 1px solid rgba(102,126,234,0.2);
+            color: #4f46e5;
+        }
+        body.dark-mode .raw-notice { color: #a5b4fc; }
+
+        /* ── CONFIG PANEL ── */
+        .config-toggle {
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; user-select: none;
+        }
+        .config-toggle:hover { opacity: 0.8; }
+        .config-toggle-icon { font-size: 10px; transition: transform 0.2s; opacity: 0.5; }
+        .config-toggle-icon.open { transform: rotate(180deg); }
+        .config-panel { margin-top: 12px; }
+        .config-status {
+            font-size: 11px; padding: 6px 10px; border-radius: 6px; margin-top: 8px;
+        }
+        .config-status.ok   { background: rgba(34,197,94,0.08); color: #16a34a; border: 1px solid rgba(34,197,94,0.25); }
+        .config-status.err  { background: rgba(239,68,68,0.08); color: #dc2626; border: 1px solid rgba(239,68,68,0.25); }
+        body.dark-mode .config-status.ok  { color: #4ade80; }
+        body.dark-mode .config-status.err { color: #f87171; }
+        .config-badge {
+            font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
+            background: rgba(102,126,234,0.12); color: #4f46e5;
+            border: 1px solid rgba(102,126,234,0.25); margin-left: 8px;
+        }
+        body.dark-mode .config-badge { color: #a5b4fc; background: rgba(165,180,252,0.08); }
+        /* MMP tabs */
+        .cfg-mmp-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+        .cfg-mmp-tab {
+            font-size: 11px; font-weight: 600; padding: 5px 12px;
+            border: 1px solid var(--border-color); border-radius: 20px;
+            cursor: pointer; background: var(--section-bg); color: var(--text-color);
+            transition: all 0.15s;
+        }
+        .cfg-mmp-tab:hover { border-color: #667eea; }
+        .cfg-mmp-tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; border-color: transparent;
+        }
+        /* URL type tabs */
+        .cfg-ut-tabs { display: flex; gap: 0; margin-bottom: 14px; }
+        .cfg-ut-tab {
+            font-size: 10px; font-weight: 700; padding: 4px 14px;
+            border: 1px solid var(--border-color); cursor: pointer;
+            background: var(--section-bg); color: var(--text-color);
+            text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.15s;
+        }
+        .cfg-ut-tab:first-child { border-radius: 6px 0 0 6px; }
+        .cfg-ut-tab:last-child  { border-radius: 0 6px 6px 0; border-left: none; }
+        .cfg-ut-tab.active { background: #667eea; color: white; border-color: #667eea; }
+        /* Param tables */
+        .cfg-list-label {
+            font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+            color: var(--text-color); opacity: 0.5; margin-bottom: 6px; margin-top: 14px;
+        }
+        .cfg-list-label:first-of-type { margin-top: 0; }
+        .cfg-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+        .cfg-table th {
+            font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--text-color); opacity: 0.4; padding: 4px 6px; text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .cfg-table td { padding: 3px 4px; border-bottom: 1px solid var(--border-color); }
+        .cfg-table tr:last-child td { border-bottom: none; }
+        .cfg-input {
+            width: 100%; padding: 4px 7px; font-size: 11px;
+            border: 1px solid transparent; border-radius: 4px;
+            background: transparent; color: var(--text-color);
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .cfg-input:hover { background: var(--section-bg); }
+        .cfg-input:focus { outline: none; border-color: #667eea; background: var(--input-bg); }
+        .cfg-input.mono { font-family: 'Courier New', monospace; color: #4f46e5; }
+        body.dark-mode .cfg-input.mono { color: #a5b4fc; }
+        .cfg-del-btn {
+            background: none; border: none; cursor: pointer; font-size: 13px;
+            color: var(--text-color); opacity: 0.25; padding: 2px 6px;
+            border-radius: 4px; transition: all 0.15s; line-height: 1;
+        }
+        .cfg-del-btn:hover { opacity: 1; color: #dc2626; background: rgba(239,68,68,0.08); }
+        .cfg-add-btn {
+            font-size: 10px; padding: 3px 10px; margin-top: 4px;
+            border: 1px dashed var(--border-color); border-radius: 5px;
+            background: none; cursor: pointer; color: var(--text-color); opacity: 0.5;
+            transition: all 0.15s;
+        }
+        .cfg-add-btn:hover { border-color: #667eea; color: #667eea; opacity: 1; }
+        /* Known lists */
+        .cfg-known-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+        .cfg-known-label {
+            font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--text-color); opacity: 0.4; margin-bottom: 4px;
+        }
+        .cfg-known-ta {
+            width: 100%; padding: 6px 8px; font-size: 10px; font-family: 'Courier New', monospace;
+            border: 1px solid var(--border-color); border-radius: 5px;
+            background: var(--input-bg); color: var(--text-color);
+            resize: vertical; min-height: 56px; line-height: 1.5;
+        }
+        .cfg-known-ta:focus { outline: none; border-color: #667eea; }
+        /* Action row */
+        .cfg-action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+
+        /* ── AUTH GATE ── */
+        #auth-gate{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.65);backdrop-filter:blur(10px)}
+        #auth-card{background:#fff;border-radius:18px;padding:44px 40px 36px;width:100%;max-width:380px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.35)}
+        body.dark-mode #auth-card{background:#1a1d24}
+        #auth-icon{font-size:2.8rem;margin-bottom:14px}
+        #auth-title{font-size:1.4rem;font-weight:700;margin-bottom:8px;color:var(--text-color)}
+        #auth-subtitle{font-size:0.88rem;color:#888;margin-bottom:24px}
+        body.dark-mode #auth-subtitle{color:#aaa}
+        #auth-input{width:100%;padding:13px 16px;font-size:1rem;border:2px solid var(--border-color);border-radius:10px;outline:none;background:var(--input-bg);color:var(--text-color);box-sizing:border-box;transition:border-color 0.2s}
+        #auth-input:focus{border-color:#667eea}
+        #auth-error{color:#e53e3e;font-size:0.83rem;min-height:22px;margin:8px 0 4px}
+        #auth-btn{width:100%;padding:13px;margin-top:4px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity 0.2s}
+        #auth-btn:hover{opacity:0.88}
+        #auth-back{display:block;margin-top:14px;font-size:0.85rem;color:#667eea;text-decoration:none}
+        #auth-back:hover{text-decoration:underline}
+        @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+        #auth-input.shake{animation:shake 0.4s ease;border-color:#e53e3e}
+
+        @media (max-width: 600px) { body { padding: 10px; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>MMP URL Validator</h1>
+        <p>Validate click &amp; impression URLs — structural errors, missing parameters and macro issues</p>
+        <span class="type-badge">Tooling</span>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+            <div class="theme-toggle-slider" id="themeSlider">☀️</div>
+        </button>
+    </div>
+
+    <div class="content">
+        <div class="section">
+            <div class="section-title">Input</div>
+            <div class="form-group">
+                <label>Tracking URL (click or impression)</label>
+                <textarea class="form-input" id="urlInput" rows="5"
+                    placeholder="Paste your MMP tracking URL here…"
+                    oninput="onUrlInput()"></textarea>
+            </div>
+            <div class="examples-row">
+                <span class="ex-chip" onclick="loadExample('af_click')">AppsFlyer click</span>
+                <span class="ex-chip" onclick="loadExample('af_imp')">AppsFlyer impression</span>
+                <span class="ex-chip" onclick="loadExample('adj_click')">Adjust click</span>
+                <span class="ex-chip" onclick="loadExample('adj_imp')">Adjust impression</span>
+                <span class="ex-chip" onclick="loadExample('branch')">Branch</span>
+                <span class="ex-chip" onclick="loadExample('kochava_click')">Kochava click</span>
+                <span class="ex-chip" onclick="loadExample('kochava_imp')">Kochava impression</span>
+                <span class="ex-chip" onclick="loadExample('singular')">Singular</span>
+            </div>
+            <div class="btn-row">
+                <button class="calc-btn" onclick="validateUrl()">Validate URL</button>
+                <button class="calc-btn secondary" onclick="clearAll()">Clear</button>
+                <input type="text" id="saveNameInput" placeholder="Name to save…" maxlength="60"
+                    onkeydown="if(event.key==='Enter') saveCurrentUrl()">
+                <button class="calc-btn secondary" onclick="saveCurrentUrl()">Save</button>
+            </div>
+            <div class="saved-row" id="savedRow">
+                <span class="saved-label">Saved</span>
+                <span class="saved-empty" id="savedEmpty">No saved URLs yet</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title config-toggle" onclick="toggleConfigPanel()">
+                <span>MMP Configuration <span class="config-badge" id="configBadge">defaults</span></span>
+                <span class="config-toggle-icon" id="configToggleIcon">▼</span>
+            </div>
+            <div class="config-panel" id="configPanel" style="display:none">
+
+                <!-- MMP selector tabs -->
+                <div class="cfg-mmp-tabs" id="cfgMmpTabs"></div>
+
+                <!-- URL type tabs -->
+                <div class="cfg-ut-tabs">
+                    <button class="cfg-ut-tab active" data-type="click"      onclick="selectUrlType('click')">Click</button>
+                    <button class="cfg-ut-tab"        data-type="impression" onclick="selectUrlType('impression')">Impression</button>
+                </div>
+
+                <!-- Required params -->
+                <div class="cfg-list-label">Required parameters</div>
+                <table class="cfg-table">
+                    <thead><tr>
+                        <th style="width:22%">Param key</th>
+                        <th style="width:38%">Description</th>
+                        <th style="width:28%">Expected macro</th>
+                        <th style="width:12%"></th>
+                    </tr></thead>
+                    <tbody id="cfgTbody_required"></tbody>
+                </table>
+                <button class="cfg-add-btn" onclick="addCfgRow('required')">+ Add parameter</button>
+
+                <!-- Recommended params -->
+                <div class="cfg-list-label">Recommended parameters</div>
+                <table class="cfg-table">
+                    <thead><tr>
+                        <th style="width:22%">Param key</th>
+                        <th style="width:38%">Description</th>
+                        <th style="width:28%">Expected macro</th>
+                        <th style="width:12%"></th>
+                    </tr></thead>
+                    <tbody id="cfgTbody_recommended"></tbody>
+                </table>
+                <button class="cfg-add-btn" onclick="addCfgRow('recommended')">+ Add parameter</button>
+
+                <!-- Known params / macros -->
+                <div class="cfg-known-row">
+                    <div>
+                        <div class="cfg-known-label">Known params (typo detection)</div>
+                        <textarea class="cfg-known-ta" id="cfgKnownParams" placeholder="pid, c, clickid, af_siteid, …"></textarea>
+                    </div>
+                    <div>
+                        <div class="cfg-known-label">Known macros (value validation)</div>
+                        <textarea class="cfg-known-ta" id="cfgKnownMacros" placeholder="clickid, af_siteid, campaign, …"></textarea>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="cfg-action-row">
+                    <button class="calc-btn" onclick="saveCfgVisual()">Save to browser</button>
+                    <button class="calc-btn secondary" onclick="exportConfig()">Export JSON</button>
+                    <label class="calc-btn secondary" style="cursor:pointer; margin:0;">
+                        Import JSON
+                        <input type="file" accept=".json,application/json" style="display:none"
+                            onchange="importConfig(this)">
+                    </label>
+                    <button class="calc-btn secondary" onclick="resetConfig()">Reset defaults</button>
+                </div>
+                <div id="configStatus" style="display:none"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Results</div>
+            <div id="resultsContent">
+                <div class="result-placeholder">
+                    <div class="icon">🔗</div>
+                    <p>Paste a tracking URL above and click Validate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// MMP PROFILES  (click + impression, each with required/recommended + macros)
+// ══════════════════════════════════════════════════════════════
+var MMP = {
+  appsflyer: {
+    name:'AppsFlyer', emoji:'🟦', color:'#00b4d8',
+    urlTypes: {
+      click:      {label:'Click URL',      domains:['app.appsflyer.com']},
+      impression: {label:'Impression URL', domains:['impression.appsflyer.com']},
+      deeplink:   {label:'OneLink',        domains:['onelink.me']}
+    },
+    click: {
+      required: [
+        {key:'pid',     desc:'Media source / partner ID',        macro:'{pid}'},
+        {key:'c',       desc:'Campaign name',                    macro:'{campaign}'},
+        {key:'clickid', desc:'Click ID for postback attribution', macro:'{clickid}'}
+      ],
+      recommended: [
+        {key:'af_siteid',          desc:'Publisher / site ID',          macro:'{af_siteid}'},
+        {key:'af_adset',           desc:'Ad set name',                  macro:'{af_adset}'},
+        {key:'af_ad',              desc:'Ad / creative name',           macro:'{af_ad}'},
+        {key:'af_adset_id',        desc:'Ad set ID',                    macro:'{af_adset_id}'},
+        {key:'af_ad_id',           desc:'Ad ID',                        macro:'{af_ad_id}'},
+        {key:'af_c_id',            desc:'Campaign ID',                  macro:'{af_c_id}'},
+        {key:'advertising_id',     desc:'Android advertising ID (GAID)',macro:'{advertising_id}'},
+        {key:'idfa',               desc:'iOS device identifier',        macro:'{idfa}'}
+      ]
+    },
+    impression: {
+      required: [
+        {key:'pid', desc:'Media source / partner ID', macro:'{pid}'},
+        {key:'c',   desc:'Campaign name',             macro:'{campaign}'}
+      ],
+      recommended: [
+        {key:'af_siteid',      desc:'Publisher / site ID',           macro:'{af_siteid}'},
+        {key:'af_adset',       desc:'Ad set name',                   macro:'{af_adset}'},
+        {key:'af_ad',          desc:'Ad / creative name',            macro:'{af_ad}'},
+        {key:'advertising_id', desc:'Android advertising ID (GAID)', macro:'{advertising_id}'},
+        {key:'idfa',           desc:'iOS device identifier',         macro:'{idfa}'}
+      ]
+    },
+    knownParams: [
+      'pid','c','clickid','click_id','af_siteid','af_sub1','af_sub2','af_sub3','af_sub4','af_sub5',
+      'af_adset','af_ad','af_adset_id','af_ad_id','af_c_id','af_click_lookback','af_viewthrough_lookback',
+      'af_ip','af_ua','af_lang','idfa','advertising_id','af_prt','af_model','af_os_version',
+      'af_keywords','af_dp','af_enc_cid','af_cost_model','af_cost_value','af_cost_currency',
+      'aggregate_id','af_reengagement_window','af_channel'
+    ],
+    knownMacros: [
+      'af_siteid','af_sub1','af_sub2','af_sub3','af_sub4','af_sub5','af_pid',
+      'af_adset','af_ad','af_adset_id','af_ad_id','af_c_id','af_model',
+      'af_os_version','af_ua','af_lang','af_ip','af_ipa','af_prt',
+      'click_id','clickid','c','campaign','country','date_tz','date',
+      'aggregate_id','cs1','cs2','cs3','publisher_id','site_id',
+      'fn:random_string','fn:random_number'
+    ]
+  },
+
+  adjust: {
+    name:'Adjust', emoji:'🟥', color:'#eb5757',
+    urlTypes: {
+      click:      {label:'Click URL',      domains:['app.adjust.com','app.adjust.world','s.adjust.com']},
+      impression: {label:'Impression URL', domains:['view.adjust.com']}
+    },
+    click: {
+      required: [
+        {key:'campaign', desc:'Campaign name', macro:'{campaign}'}
+      ],
+      recommended: [
+        {key:'adgroup',  desc:'Ad group name',           macro:'{adgroup}'},
+        {key:'creative', desc:'Creative name',            macro:'{creative}'},
+        {key:'label',    desc:'Custom label for postback',macro:'{label}'},
+        {key:'idfa',     desc:'iOS device identifier',    macro:'{idfa}'},
+        {key:'gps_adid', desc:'Google advertising ID',    macro:'{gps_adid}'}
+      ]
+    },
+    impression: {
+      required: [
+        {key:'campaign', desc:'Campaign name', macro:'{campaign}'}
+      ],
+      recommended: [
+        {key:'adgroup',  desc:'Ad group name',  macro:'{adgroup}'},
+        {key:'creative', desc:'Creative name',  macro:'{creative}'},
+        {key:'idfa',     desc:'iOS device ID',  macro:'{idfa}'},
+        {key:'gps_adid', desc:'Google adv. ID', macro:'{gps_adid}'}
+      ]
+    },
+    knownParams: [
+      'campaign','adgroup','creative','label','deep_link','redirect','fallback',
+      'idfa','gps_adid','android_id','oaid','fire_adid','win_adid',
+      'tracker_limit','callback_params','partner_params'
+    ],
+    knownMacros: ['campaign','adgroup','creative','label','click_id','idfa','gps_adid']
+  },
+
+  branch: {
+    name:'Branch', emoji:'🟩', color:'#38b000',
+    urlTypes: {
+      click:      {label:'Click URL',      domains:['app.link','bnc.lt','branch.io','click.branch.io']},
+      impression: {label:'Impression URL', domains:['impression.branch.io']}
+    },
+    click: {
+      required: [
+        {key:'~campaign', desc:'Campaign name', macro:'{campaign}'},
+        {key:'~channel',  desc:'Channel',        macro:'{channel}'}
+      ],
+      recommended: [
+        {key:'~feature',       desc:'Feature type',     macro:'{feature}'},
+        {key:'~stage',         desc:'Funnel stage',      macro:'{stage}'},
+        {key:'$deeplink_path', desc:'Deep link path',    macro:'/path/to/content'},
+        {key:'click_id',       desc:'Click ID for postback', macro:'{click_id}'}
+      ]
+    },
+    impression: {
+      required: [
+        {key:'~campaign', desc:'Campaign name', macro:'{campaign}'},
+        {key:'~channel',  desc:'Channel',       macro:'{channel}'}
+      ],
+      recommended: [
+        {key:'~feature',       desc:'Feature type',  macro:'{feature}'},
+        {key:'$deeplink_path', desc:'Deep link path', macro:'/path/to/content'}
+      ]
+    },
+    knownParams: [
+      '~campaign','~channel','~feature','~stage','~tags','~creative_name','~creative_id',
+      '~ad_name','~ad_id','~ad_set_name','~ad_set_id','click_id','$deeplink_path',
+      '$fallback_url','$ios_url','$android_url'
+    ],
+    knownMacros: ['campaign','channel','feature','stage','click_id','creative_id']
+  },
+
+  kochava: {
+    name:'Kochava', emoji:'🟧', color:'#f77f00',
+    urlTypes: {
+      click:      {label:'Click URL',      domains:['control.kochava.com'], pathHint:'/track/click'},
+      impression: {label:'Impression URL', domains:['control.kochava.com'], pathHint:'/track/impression'}
+    },
+    click: {
+      required: [
+        {key:'campaign_id', desc:'Campaign ID', macro:'{campaign_id}'}
+      ],
+      recommended: [
+        {key:'network_id',  desc:'Network / partner ID',  macro:'{network_id}'},
+        {key:'site_id',     desc:'Publisher site ID',     macro:'{site_id}'},
+        {key:'creative_id', desc:'Creative ID',           macro:'{creative_id}'},
+        {key:'click_id',    desc:'Click identifier',      macro:'{click_id}'},
+        {key:'device_id',   desc:'Device identifier',     macro:'{device_id}'}
+      ]
+    },
+    impression: {
+      required: [
+        {key:'campaign_id', desc:'Campaign ID', macro:'{campaign_id}'}
+      ],
+      recommended: [
+        {key:'network_id',  desc:'Network / partner ID', macro:'{network_id}'},
+        {key:'site_id',     desc:'Publisher site ID',    macro:'{site_id}'},
+        {key:'creative_id', desc:'Creative ID',          macro:'{creative_id}'},
+        {key:'device_id',   desc:'Device identifier',    macro:'{device_id}'}
+      ]
+    },
+    knownParams: [
+      'campaign_id','network_id','site_id','creative_id','click_id','device_id',
+      'idfa','adid','app_guid','os_version','device_version','ua','country_code'
+    ],
+    knownMacros: ['campaign_id','network_id','site_id','creative_id','click_id','device_id','idfa','adid']
+  },
+
+  singular: {
+    name:'Singular', emoji:'🟪', color:'#7b2d8b',
+    urlTypes: {
+      click:      {label:'Click URL',      domains:['link.singular.net','app.singular.net']},
+      impression: {label:'Impression URL', domains:['impression.singular.net','singular.net']}
+    },
+    click: {
+      required: [
+        {key:'p',    desc:'Partner / media source', macro:'{partner}'},
+        {key:'site', desc:'Site / placement',       macro:'{site_id}'}
+      ],
+      recommended: [
+        {key:'cl',   desc:'Click ID for postback',   macro:'{click_id}'},
+        {key:'idfa', desc:'iOS device identifier',   macro:'{idfa}'},
+        {key:'aifa', desc:'Android advertising ID',  macro:'{gaid}'},
+        {key:'data', desc:'Extra data payload',      macro:'base64_encoded_json'}
+      ]
+    },
+    impression: {
+      required: [
+        {key:'p',    desc:'Partner / media source', macro:'{partner}'},
+        {key:'site', desc:'Site / placement',       macro:'{site_id}'}
+      ],
+      recommended: [
+        {key:'idfa', desc:'iOS device identifier',  macro:'{idfa}'},
+        {key:'aifa', desc:'Android advertising ID', macro:'{gaid}'}
+      ]
+    },
+    knownParams: ['p','site','cl','idfa','aifa','data','i','ifa_limited','ddl','forward_params'],
+    knownMacros: ['partner','site_id','click_id','idfa','gaid']
+  }
+};
+
+// ── CONFIG SAVE / LOAD ───────────────────────────────────────────
+var CFG_KEY  = 'mu_mmp_config';
+var _CFG_KEYS = ['urlTypes','click','impression','knownParams','knownMacros'];
+var _cfgState = { mmpId: 'appsflyer', urlType: 'click' };
+
+function getConfigObject() {
+  var cfg = {};
+  for (var id in MMP) {
+    cfg[id] = {};
+    _CFG_KEYS.forEach(function(k){ if (MMP[id][k] !== undefined) cfg[id][k] = MMP[id][k]; });
+  }
+  return cfg;
+}
+
+var _DEFAULT_CFG_JSON = JSON.stringify(getConfigObject(), null, 2);
+
+function applyConfigObject(cfg) {
+  for (var id in cfg) {
+    if (!MMP[id]) continue;
+    _CFG_KEYS.forEach(function(k){ if (cfg[id][k] !== undefined) MMP[id][k] = cfg[id][k]; });
+  }
+}
+
+function configStatus(msg, isErr) {
+  var el = document.getElementById('configStatus');
+  el.textContent = msg;
+  el.className = 'config-status ' + (isErr ? 'err' : 'ok');
+  el.style.display = '';
+  clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.style.display = 'none'; }, 3000);
+}
+
+function updateConfigBadge() {
+  var badge = document.getElementById('configBadge');
+  if (!badge) return;
+  var saved = localStorage.getItem(CFG_KEY);
+  badge.textContent = saved ? 'custom' : 'defaults';
+  badge.style.background  = saved ? 'rgba(245,158,11,0.12)' : '';
+  badge.style.color       = saved ? '#b45309' : '';
+  badge.style.borderColor = saved ? 'rgba(245,158,11,0.3)' : '';
+}
+
+// ── VISUAL CONFIG RENDERING ──────────────────────────────────────
+
+function buildMmpTabs() {
+  var container = document.getElementById('cfgMmpTabs');
+  container.innerHTML = '';
+  for (var id in MMP) {
+    var p = MMP[id];
+    var btn = document.createElement('button');
+    btn.className = 'cfg-mmp-tab' + (id === _cfgState.mmpId ? ' active' : '');
+    btn.dataset.id = id;
+    btn.textContent = p.emoji + ' ' + p.name;
+    btn.setAttribute('onclick', 'selectMmpTab("' + id + '")');
+    container.appendChild(btn);
+  }
+}
+
+function renderCfgTable(listName) {
+  var mmp      = MMP[_cfgState.mmpId];
+  var typeConf = mmp[_cfgState.urlType] || {};
+  var items    = typeConf[listName] || [];
+  var tbody    = document.getElementById('cfgTbody_' + listName);
+  tbody.innerHTML = items.map(function(item) {
+    return '<tr>' +
+      '<td><input class="cfg-input" value="' + escH(item.key||'') + '" placeholder="key"></td>' +
+      '<td><input class="cfg-input" value="' + escH(item.desc||'') + '" placeholder="description"></td>' +
+      '<td><input class="cfg-input mono" value="' + escH(item.macro||'') + '" placeholder="{macro}"></td>' +
+      '<td><button class="cfg-del-btn" onclick="delCfgRow(this)">×</button></td>' +
+    '</tr>';
+  }).join('');
+}
+
+function renderCfgKnownLists() {
+  var mmp = MMP[_cfgState.mmpId];
+  document.getElementById('cfgKnownParams').value = (mmp.knownParams || []).join(', ');
+  document.getElementById('cfgKnownMacros').value = (mmp.knownMacros || []).join(', ');
+}
+
+function renderCfgPanel() {
+  renderCfgTable('required');
+  renderCfgTable('recommended');
+  renderCfgKnownLists();
+}
+
+function readCfgTables() {
+  var mmp      = MMP[_cfgState.mmpId];
+  var typeConf = mmp[_cfgState.urlType] || {};
+  ['required','recommended'].forEach(function(listName) {
+    var rows = document.getElementById('cfgTbody_' + listName).querySelectorAll('tr');
+    typeConf[listName] = Array.from(rows).map(function(row) {
+      var inputs = row.querySelectorAll('input');
+      return { key: inputs[0].value.trim(), desc: inputs[1].value.trim(), macro: inputs[2].value.trim() };
+    }).filter(function(r){ return r.key; });
+  });
+  mmp[_cfgState.urlType] = typeConf;
+  mmp.knownParams = document.getElementById('cfgKnownParams').value
+    .split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+  mmp.knownMacros = document.getElementById('cfgKnownMacros').value
+    .split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+}
+
+function selectMmpTab(id) {
+  readCfgTables();
+  _cfgState.mmpId  = id;
+  _cfgState.urlType = 'click';
+  document.querySelectorAll('.cfg-mmp-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.id === id); });
+  document.querySelectorAll('.cfg-ut-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.type === 'click'); });
+  renderCfgPanel();
+}
+
+function selectUrlType(type) {
+  readCfgTables();
+  _cfgState.urlType = type;
+  document.querySelectorAll('.cfg-ut-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.type === type); });
+  renderCfgPanel();
+}
+
+function addCfgRow(listName) {
+  var tbody = document.getElementById('cfgTbody_' + listName);
+  var tr = document.createElement('tr');
+  tr.innerHTML =
+    '<td><input class="cfg-input" placeholder="key"></td>' +
+    '<td><input class="cfg-input" placeholder="description"></td>' +
+    '<td><input class="cfg-input mono" placeholder="{macro}"></td>' +
+    '<td><button class="cfg-del-btn" onclick="delCfgRow(this)">×</button></td>';
+  tbody.appendChild(tr);
+  tr.querySelector('input').focus();
+}
+
+function delCfgRow(btn) { btn.closest('tr').remove(); }
+
+function toggleConfigPanel() {
+  var panel = document.getElementById('configPanel');
+  var icon  = document.getElementById('configToggleIcon');
+  var open  = panel.style.display !== 'none';
+  if (!open) { buildMmpTabs(); renderCfgPanel(); }
+  panel.style.display = open ? 'none' : '';
+  icon.classList.toggle('open', !open);
+}
+
+function saveCfgVisual() {
+  readCfgTables();
+  localStorage.setItem(CFG_KEY, JSON.stringify(getConfigObject()));
+  updateConfigBadge();
+  configStatus('Config saved to browser.');
+}
+
+function exportConfig() {
+  var json = JSON.stringify(getConfigObject(), null, 2);
+  var blob = new Blob([json], {type: 'application/json'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href = url; a.download = 'mmp-config.json';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importConfig(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var cfg = JSON.parse(e.target.result);
+      applyConfigObject(cfg);
+      renderCfgPanel();
+      configStatus('Imported — click "Save to browser" to persist.');
+    } catch(err) {
+      configStatus('Invalid JSON: ' + err.message, true);
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function resetConfig() {
+  if (!confirm('Reset all MMP config to factory defaults?')) return;
+  applyConfigObject(JSON.parse(_DEFAULT_CFG_JSON));
+  localStorage.removeItem(CFG_KEY);
+  updateConfigBadge();
+  renderCfgPanel();
+  configStatus('Reset to defaults.');
+}
+
+// ── BOOT: load saved config ──────────────────────────────────────
+(function() {
+  var saved = localStorage.getItem(CFG_KEY);
+  if (saved) {
+    try { applyConfigObject(JSON.parse(saved)); } catch(e) {}
+  }
+  updateConfigBadge();
+})();
+
+// ── EXAMPLES ────────────────────────────────────────────────────
+var EXAMPLES = {
+  af_click:     'https://app.appsflyer.com/com.example.app?pid=facebook_int&c=summer_sale_2024&clickid={clickid}&af_siteid={af_siteid}&af_adset=retargeting_eu&af_adset_id={af_adset_id}&af_ad=banner_300x250&af_ad_id={af_ad_id}&af_c_id={af_c_id}&advertising_id={advertising_id}&idfa={idfa}',
+  af_imp:       'https://impression.appsflyer.com/com.example.app?pid=facebook_int&c=summer_sale_2024&af_siteid={af_siteid}&af_adset=retargeting_eu&af_ad=banner_300x250&advertising_id={advertising_id}&idfa={idfa}',
+  adj_click:    'https://app.adjust.com/abc1234?campaign=black_friday&adgroup=ios_users&creative=video_15s&label={click_id}&idfa={idfa}&gps_adid={gps_adid}',
+  adj_imp:      'https://view.adjust.com/abc1234?campaign=black_friday&adgroup=ios_users&creative=video_15s&idfa={idfa}&gps_adid={gps_adid}',
+  branch:       'https://example.app.link/xyz?%7Ecampaign=spring_promo&%7Echannel=paid_social&%7Efeature=acquisition&%7Estage=new_users&click_id={click_id}&%24deeplink_path=products%2F123',
+  kochava_click:'https://control.kochava.com/track/click?campaign_id=ko12345&network_id=67890&site_id={site_id}&creative_id=banner_v2&click_id={click_id}&device_id={idfa}',
+  kochava_imp:  'https://control.kochava.com/track/impression?campaign_id=ko12345&network_id=67890&site_id={site_id}&creative_id=banner_v2&device_id={idfa}',
+  singular:     'https://link.singular.net/abc123?p=partner_network&site={site_id}&cl={click_id}&idfa={idfa}&aifa={gaid}'
+};
+
+// ── HELPERS ──────────────────────────────────────────────────────
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function levenshtein(a, b) {
+  var m = a.length, n = b.length, dp = [], i, j;
+  for (i = 0; i <= m; i++) { dp[i] = [i]; }
+  for (j = 0; j <= n; j++) { dp[0][j] = j; }
+  for (i = 1; i <= m; i++) {
+    for (j = 1; j <= n; j++) {
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+
+function fuzzyFind(name, candidates, maxDist) {
+  var best = null, bestD = Infinity;
+  for (var i = 0; i < candidates.length; i++) {
+    var d = levenshtein(name.toLowerCase(), candidates[i].toLowerCase());
+    if (d < bestD && d <= maxDist) { best = candidates[i]; bestD = d; }
+  }
+  return best;
+}
+
+function isPlaceholder(val) {
+  // Only square-bracket style counts as "unfilled" — {macro} values are valid template macros
+  return /^\[[^\]]+\]$/.test(val);
+}
+
+// ── MMP DETECTION ────────────────────────────────────────────────
+function detectMmpAndType(hostname, pathname) {
+  for (var id in MMP) {
+    var profile = MMP[id];
+    for (var typeName in profile.urlTypes) {
+      var ut = profile.urlTypes[typeName];
+      for (var i = 0; i < ut.domains.length; i++) {
+        var dom = ut.domains[i];
+        if (hostname === dom || hostname.endsWith('.' + dom)) {
+          // Kochava distinguishes click/impression by path
+          if (id === 'kochava' && ut.pathHint && pathname.indexOf(ut.pathHint) < 0) continue;
+          return {id: id, urlType: typeName};
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function fuzzyDetectMmp(rawDomain) {
+  var clean = rawDomain.toLowerCase().replace(/\./g, '');
+  for (var id in MMP) {
+    var profile = MMP[id];
+    for (var typeName in profile.urlTypes) {
+      var ut = profile.urlTypes[typeName];
+      for (var i = 0; i < ut.domains.length; i++) {
+        var domClean = ut.domains[i].replace(/\./g, '');
+        if (clean.indexOf(domClean) >= 0 || domClean.indexOf(clean) >= 0) {
+          return {id: id, urlType: typeName, fuzzy: true, suggestion: ut.domains[i]};
+        }
+        var dist = levenshtein(clean, domClean);
+        if (dist <= Math.floor(domClean.length / 4)) {
+          return {id: id, urlType: typeName, fuzzy: true, suggestion: ut.domains[i]};
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// ── STRUCTURAL PRE-VALIDATION ────────────────────────────────────
+function preValidate(raw) {
+  var issues = [];
+
+  // Protocol
+  if (!/^https?:\/\//i.test(raw.trim())) {
+    var pm = raw.match(/^([a-zA-Z0-9]+):\/?\/?/);
+    issues.push({sev:'err', msg: pm
+      ? 'Invalid protocol "' + pm[1] + '://". Tracking URLs must use https://'
+      : 'URL must start with https://'
+    });
+  } else if (/^http:\/\//i.test(raw)) {
+    issues.push({sev:'warn', msg: 'Using http:// — tracking URLs should use https:// for security and attribution accuracy'});
+  }
+
+  // Missing domain dots (looks like domain with no dots)
+  var domMatch = raw.match(/^https?:\/\/([^/?#\s]+)/i);
+  if (domMatch && domMatch[1].indexOf('.') < 0 && domMatch[1].length > 0) {
+    issues.push({sev:'err', msg: 'Domain "' + domMatch[1] + '" has no dots — not a valid hostname. Check for missing dots (e.g. app.appsflyer.com)'});
+  }
+
+  // Missing ? separator
+  if (raw.indexOf('?') < 0 && raw.indexOf('=') > 0) {
+    issues.push({sev:'err', msg: 'Missing "?" between URL path and query parameters'});
+  }
+
+  // Unclosed macros
+  var opens  = (raw.match(/\{/g) || []).length;
+  var closes = (raw.match(/\}/g) || []).length;
+  if (opens !== closes) {
+    var diff = opens - closes;
+    issues.push({sev:'err', msg:
+      Math.abs(diff) + ' unclosed macro brace' + (Math.abs(diff) > 1 ? 's' : '') +
+      ' (' + opens + ' opening "{" vs ' + closes + ' closing "}")'
+    });
+  }
+
+  // Merged parameters (} immediately followed by next param name=)
+  var mergedRx = /\}([a-zA-Z_][a-zA-Z0-9_]*)=/g, mm;
+  while ((mm = mergedRx.exec(raw)) !== null) {
+    issues.push({sev:'err', msg: 'Missing "&" before parameter "' + mm[1] + '" — merged without separator after previous value'});
+  }
+
+  return issues;
+}
+
+// ── FIX URL FOR BEST-EFFORT PARSING ─────────────────────────────
+function tryFixAndParse(raw) {
+  var fixed = raw.trim().replace(/\s+/g, '');
+
+  // Fix protocol
+  fixed = fixed.replace(/^hts:\/+/i, 'https://');
+  fixed = fixed.replace(/^htps:\/+/i, 'https://');
+  if (/^https?:\/(?!\/)/.test(fixed)) fixed = fixed.replace(/^(https?):\//, '$1://');
+  if (!/^https?:\/\//i.test(fixed))   fixed = 'https://' + fixed.replace(/^[^:]*:\/*/,'');
+
+  // Add missing ?
+  if (fixed.indexOf('?') < 0) {
+    var domEnd = fixed.indexOf('/', fixed.indexOf('://') + 3);
+    if (domEnd > 0) {
+      var afterDom = fixed.substring(domEnd);
+      var eqIdx = afterDom.indexOf('=');
+      if (eqIdx > 0) {
+        var lastSlash = afterDom.lastIndexOf('/', eqIdx);
+        if (lastSlash >= 0) {
+          fixed = fixed.substring(0, domEnd + lastSlash + 1) + '?' + afterDom.substring(lastSlash + 1);
+        }
+      }
+    }
+  }
+
+  // Fix merged params
+  fixed = fixed.replace(/\}([a-zA-Z_][a-zA-Z0-9_]*)=/g, '}&$1=');
+
+  try { return new URL(fixed); } catch(e) { return null; }
+}
+
+// ── RAW PARAM EXTRACTION (fallback for totally broken URLs) ──────
+function extractParamsRaw(text) {
+  // First fix merges so params split properly
+  var fixed = text.replace(/\s+/g,'').replace(/\}([a-zA-Z_][a-zA-Z0-9_]*)=/g,'}&$1=');
+  var qIdx = fixed.indexOf('?');
+  var qs = qIdx >= 0 ? fixed.substring(qIdx + 1) : fixed;
+  var params = [];
+  var pairs = qs.split('&');
+  pairs.forEach(function(pair) {
+    var eqIdx = pair.indexOf('=');
+    if (eqIdx > 0) {
+      var key = pair.substring(0, eqIdx);
+      var val = pair.substring(eqIdx + 1);
+      if (/^[a-zA-Z_~$][a-zA-Z0-9_~$]*$/.test(key)) {
+        params.push({key: key, raw: val});
+      }
+    }
+  });
+  return params;
+}
+
+// ── VALIDATE MACRO NAMES IN VALUES ──────────────────────────────
+function checkValueMacros(paramKey, rawValue, knownMacros, knownParams) {
+  var issues = [];
+  var macroRx = /\{([^}]+)\}/g, m;
+  while ((m = macroRx.exec(rawValue)) !== null) {
+    var macroName = m[1];
+    // Skip complex expressions like fn:random_string(...)
+    if (macroName.indexOf('(') >= 0 || macroName.indexOf(':') >= 0) continue;
+    var inMacros  = knownMacros.indexOf(macroName) >= 0;
+    var inParams  = knownParams.indexOf(macroName) >= 0;
+    if (!inMacros && !inParams) {
+      var suggestion = fuzzyFind(macroName, knownMacros.concat(knownParams), Math.min(4, Math.floor(macroName.length / 3)));
+      issues.push({
+        type: 'wrong-macro',
+        msg: 'Unknown macro {' + macroName + '}' + (suggestion ? ' — did you mean {' + suggestion + '}?' : '')
+      });
+    }
+  }
+  // Check if the macro used for this param matches the param itself
+  // e.g. af_ad={af_adset} is likely wrong
+  if (knownParams.indexOf(paramKey) >= 0) {
+    var macros = [];
+    var rx2 = /\{([^}(]+)\}/g, m2;
+    while ((m2 = rx2.exec(rawValue)) !== null) macros.push(m2[1]);
+    if (macros.length === 1) {
+      var macro = macros[0];
+      // If macro name is similar to another param but NOT this param
+      if (macro !== paramKey && knownParams.indexOf(macro) >= 0 && macro !== paramKey) {
+        var distToParam = levenshtein(macro, paramKey);
+        var distToMacro = levenshtein(macro, paramKey.replace(/^af_/, ''));
+        if (distToParam > 2 && knownParams.indexOf(macro) >= 0) {
+          // The value macro seems to belong to a different parameter
+          issues.push({type:'wrong-macro', msg:'Value {' + macro + '} may be the wrong macro for parameter "' + paramKey + '" — expected {' + paramKey + '}'});
+        }
+      }
+    }
+    // Static value where a macro is expected for certain params
+    var macroExpected = ['clickid','click_id','idfa','advertising_id','gps_adid','af_siteid','site_id','device_id'];
+    if (macroExpected.indexOf(paramKey) >= 0 && macros.length === 0 && rawValue.length > 0 && !isPlaceholder(rawValue)) {
+      issues.push({type:'warn', msg:'Static value — "' + paramKey + '" usually contains a dynamic macro like {' + paramKey + '}'});
+    }
+  }
+  return issues;
+}
+
+// ── MAIN VALIDATE ────────────────────────────────────────────────
+function validateUrl() {
+  var raw = document.getElementById('urlInput').value.trim();
+  if (!raw) { showPlaceholder('Paste a tracking URL above and click Validate'); return; }
+
+  var structIssues = preValidate(raw);
+  var parsed       = null;
+  var isRawMode    = false;
+
+  try { parsed = new URL(raw); } catch(e) {
+    parsed = tryFixAndParse(raw);
+    if (!parsed) isRawMode = true;
+  }
+
+  var mmpResult = null;
+  var rawDomain = '';
+
+  if (parsed) {
+    mmpResult = detectMmpAndType(parsed.hostname, parsed.pathname);
+    if (!mmpResult) mmpResult = fuzzyDetectMmp(parsed.hostname);
+    rawDomain = parsed.hostname;
+  } else {
+    // Try to extract domain from broken URL
+    var domExtract = raw.match(/(?:https?:\/+)?([a-zA-Z0-9._-]+)/i);
+    if (domExtract) {
+      rawDomain = domExtract[1];
+      mmpResult = fuzzyDetectMmp(rawDomain);
+    }
+  }
+
+  var profile  = mmpResult ? MMP[mmpResult.id] : null;
+  var urlType  = mmpResult ? mmpResult.urlType  : null;
+  var typeConf = profile && urlType ? profile[urlType === 'deeplink' ? 'click' : urlType] : null;
+  var required    = typeConf ? typeConf.required    : [];
+  var recommended = typeConf ? typeConf.recommended : [];
+  var knownParams = profile ? profile.knownParams : [];
+  var knownMacros = profile ? profile.knownMacros : [];
+
+  // Extract params
+  var params = [];
+  if (parsed) {
+    parsed.searchParams.forEach(function(v, k) {
+      var dec;
+      try { dec = decodeURIComponent(v); } catch(e) { dec = v; }
+      params.push({key: k, raw: v, decoded: dec});
+    });
+  } else {
+    params = extractParamsRaw(raw);
+    params.forEach(function(p) {
+      try { p.decoded = decodeURIComponent(p.raw); } catch(e) { p.decoded = p.raw; }
+    });
+  }
+
+  var presentKeys = params.map(function(p){ return p.key; });
+  var missingRequired    = required.filter(function(r){ return presentKeys.indexOf(r.key) < 0; });
+  var missingRecommended = recommended.filter(function(r){ return presentKeys.indexOf(r.key) < 0; });
+
+  // Classify and annotate each param
+  params.forEach(function(p) {
+    var reqMatch = required.filter(function(r){ return r.key === p.key; })[0];
+    var recMatch = recommended.filter(function(r){ return r.key === p.key; })[0];
+    if (reqMatch)      p.status = 'req-ok';
+    else if (recMatch) p.status = 'rec-ok';
+    else               p.status = 'extra';
+
+    p.isEmpty       = p.raw === '';
+    p.isPlaceholder = isPlaceholder(p.raw);
+
+    // Typo check on param name
+    if (!reqMatch && !recMatch && knownParams.indexOf(p.key) < 0) {
+      var suggestion = fuzzyFind(p.key, knownParams, Math.min(4, Math.floor(p.key.length / 3)));
+      p.typoSuggestion = suggestion || null;
+    }
+
+    // Macro value checks
+    p.macroIssues = checkValueMacros(p.key, p.raw, knownMacros, knownParams);
+  });
+
+  // ── RENDER ──────────────────────────────────────────────────────
+  var html = '';
+
+  // Structural issues
+  if (structIssues.length > 0 || mmpResult && mmpResult.fuzzy) {
+    html += '<div class="struct-issues">';
+    structIssues.forEach(function(si) {
+      var icon = si.sev === 'err' ? '✗' : (si.sev === 'warn' ? '⚠' : 'ℹ');
+      html += '<div class="struct-issue ' + si.sev + '"><span class="struct-icon">' + icon + '</span><span>' + escH(si.msg) + '</span></div>';
+    });
+    if (mmpResult && mmpResult.fuzzy) {
+      html += '<div class="struct-issue warn"><span class="struct-icon">⚠</span><span>Domain not exactly recognized — best-match MMP: <strong>' + escH(MMP[mmpResult.id].name) + '</strong>. Did you mean <code>' + escH(mmpResult.suggestion) + '</code>?</span></div>';
+    }
+    if (isRawMode) {
+      html += '<div class="struct-issue err"><span class="struct-icon">✗</span><span>URL could not be parsed even after auto-fix — showing best-effort parameter extraction below</span></div>';
+    }
+    html += '</div>';
+  }
+
+  // MMP banner
+  if (profile) {
+    var utLabel = urlType && MMP[mmpResult.id].urlTypes[urlType] ? MMP[mmpResult.id].urlTypes[urlType].label : '';
+    var utClass = urlType === 'impression' ? 'utb-impression' : (urlType === 'click' || urlType === 'deeplink' ? 'utb-click' : 'utb-unknown');
+    html += '<div class="mmp-banner">';
+    html += '<div class="mmp-logo">' + profile.emoji + '</div>';
+    html += '<div class="mmp-info"><div class="mmp-name">' + escH(profile.name);
+    if (utLabel) html += '<span class="url-type-badge ' + utClass + '">' + escH(utLabel) + '</span>';
+    html += '</div>';
+    html += '<div class="mmp-domain">' + escH(rawDomain + (parsed ? parsed.pathname : '')) + '</div></div>';
+    html += '<span class="mmp-badge" style="background:' + profile.color + '">' + escH(profile.name) + '</span>';
+    html += '</div>';
+  } else {
+    html += '<div class="mmp-banner"><div class="mmp-logo">❓</div>';
+    html += '<div class="mmp-info"><div class="mmp-name">Unknown MMP<span class="url-type-badge utb-unknown">Unrecognized</span></div>';
+    html += '<div class="mmp-domain">' + escH(rawDomain) + '</div></div>';
+    html += '<span class="mmp-badge" style="background:#888">Unknown</span></div>';
+  }
+
+  if (isRawMode) html += '<div class="raw-notice">ℹ Parameters extracted via best-effort raw parsing — structural errors above must be fixed first</div>';
+
+  // Summary pills
+  var errCount = structIssues.filter(function(i){ return i.sev === 'err'; }).length;
+  var paramTypos = params.filter(function(p){ return p.typoSuggestion; }).length;
+  var wrongMacros = params.filter(function(p){ return p.macroIssues && p.macroIssues.some(function(i){ return i.type === 'wrong-macro'; }); }).length;
+  var placeholders = params.filter(function(p){ return p.isPlaceholder; }).length;
+
+  html += '<div class="summary-row">';
+  html += '<span class="summary-pill pill-info">🔢 ' + params.length + ' param' + (params.length !== 1 ? 's' : '') + '</span>';
+  if (errCount > 0)
+    html += '<span class="summary-pill pill-miss">✗ ' + errCount + ' structural error' + (errCount > 1 ? 's' : '') + '</span>';
+  if (missingRequired.length > 0)
+    html += '<span class="summary-pill pill-miss">✗ ' + missingRequired.length + ' required missing</span>';
+  else if (profile && required.length > 0)
+    html += '<span class="summary-pill pill-ok">✓ Required params present</span>';
+  if (missingRecommended.length > 0)
+    html += '<span class="summary-pill pill-warn">' + missingRecommended.length + ' recommended missing</span>';
+  if (paramTypos > 0)
+    html += '<span class="summary-pill pill-warn">⚠ ' + paramTypos + ' param name typo' + (paramTypos > 1 ? 's' : '') + '</span>';
+  if (wrongMacros > 0)
+    html += '<span class="summary-pill pill-warn">⚠ ' + wrongMacros + ' wrong macro' + (wrongMacros > 1 ? 's' : '') + ' in values</span>';
+  if (placeholders > 0)
+    html += '<span class="summary-pill pill-warn">⚠ ' + placeholders + ' unfilled placeholder' + (placeholders > 1 ? 's' : '') + '</span>';
+  html += '</div>';
+
+  // Missing required params (with macro)
+  if (missingRequired.length > 0) {
+    html += '<div class="missing-block">';
+    missingRequired.forEach(function(r) {
+      html += '<div class="missing-row">';
+      html += '<span class="missing-key">' + escH(r.key) + '</span>';
+      html += '<span class="missing-desc">' + escH(r.desc) + '</span>';
+      html += '<code class="missing-macro">' + escH(r.macro) + '</code>';
+      html += '<span class="status-badge badge-typo">Required</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Missing recommended params (with macro)
+  if (missingRecommended.length > 0) {
+    html += '<div class="missing-block">';
+    missingRecommended.forEach(function(r) {
+      html += '<div class="missing-row recommended">';
+      html += '<span class="missing-key">' + escH(r.key) + '</span>';
+      html += '<span class="missing-desc">' + escH(r.desc) + '</span>';
+      html += '<code class="missing-macro">' + escH(r.macro) + '</code>';
+      html += '<span class="status-badge badge-rec-ok">Recommended</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // URL colorized breakdown (only if properly parsed)
+  if (parsed && params.length > 0) {
+    html += '<div class="url-breakdown"><span class="url-base">' + escH(parsed.origin + parsed.pathname) + '</span><span class="url-sep">?</span>';
+    params.forEach(function(p, i) {
+      if (i > 0) html += '<span class="url-sep">&amp;</span>';
+      html += '<span class="url-key">' + escH(p.key) + '</span><span class="url-eq">=</span><span class="url-val">' + escH(p.raw) + '</span>';
+    });
+    html += '</div>';
+  }
+
+  // Params table
+  if (params.length > 0) {
+    html += '<table class="params-table"><thead><tr><th>Parameter</th><th>Value</th><th>Issues / Status</th><th></th></tr></thead><tbody>';
+    params.forEach(function(p, idx) {
+      var keyClass = p.typoSuggestion ? 'param-key typo' : 'param-key';
+      var valClass = p.isEmpty ? 'param-val empty' : (p.isPlaceholder ? 'param-val placeholder' : 'param-val');
+      var valText  = p.isEmpty ? '(empty)' : escH(p.raw);
+      var decoded  = (p.decoded !== p.raw && !p.isEmpty) ? '<div class="param-hint">↳ ' + escH(p.decoded) + '</div>' : '';
+
+      var issuesHtml = '<div class="issues-cell">';
+      if (p.status === 'req-ok')
+        issuesHtml += '<span class="status-badge badge-req-ok">Required ✓</span>';
+      else if (p.status === 'rec-ok')
+        issuesHtml += '<span class="status-badge badge-rec-ok">Recommended ✓</span>';
+      else if (p.typoSuggestion)
+        issuesHtml += '<span class="status-badge badge-typo">Typo? → ' + escH(p.typoSuggestion) + '</span>';
+      else
+        issuesHtml += '<span class="status-badge badge-extra">Extra</span>';
+
+      if (p.isPlaceholder)
+        issuesHtml += '<span class="status-badge badge-wmacro" style="margin-top:2px">Unfilled placeholder</span>';
+      if (p.isEmpty)
+        issuesHtml += '<span class="status-badge badge-wmacro" style="margin-top:2px">Empty value</span>';
+
+      (p.macroIssues || []).forEach(function(mi) {
+        issuesHtml += '<span class="status-badge badge-wmacro" style="margin-top:2px">' + escH(mi.msg) + '</span>';
+      });
+
+      issuesHtml += '</div>';
+
+      html += '<tr>';
+      html += '<td><span class="' + keyClass + '">' + escH(p.key) + '</span>';
+      if (p.typoSuggestion) html += '<div class="param-hint">→ ' + escH(p.typoSuggestion) + '?</div>';
+      html += '</td>';
+      html += '<td><span class="' + valClass + '">' + valText + '</span>' + decoded + '</td>';
+      html += '<td>' + issuesHtml + '</td>';
+      html += '<td><button class="copy-val-btn" title="Copy value" onclick="copyVal(' + idx + ')">📋</button></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+  } else if (structIssues.length === 0) {
+    html += '<p class="info-hint">No query parameters found in this URL.</p>';
+  }
+
+  document.getElementById('resultsContent').innerHTML = html;
+  window._lastParams = params;
+}
+
+function copyVal(idx) {
+  if (!window._lastParams) return;
+  var text = window._lastParams[idx].decoded || window._lastParams[idx].raw;
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).catch(function(){ copyFallback(text); });
+  } else {
+    copyFallback(text);
+  }
+}
+function copyFallback(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+}
+function showPlaceholder(msg) {
+  document.getElementById('resultsContent').innerHTML =
+    '<div class="result-placeholder"><div class="icon">🔗</div><p>' + escH(msg) + '</p></div>';
+}
+function loadExample(key) {
+  document.getElementById('urlInput').value = EXAMPLES[key] || '';
+  validateUrl();
+}
+function clearAll() {
+  document.getElementById('urlInput').value = '';
+  window._lastParams = null;
+  showPlaceholder('Paste a tracking URL above and click Validate');
+}
+function onUrlInput() {
+  var val = document.getElementById('urlInput').value.trim();
+  if (val.startsWith('http') && val.indexOf('?') > 0) validateUrl();
+}
+
+// ── SAVED URLS ────────────────────────────────────────────────────
+var SAVED_KEY = 'mu_saved_urls';
+
+function getSaved() {
+  try { return JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); } catch(e){ return []; }
+}
+function setSaved(arr) {
+  localStorage.setItem(SAVED_KEY, JSON.stringify(arr));
+}
+
+function renderSavedChips() {
+  var row = document.getElementById('savedRow');
+  var empty = document.getElementById('savedEmpty');
+  var saved = getSaved();
+  // Remove existing chips (keep label + empty span)
+  Array.from(row.querySelectorAll('.saved-chip')).forEach(function(el){ el.remove(); });
+  if (saved.length === 0) {
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+  saved.forEach(function(item, idx) {
+    var chip = document.createElement('span');
+    chip.className = 'saved-chip';
+    chip.title = item.url;
+    chip.innerHTML =
+      '<span class="saved-chip-name">' + escH(item.name) + '</span>' +
+      '<span class="saved-chip-del" title="Delete" onclick="event.stopPropagation();deleteSavedUrl(' + idx + ')">✕</span>';
+    chip.addEventListener('click', function(){ loadSavedUrl(idx); });
+    row.appendChild(chip);
+  });
+}
+
+function saveCurrentUrl() {
+  var url = document.getElementById('urlInput').value.trim();
+  if (!url) { alert('Paste a URL first.'); return; }
+  var nameInput = document.getElementById('saveNameInput');
+  var name = nameInput.value.trim();
+  if (!name) { nameInput.focus(); nameInput.placeholder = 'Enter a name first'; return; }
+  var saved = getSaved();
+  // Replace if same name exists
+  var existing = saved.findIndex(function(s){ return s.name === name; });
+  if (existing >= 0) { saved[existing].url = url; }
+  else { saved.push({name: name, url: url}); }
+  setSaved(saved);
+  nameInput.value = '';
+  nameInput.placeholder = 'Name to save…';
+  renderSavedChips();
+}
+
+function loadSavedUrl(idx) {
+  var saved = getSaved();
+  if (!saved[idx]) return;
+  document.getElementById('urlInput').value = saved[idx].url;
+  validateUrl();
+}
+
+function deleteSavedUrl(idx) {
+  var saved = getSaved();
+  saved.splice(idx, 1);
+  setSaved(saved);
+  renderSavedChips();
+}
+
+// init chips on load
+renderSavedChips();
+
+// ── THEME ─────────────────────────────────────────────────────────
+(function() {
+  var t = localStorage.getItem('tooling_hub_theme') || localStorage.getItem('ht_nlp_theme');
+  if (t === 'dark') {
+    document.body.classList.add('dark-mode');
+    document.getElementById('themeToggle').classList.add('dark');
+    document.getElementById('themeSlider').textContent = '🌙';
+  }
+})();
+function toggleTheme() {
+  var isDark = document.body.classList.toggle('dark-mode');
+  document.getElementById('themeToggle').classList.toggle('dark', isDark);
+  document.getElementById('themeSlider').textContent = isDark ? '🌙' : '☀️';
+  localStorage.setItem('tooling_hub_theme', isDark ? 'dark' : 'light');
+}
+</script>
+</body>
+</html>

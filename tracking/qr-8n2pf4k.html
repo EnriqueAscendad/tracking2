@@ -2701,9 +2701,9 @@ function downloadPNG() {
     if (!svg) return;
     var size = parseInt(document.getElementById('qrSize').value, 10);
     var svgData = new XMLSerializer().serializeToString(svg);
+    // Use base64 data URI — avoids canvas taint issues with blob: URLs on file:// or restricted contexts
+    var dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
     var img = new Image();
-    var blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    var url = URL.createObjectURL(blob);
 
     img.onload = function() {
         var canvas = document.createElement('canvas');
@@ -2712,13 +2712,17 @@ function downloadPNG() {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, size, size);
         ctx.drawImage(img, 0, 0, size, size);
-        URL.revokeObjectURL(url);
         var a = document.createElement('a');
         a.href = canvas.toDataURL('image/png');
         a.download = 'qrcode.png';
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
     };
-    img.src = url;
+    img.onerror = function() {
+        alert('Could not render QR code to PNG. Try the SVG download instead.');
+    };
+    img.src = dataUrl;
 }
 
 function copyURL() {

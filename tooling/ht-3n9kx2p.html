@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="version" content="1.0.0">
+    <title>Hypertargeting Builder</title>
+
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <meta name="googlebot" content="noindex, nofollow">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎛️</text></svg>">
+
+    <style>
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --section-bg: #f8f9fa;
+            --border-color: #e0e0e0;
+            --input-bg: #ffffff;
+        }
+        body.dark-mode {
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --container-bg: #0f1419;
+            --text-color: #e4e6eb;
+            --section-bg: #1a1d24;
+            --border-color: #2d3748;
+            --input-bg: #1a1d24;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh; padding: 20px; transition: background 0.3s ease;
+        }
+        .container {
+            max-width: 960px; margin: 0 auto;
+            background: var(--container-bg);
+            border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden; transition: background 0.3s ease;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 8px 20px; text-align: center; position: relative;
+        }
+        body.dark-mode .header { background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); }
+        .header h1 { font-size: 15px; margin-bottom: 1px; }
+        .header p  { opacity: 0.9; font-size: 11px; }
+        .type-badge {
+            display: inline-block; background: rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.5); color: white;
+            font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 20px;
+            letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px;
+        }
+        .theme-toggle {
+            position: absolute; top: 50%; transform: translateY(-50%); right: 20px;
+            background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px; width: 60px; height: 30px; cursor: pointer;
+            transition: all 0.3s; display: flex; align-items: center; padding: 2px;
+        }
+        .theme-toggle:hover { background: rgba(255,255,255,0.3); }
+        .theme-toggle-slider {
+            width: 24px; height: 24px; background: white; border-radius: 50%;
+            transition: transform 0.3s; display: flex; align-items: center;
+            justify-content: center; font-size: 12px;
+        }
+        .theme-toggle.dark .theme-toggle-slider { transform: translateX(30px); }
+        .content { padding: 16px 20px; }
+        .section { margin-bottom: 18px; }
+        .section-title {
+            font-size: 11px; font-weight: 700; color: var(--text-color); opacity: 0.6;
+            margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid #667eea;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        /* Mode pills */
+        .mode-pills { display: flex; gap: 4px; margin-bottom: 14px; }
+        .mode-pill {
+            padding: 5px 16px; border: 2px solid var(--border-color);
+            border-radius: 20px; font-size: 11px; font-weight: 700;
+            cursor: pointer; transition: all 0.15s; color: var(--text-color);
+            opacity: 0.6; background: var(--input-bg); user-select: none;
+        }
+        .mode-pill:hover { border-color: #667eea; opacity: 0.9; }
+        .mode-pill.active { background: #667eea; border-color: #667eea; color: white; opacity: 1; }
+        /* Form */
+        .form-group { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; }
+        .form-group label {
+            font-size: 10px; font-weight: 700; color: var(--text-color); opacity: 0.6;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        textarea.form-input {
+            padding: 10px 12px; border: 2px solid var(--border-color); border-radius: 6px;
+            font-size: 13px; font-family: inherit; background: var(--input-bg);
+            color: var(--text-color); transition: border-color 0.2s; resize: vertical;
+            width: 100%; line-height: 1.5;
+        }
+        textarea.form-input:focus { outline: none; border-color: #667eea; }
+        /* Buttons */
+        .calc-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 8px 22px; border-radius: 6px;
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; cursor: pointer; transition: opacity 0.2s;
+        }
+        .calc-btn:hover { opacity: 0.9; }
+        /* Examples */
+        .examples-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+        .ex-chip {
+            font-size: 10px; padding: 3px 9px; border: 1px solid var(--border-color);
+            border-radius: 20px; cursor: pointer; color: var(--text-color);
+            background: var(--input-bg); transition: all 0.15s; opacity: 0.7;
+        }
+        .ex-chip:hover { border-color: #667eea; opacity: 1; color: #667eea; }
+        /* Warning strip */
+        .warn-strip {
+            display: none; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.4);
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px;
+            color: #b45309;
+        }
+        body.dark-mode .warn-strip { color: #fbbf24; background: rgba(251,191,36,0.08); }
+        .warn-strip strong { font-weight: 700; }
+        .warn-token { display:inline-block; background: rgba(245,158,11,0.2); border-radius: 4px; padding: 1px 5px; margin: 1px 2px; font-family: monospace; font-size: 11px; }
+        /* Tree output */
+        .tree-placeholder {
+            text-align: center; padding: 32px 20px; color: var(--text-color); opacity: 0.3;
+        }
+        .tree-placeholder .icon { font-size: 40px; margin-bottom: 8px; }
+        .tree-placeholder p { font-size: 12px; }
+        /* Tree nodes */
+        .tree-root { margin-top: 4px; }
+        .tree-group {
+            border-radius: 8px; padding: 10px 12px; margin: 6px 0; position: relative;
+        }
+        .tree-group-or {
+            border: 2px solid #667eea; background: rgba(102,126,234,0.07);
+        }
+        body.dark-mode .tree-group-or { background: rgba(102,126,234,0.10); }
+        .tree-group-and {
+            border: 1px solid rgba(34,197,94,0.35); background: rgba(34,197,94,0.07);
+            border-left: 3px solid #22c55e; margin-left: 12px;
+        }
+        body.dark-mode .tree-group-and { background: rgba(34,197,94,0.06); border-color: rgba(34,197,94,0.25); }
+        .tree-group-and + .tree-group-and { margin-top: 8px; }
+        .tree-group-header {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+        }
+        .tree-toggle-dot {
+            width: 14px; height: 14px; border-radius: 50%; background: #22c55e; flex-shrink: 0;
+            box-shadow: 0 0 0 2px rgba(34,197,94,0.25);
+        }
+        .tree-group-or > .tree-group-header .tree-toggle-dot {
+            background: #667eea;
+            box-shadow: 0 0 0 2px rgba(102,126,234,0.25);
+        }
+        .tree-group-label {
+            font-size: 11px; font-weight: 700; color: var(--text-color); opacity: 0.7;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .tree-rule-row {
+            display: flex; align-items: center; gap: 6px; padding: 5px 8px;
+            background: var(--container-bg); border: 1px solid var(--border-color);
+            border-radius: 6px; margin: 4px 0; flex-wrap: wrap;
+        }
+        .tree-field-pill {
+            font-size: 11px; font-weight: 600; padding: 2px 10px;
+            border: 1px solid var(--border-color); border-radius: 4px;
+            background: var(--section-bg); color: var(--text-color);
+            white-space: nowrap;
+        }
+        .tree-op-in {
+            font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 4px;
+            background: rgba(34,197,94,0.12); color: #16a34a; border: 1px solid rgba(34,197,94,0.3);
+            white-space: nowrap;
+        }
+        body.dark-mode .tree-op-in { color: #4ade80; background: rgba(74,222,128,0.1); }
+        .tree-op-not-in {
+            font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 4px;
+            background: rgba(239,68,68,0.1); color: #dc2626; border: 1px solid rgba(239,68,68,0.25);
+            white-space: nowrap;
+        }
+        body.dark-mode .tree-op-not-in { color: #f87171; background: rgba(248,113,113,0.1); }
+        .tree-val-chip {
+            font-size: 11px; padding: 2px 8px; background: rgba(102,126,234,0.12);
+            border: 1px solid rgba(102,126,234,0.3); border-radius: 4px; color: #4f46e5;
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+        body.dark-mode .tree-val-chip { color: #a5b4fc; background: rgba(165,180,252,0.1); border-color: rgba(165,180,252,0.25); }
+        .tree-val-chip .chip-x { opacity: 0.5; font-size: 10px; }
+        /* Edit mode textarea */
+        #editJsonArea { display: none; }
+        /* Info hint */
+        .info-hint {
+            font-size: 11px; color: var(--text-color); opacity: 0.5;
+            margin-top: 4px; font-style: italic;
+        }
+        /* Subsection */
+        .subsection {
+            background: var(--section-bg); border-left: 3px solid #667eea;
+            border-radius: 0 6px 6px 0; padding: 10px 12px; margin-top: 8px;
+        }
+        @media (max-width: 600px) { body { padding: 10px; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Hypertargeting Builder</h1>
+        <p>Describe tus reglas de targeting en lenguaje natural</p>
+        <span class="type-badge">Tooling</span>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+            <div class="theme-toggle-slider" id="themeSlider">&#9728;&#65039;</div>
+        </button>
+    </div>
+    <div class="content">
+
+        <!-- Mode selector -->
+        <div class="mode-pills">
+            <div class="mode-pill active" id="pill-create" onclick="setMode('create')">Crear reglas</div>
+            <div class="mode-pill" id="pill-edit" onclick="setMode('edit')">Editar existentes</div>
+        </div>
+
+        <!-- Input section -->
+        <div class="section">
+            <div class="section-title">Descripci&#243;n en lenguaje natural</div>
+
+            <!-- Edit mode: paste existing JSON -->
+            <div id="editJsonArea">
+                <div class="form-group">
+                    <label>Reglas actuales (JSON de la plataforma)</label>
+                    <textarea id="existingJson" class="form-input" rows="4"
+                        placeholder='Pega aqu&#237; el JSON de las reglas actuales...'></textarea>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label id="nlLabel">Describe lo que quieres</label>
+                <textarea id="nlInput" class="form-input" rows="5"
+                    placeholder="Ej: eliminar el tr&#225;fico de Vodafone Espa&#241;a&#10;Ej: s&#243;lo tr&#225;fico de US en los estados Wisconsin y Nueva York&#10;Ej: para Espa&#241;a solo Salamanca pero no Movistar. Aparte para US solo T-Mobile."
+                    onkeydown="if(event.ctrlKey&&event.key==='Enter')parseRules()"></textarea>
+                <div class="info-hint">Ctrl+Enter para parsear &#183; Espa&#241;ol o ingl&#233;s</div>
+            </div>
+
+            <!-- Quick examples -->
+            <div class="examples-row">
+                <span class="ex-chip" onclick="loadExample(0)">Excluir operadora</span>
+                <span class="ex-chip" onclick="loadExample(1)">Solo estado US</span>
+                <span class="ex-chip" onclick="loadExample(2)">Multi-pa&#237;s complejo</span>
+                <span class="ex-chip" onclick="loadExample(3)">Varios pa&#237;ses</span>
+            </div>
+
+            <div style="margin-top:12px">
+                <button class="calc-btn" onclick="parseRules()">&#8594; Parsear reglas</button>
+            </div>
+        </div>
+
+        <!-- Result section -->
+        <div class="section">
+            <div class="section-title">Resultado &#8212; &#193;rbol AND/OR</div>
+
+            <!-- Warning strip -->
+            <div class="warn-strip" id="warnStrip"></div>
+
+            <!-- Tree output -->
+            <div id="treeOutput">
+                <div class="tree-placeholder" id="treePlaceholder">
+                    <div class="icon">&#127919;</div>
+                    <p>Escribe una descripci&#243;n y pulsa "Parsear reglas"</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DICTIONARIES
+// ══════════════════════════════════════════════════════════════════════════════
+
+var COUNTRIES = {
+  'espana':{iso2:'ES',canonical:'ES - Spain'},'spain':{iso2:'ES',canonical:'ES - Spain'},
+  'estados unidos':{iso2:'US',canonical:'US - United States'},
+  'united states':{iso2:'US',canonical:'US - United States'},
+  'united states of america':{iso2:'US',canonical:'US - United States'},
+  'eeuu':{iso2:'US',canonical:'US - United States'},'ee uu':{iso2:'US',canonical:'US - United States'},
+  'usa':{iso2:'US',canonical:'US - United States'},'us':{iso2:'US',canonical:'US - United States'},
+  'francia':{iso2:'FR',canonical:'FR - France'},'france':{iso2:'FR',canonical:'FR - France'},
+  'alemania':{iso2:'DE',canonical:'DE - Germany'},'germany':{iso2:'DE',canonical:'DE - Germany'},
+  'italia':{iso2:'IT',canonical:'IT - Italy'},'italy':{iso2:'IT',canonical:'IT - Italy'},
+  'portugal':{iso2:'PT',canonical:'PT - Portugal'},
+  'reino unido':{iso2:'GB',canonical:'GB - United Kingdom'},
+  'united kingdom':{iso2:'GB',canonical:'GB - United Kingdom'},
+  'uk':{iso2:'GB',canonical:'GB - United Kingdom'},'gb':{iso2:'GB',canonical:'GB - United Kingdom'},
+  'gran bretana':{iso2:'GB',canonical:'GB - United Kingdom'},
+  'mexico':{iso2:'MX',canonical:'MX - Mexico'},'brasil':{iso2:'BR',canonical:'BR - Brazil'},
+  'brazil':{iso2:'BR',canonical:'BR - Brazil'},'argentina':{iso2:'AR',canonical:'AR - Argentina'},
+  'colombia':{iso2:'CO',canonical:'CO - Colombia'},'chile':{iso2:'CL',canonical:'CL - Chile'},
+  'peru':{iso2:'PE',canonical:'PE - Peru'},'venezuela':{iso2:'VE',canonical:'VE - Venezuela'},
+  'polonia':{iso2:'PL',canonical:'PL - Poland'},'poland':{iso2:'PL',canonical:'PL - Poland'},
+  'holanda':{iso2:'NL',canonical:'NL - Netherlands'},'paises bajos':{iso2:'NL',canonical:'NL - Netherlands'},
+  'netherlands':{iso2:'NL',canonical:'NL - Netherlands'},
+  'belgica':{iso2:'BE',canonical:'BE - Belgium'},'belgium':{iso2:'BE',canonical:'BE - Belgium'},
+  'suiza':{iso2:'CH',canonical:'CH - Switzerland'},'switzerland':{iso2:'CH',canonical:'CH - Switzerland'},
+  'austria':{iso2:'AT',canonical:'AT - Austria'},
+  'suecia':{iso2:'SE',canonical:'SE - Sweden'},'sweden':{iso2:'SE',canonical:'SE - Sweden'},
+  'noruega':{iso2:'NO',canonical:'NO - Norway'},'norway':{iso2:'NO',canonical:'NO - Norway'},
+  'dinamarca':{iso2:'DK',canonical:'DK - Denmark'},'denmark':{iso2:'DK',canonical:'DK - Denmark'},
+  'finlandia':{iso2:'FI',canonical:'FI - Finland'},'finland':{iso2:'FI',canonical:'FI - Finland'},
+  'andorra':{iso2:'AD',canonical:'AD - Andorra'},
+  'rumania':{iso2:'RO',canonical:'RO - Romania'},'romania':{iso2:'RO',canonical:'RO - Romania'},
+  'rusia':{iso2:'RU',canonical:'RU - Russia'},'russia':{iso2:'RU',canonical:'RU - Russia'},
+  'turquia':{iso2:'TR',canonical:'TR - Turkey'},'turkey':{iso2:'TR',canonical:'TR - Turkey'},
+  'india':{iso2:'IN',canonical:'IN - India'},'china':{iso2:'CN',canonical:'CN - China'},
+  'japon':{iso2:'JP',canonical:'JP - Japan'},'japan':{iso2:'JP',canonical:'JP - Japan'},
+  'canada':{iso2:'CA',canonical:'CA - Canada'},'australia':{iso2:'AU',canonical:'AU - Australia'},
+  'nueva zelanda':{iso2:'NZ',canonical:'NZ - New Zealand'},
+  'new zealand':{iso2:'NZ',canonical:'NZ - New Zealand'},
+  'sudafrica':{iso2:'ZA',canonical:'ZA - South Africa'},
+  'south africa':{iso2:'ZA',canonical:'ZA - South Africa'},
+  'nigeria':{iso2:'NG',canonical:'NG - Nigeria'},
+  'egipto':{iso2:'EG',canonical:'EG - Egypt'},'egypt':{iso2:'EG',canonical:'EG - Egypt'},
+  'arabia saudi':{iso2:'SA',canonical:'SA - Saudi Arabia'},
+  'saudi arabia':{iso2:'SA',canonical:'SA - Saudi Arabia'},
+  'emiratos arabes unidos':{iso2:'AE',canonical:'AE - UAE'},'uae':{iso2:'AE',canonical:'AE - UAE'},
+  'indonesia':{iso2:'ID',canonical:'ID - Indonesia'},
+  'malasia':{iso2:'MY',canonical:'MY - Malaysia'},'malaysia':{iso2:'MY',canonical:'MY - Malaysia'},
+  'tailandia':{iso2:'TH',canonical:'TH - Thailand'},'thailand':{iso2:'TH',canonical:'TH - Thailand'},
+  'filipinas':{iso2:'PH',canonical:'PH - Philippines'},
+  'philippines':{iso2:'PH',canonical:'PH - Philippines'},
+  'vietnam':{iso2:'VN',canonical:'VN - Vietnam'},
+  'singapur':{iso2:'SG',canonical:'SG - Singapore'},'singapore':{iso2:'SG',canonical:'SG - Singapore'},
+  'hong kong':{iso2:'HK',canonical:'HK - Hong Kong'},
+  'corea del sur':{iso2:'KR',canonical:'KR - South Korea'},
+  'south korea':{iso2:'KR',canonical:'KR - South Korea'},
+  'taiwan':{iso2:'TW',canonical:'TW - Taiwan'},
+  'hungria':{iso2:'HU',canonical:'HU - Hungary'},'hungary':{iso2:'HU',canonical:'HU - Hungary'},
+  'republica checa':{iso2:'CZ',canonical:'CZ - Czech Republic'},
+  'czech republic':{iso2:'CZ',canonical:'CZ - Czech Republic'},
+  'eslovaquia':{iso2:'SK',canonical:'SK - Slovakia'},
+  'eslovenia':{iso2:'SI',canonical:'SI - Slovenia'},
+  'croacia':{iso2:'HR',canonical:'HR - Croatia'},
+  'bulgaria':{iso2:'BG',canonical:'BG - Bulgaria'},
+  'grecia':{iso2:'GR',canonical:'GR - Greece'},'greece':{iso2:'GR',canonical:'GR - Greece'},
+  'irlanda':{iso2:'IE',canonical:'IE - Ireland'},'ireland':{iso2:'IE',canonical:'IE - Ireland'},
+  'marruecos':{iso2:'MA',canonical:'MA - Morocco'},'morocco':{iso2:'MA',canonical:'MA - Morocco'},
+  'guatemala':{iso2:'GT',canonical:'GT - Guatemala'},
+  'costa rica':{iso2:'CR',canonical:'CR - Costa Rica'},
+  'panama':{iso2:'PA',canonical:'PA - Panama'},
+  'republica dominicana':{iso2:'DO',canonical:'DO - Dominican Republic'},
+  'ecuador':{iso2:'EC',canonical:'EC - Ecuador'},'bolivia':{iso2:'BO',canonical:'BO - Bolivia'},
+  'paraguay':{iso2:'PY',canonical:'PY - Paraguay'},'uruguay':{iso2:'UY',canonical:'UY - Uruguay'},
+  'cuba':{iso2:'CU',canonical:'CU - Cuba'},'puerto rico':{iso2:'PR',canonical:'PR - Puerto Rico'}
+};
+
+var US_STATES = {
+  'alabama':{code:'AL'},'alaska':{code:'AK'},'arizona':{code:'AZ'},'arkansas':{code:'AR'},
+  'california':{code:'CA'},'colorado':{code:'CO'},'connecticut':{code:'CT'},
+  'delaware':{code:'DE'},'florida':{code:'FL'},'georgia':{code:'GA'},
+  'hawaii':{code:'HI'},'hawai':{code:'HI'},'idaho':{code:'ID'},
+  'illinois':{code:'IL'},'indiana':{code:'IN'},'iowa':{code:'IA'},
+  'kansas':{code:'KS'},'kentucky':{code:'KY'},'louisiana':{code:'LA'},
+  'maine':{code:'ME'},'maryland':{code:'MD'},'massachusetts':{code:'MA'},
+  'michigan':{code:'MI'},'minnesota':{code:'MN'},
+  'mississippi':{code:'MS'},'mississipi':{code:'MS'},'misisipi':{code:'MS'},
+  'missouri':{code:'MO'},'montana':{code:'MT'},'nebraska':{code:'NE'},
+  'nevada':{code:'NV'},'new hampshire':{code:'NH'},'nueva hampshire':{code:'NH'},
+  'new jersey':{code:'NJ'},'nueva jersey':{code:'NJ'},
+  'new mexico':{code:'NM'},'nuevo mexico':{code:'NM'},
+  'new york':{code:'NY',isAlsoCity:true},'nueva york':{code:'NY',isAlsoCity:true},
+  'north carolina':{code:'NC'},'carolina del norte':{code:'NC'},
+  'north dakota':{code:'ND'},'dakota del norte':{code:'ND'},
+  'ohio':{code:'OH'},'oklahoma':{code:'OK'},'oregon':{code:'OR'},'oregón':{code:'OR'},
+  'pennsylvania':{code:'PA'},'pensilvania':{code:'PA'},'rhode island':{code:'RI'},
+  'south carolina':{code:'SC'},'carolina del sur':{code:'SC'},
+  'south dakota':{code:'SD'},'dakota del sur':{code:'SD'},
+  'tennessee':{code:'TN'},'texas':{code:'TX'},'utah':{code:'UT'},
+  'vermont':{code:'VT'},'virginia':{code:'VA'},'washington':{code:'WA'},
+  'west virginia':{code:'WV'},'virginia occidental':{code:'WV'},
+  'wisconsin':{code:'WI'},'wyoming':{code:'WY'},
+  'district of columbia':{code:'DC'},'washington dc':{code:'DC'},'dc':{code:'DC'}
+};
+
+var CARRIERS = {
+  ES:{
+    'vodafone':{canonical:'Vodafone(ES)'},'vodafone espana':{canonical:'Vodafone(ES)'},
+    'vodafone spain':{canonical:'Vodafone(ES)'},'movistar':{canonical:'Movistar(ES)'},
+    'telefonica':{canonical:'Movistar(ES)'},'orange':{canonical:'Orange(ES)'},
+    'yoigo':{canonical:'Yoigo(ES)'},'masmovil':{canonical:'MásMóvil(ES)'},
+    'mas movil':{canonical:'MásMóvil(ES)'}
+  },
+  US:{
+    't-mobile':{canonical:'T-Mobile(US)'},'tmobile':{canonical:'T-Mobile(US)'},
+    't mobile':{canonical:'T-Mobile(US)'},
+    'verizon':{canonical:'Verizon(US)'},'att':{canonical:'AT&T(US)'},
+    'at&t':{canonical:'AT&T(US)'},'at t':{canonical:'AT&T(US)'},
+    'sprint':{canonical:'Sprint(US)'},'us cellular':{canonical:'US Cellular(US)'}
+  },
+  FR:{
+    'orange':{canonical:'Orange(FR)'},'sfr':{canonical:'SFR(FR)'},
+    'bouygues':{canonical:'Bouygues(FR)'},'free':{canonical:'Free(FR)'}
+  },
+  DE:{
+    'telekom':{canonical:'Telekom(DE)'},'deutsche telekom':{canonical:'Telekom(DE)'},
+    'vodafone':{canonical:'Vodafone(DE)'},'o2':{canonical:'O2(DE)'},
+    'e-plus':{canonical:'E-Plus(DE)'}
+  },
+  GB:{
+    'ee':{canonical:'EE(GB)'},'o2':{canonical:'O2(GB)'},
+    'vodafone':{canonical:'Vodafone(GB)'},'three':{canonical:'Three(GB)'},
+    'bt mobile':{canonical:'BT Mobile(GB)'}
+  },
+  IT:{
+    'tim':{canonical:'TIM(IT)'},'vodafone':{canonical:'Vodafone(IT)'},
+    'wind tre':{canonical:'Wind Tre(IT)'},'iliad':{canonical:'Iliad(IT)'}
+  },
+  PT:{
+    'nos':{canonical:'NOS(PT)'},'meo':{canonical:'MEO(PT)'},
+    'vodafone':{canonical:'Vodafone(PT)'}
+  },
+  NL:{
+    'kpn':{canonical:'KPN(NL)'},'vodafone':{canonical:'Vodafone(NL)'},
+    't-mobile':{canonical:'T-Mobile(NL)'},'tele2':{canonical:'Tele2(NL)'}
+  },
+  MX:{
+    'telcel':{canonical:'Telcel(MX)'},'att':{canonical:'AT&T(MX)'},
+    'movistar':{canonical:'Movistar(MX)'}
+  },
+  BR:{
+    'claro':{canonical:'Claro(BR)'},'tim':{canonical:'TIM(BR)'},
+    'vivo':{canonical:'Vivo(BR)'},'oi':{canonical:'Oi(BR)'}
+  },
+  AR:{
+    'claro':{canonical:'Claro(AR)'},'personal':{canonical:'Personal(AR)'},
+    'movistar':{canonical:'Movistar(AR)'}
+  },
+  CO:{
+    'claro':{canonical:'Claro(CO)'},'movistar':{canonical:'Movistar(CO)'},
+    'tigo':{canonical:'Tigo(CO)'}
+  },
+  PL:{
+    'orange':{canonical:'Orange(PL)'},'play':{canonical:'Play(PL)'},
+    'plus':{canonical:'Plus(PL)'},'t-mobile':{canonical:'T-Mobile(PL)'}
+  },
+  SE:{
+    'telia':{canonical:'Telia(SE)'},'tele2':{canonical:'Tele2(SE)'},
+    'tre':{canonical:'Tre(SE)'},'telenor':{canonical:'Telenor(SE)'}
+  },
+  NO:{
+    'telenor':{canonical:'Telenor(NO)'},'telia':{canonical:'Telia(NO)'},
+    'ice':{canonical:'Ice(NO)'}
+  },
+  DK:{
+    'tdc':{canonical:'TDC(DK)'},'telia':{canonical:'Telia(DK)'},
+    'telenor':{canonical:'Telenor(DK)'},'three':{canonical:'Three(DK)'}
+  },
+  FI:{
+    'elisa':{canonical:'Elisa(FI)'},'dna':{canonical:'DNA(FI)'},
+    'telia':{canonical:'Telia(FI)'}
+  }
+};
+
+var CITIES = {
+  US:{
+    'new york':{canonical:'New York'},'nueva york':{canonical:'New York'},
+    'los angeles':{canonical:'Los Angeles'},'los ángeles':{canonical:'Los Angeles'},
+    'chicago':{canonical:'Chicago'},'houston':{canonical:'Houston'},
+    'philadelphia':{canonical:'Philadelphia'},'filadelfia':{canonical:'Philadelphia'},
+    'phoenix':{canonical:'Phoenix'},'san antonio':{canonical:'San Antonio'},
+    'san diego':{canonical:'San Diego'},'dallas':{canonical:'Dallas'},
+    'san jose':{canonical:'San Jose'},'san josé':{canonical:'San Jose'},
+    'austin':{canonical:'Austin'},'seattle':{canonical:'Seattle'},
+    'denver':{canonical:'Denver'},'nashville':{canonical:'Nashville'},
+    'miami':{canonical:'Miami'},'atlanta':{canonical:'Atlanta'},
+    'minneapolis':{canonical:'Minneapolis'},'portland':{canonical:'Portland'},
+    'las vegas':{canonical:'Las Vegas'},'memphis':{canonical:'Memphis'},
+    'boston':{canonical:'Boston'},'detroit':{canonical:'Detroit'}
+  },
+  ES:{
+    'madrid':{canonical:'Madrid'},'barcelona':{canonical:'Barcelona'},
+    'valencia':{canonical:'Valencia'},'sevilla':{canonical:'Sevilla'},
+    'zaragoza':{canonical:'Zaragoza'},'malaga':{canonical:'Málaga'},
+    'málaga':{canonical:'Málaga'},'murcia':{canonical:'Murcia'},
+    'palma':{canonical:'Palma'},'bilbao':{canonical:'Bilbao'},
+    'alicante':{canonical:'Alicante'},'cordoba':{canonical:'Córdoba'},
+    'córdoba':{canonical:'Córdoba'},'valladolid':{canonical:'Valladolid'},
+    'vigo':{canonical:'Vigo'},'granada':{canonical:'Granada'},
+    'oviedo':{canonical:'Oviedo'},'burgos':{canonical:'Burgos'},
+    'salamanca':{canonical:'Salamanca'},'santander':{canonical:'Santander'},
+    'pamplona':{canonical:'Pamplona'},'almeria':{canonical:'Almería'},
+    'almería':{canonical:'Almería'},'vitoria':{canonical:'Vitoria'},
+    'jerez':{canonical:'Jerez'},'tarragona':{canonical:'Tarragona'},
+    'lleida':{canonical:'Lleida'},'girona':{canonical:'Girona'},
+    'toledo':{canonical:'Toledo'},'badajoz':{canonical:'Badajoz'},
+    'lograno':{canonical:'Logroño'},'logrono':{canonical:'Logroño'},
+    'teruel':{canonical:'Teruel'},'cuenca':{canonical:'Cuenca'},
+    'guadalajara':{canonical:'Guadalajara (ES)'}
+  },
+  FR:{
+    'paris':{canonical:'Paris'},'lyon':{canonical:'Lyon'},
+    'marseille':{canonical:'Marseille'},'marsella':{canonical:'Marsella'},
+    'toulouse':{canonical:'Toulouse'},'nice':{canonical:'Nice'},
+    'nantes':{canonical:'Nantes'},'bordeaux':{canonical:'Bordeaux'},
+    'estrasburgo':{canonical:'Strasbourg'},'strasbourg':{canonical:'Strasbourg'}
+  },
+  DE:{
+    'berlin':{canonical:'Berlin'},'berlín':{canonical:'Berlin'},
+    'munich':{canonical:'Munich'},'múnich':{canonical:'Munich'},
+    'hamburg':{canonical:'Hamburg'},'hamburgo':{canonical:'Hamburg'},
+    'cologne':{canonical:'Cologne'},'colonia':{canonical:'Cologne'},
+    'frankfurt':{canonical:'Frankfurt'},'stuttgart':{canonical:'Stuttgart'},
+    'dusseldorf':{canonical:'Düsseldorf'},'dortmund':{canonical:'Dortmund'}
+  },
+  GB:{
+    'london':{canonical:'London'},'londres':{canonical:'London'},
+    'manchester':{canonical:'Manchester'},'birmingham':{canonical:'Birmingham'},
+    'glasgow':{canonical:'Glasgow'},'liverpool':{canonical:'Liverpool'},
+    'edinburgh':{canonical:'Edinburgh'},'edimburgo':{canonical:'Edinburgh'}
+  },
+  SE:{
+    'estocolmo':{canonical:'Stockholm'},'stockholm':{canonical:'Stockholm'},
+    'gotemburgo':{canonical:'Gothenburg'},'gothenburg':{canonical:'Gothenburg'},
+    'goteborg':{canonical:'Gothenburg'},'göteborg':{canonical:'Gothenburg'},
+    'malmo':{canonical:'Malmö'},'malmö':{canonical:'Malmö'},
+    'uppsala':{canonical:'Uppsala'},'vasteras':{canonical:'Västerås'},
+    'orebro':{canonical:'Örebro'},'linkoping':{canonical:'Linköping'}
+  },
+  BR:{
+    'sao paulo':{canonical:'São Paulo'},'são paulo':{canonical:'São Paulo'},
+    'rio de janeiro':{canonical:'Rio de Janeiro'},'rio':{canonical:'Rio de Janeiro'},
+    'brasilia':{canonical:'Brasília'},'brasília':{canonical:'Brasília'},
+    'salvador':{canonical:'Salvador'},'fortaleza':{canonical:'Fortaleza'},
+    'belo horizonte':{canonical:'Belo Horizonte'},'manaus':{canonical:'Manaus'},
+    'curitiba':{canonical:'Curitiba'},'recife':{canonical:'Recife'},
+    'porto alegre':{canonical:'Porto Alegre'},'belem':{canonical:'Belém'}
+  },
+  MX:{
+    'ciudad de mexico':{canonical:'Ciudad de México'},'ciudad de méxico':{canonical:'Ciudad de México'},
+    'cdmx':{canonical:'Ciudad de México'},'df':{canonical:'Ciudad de México'},
+    'guadalajara':{canonical:'Guadalajara'},'monterrey':{canonical:'Monterrey'},
+    'puebla':{canonical:'Puebla'},'tijuana':{canonical:'Tijuana'},
+    'leon':{canonical:'León'},'leó​n':{canonical:'León'},
+    'juarez':{canonical:'Juárez'},'ciudad juarez':{canonical:'Juárez'},
+    'torreon':{canonical:'Torreón'},'queretaro':{canonical:'Querétaro'},
+    'san luis potosi':{canonical:'San Luis Potosí'},'merida':{canonical:'Mérida'},
+    'mexicali':{canonical:'Mexicali'},'aguascalientes':{canonical:'Aguascalientes'},
+    'cancun':{canonical:'Cancún'},'acapulco':{canonical:'Acapulco'}
+  }
+};
+
+var MISSPELLINGS = {
+  'missisipi':'mississippi','misisipi':'mississippi','mississipi':'mississippi',
+  'vonafone':'vodafone','vodaphone':'vodafone','vodasfone':'vodafone',
+  'moviistar':'movistar','moivstar':'movistar',
+  'tmobile':'t-mobile','t mobile':'t-mobile',
+  'californya':'california','californnia':'california',
+  'flordia':'florida','flroida':'florida',
+  'texax':'texas','georiga':'georgia',
+  'illionis':'illinois','minnessota':'minnesota',
+  'tennesee':'tennessee','tenessee':'tennessee',
+  'conecticut':'connecticut','conneticut':'connecticut',
+  'wisonsin':'wisconsin','winsconsin':'wisconsin',
+  'pennslyvania':'pennsylvania','pensilvania':'pennsylvania',
+  'escocia':'scotland','escosia':'scotland'
+};
+
+var INCLUDE_KW = ['permitir','quiero','solo','solamente','unicamente','únicamente','only','allow','want','include','incluir','necesito','deseo'];
+var EXCLUDE_KW = ['no quiero','tampoco quiero','tampoco','eliminar','excluir','bloquear','sin','not','exclude','block','remove','quitar','borrar','evitar','prohibir','desactivar','nada de','nada'];
+var SCOPE_SPLIT_KW = [
+  'aparte para el trafico de','aparte para trafico de','aparte para ','aparte,',
+  'aparte ','por otro lado para','por otro lado,','por otro lado ',
+  'ademas para el trafico de','ademas para ','ademas ',
+  'tambien para el trafico de','tambien para ','tambien ',
+  'also for ','for the traffic of ','for traffic from '
+];
+var EXCL_SPLIT_KW = [
+  'pero no quiero','pero tampoco quiero','pero tampoco ','pero no si es de','pero no si','pero sin','pero no ','pero excepto',
+  'pero excluyendo','but not ','except ','excepto ','salvo ','a excepcion de ',
+  'excluding ','excluyendo ','nada de ','tampoco '
+];
+var NOOP_RX = [
+  /resto de (los )?(pa[ií]ses|pa[ií]s)/,
+  /demas pa[ií]ses/,/dem[aá]s pa[ií]ses/,
+  /el resto/,/the rest/,
+  /sin (restricci[oó]n|modificaci[oó]n|cambios)/,
+  /without (restriction|modification|changes)/,
+  /other countries/,/rest of (the )?countries/,
+  /no restriction/,/as[íi] como est[aá]/,/igual que est[aá]/
+];
+var EDIT_ADD_KW = ['anadir','agregar','incluir tambien','add ','include also','agregar tambien'];
+var EDIT_REM_KW = ['eliminar','quitar','borrar','remove ','delete ','excluir '];
+
+var FIELD_LABELS = {
+  'Country':'Country','Carrier':'Carrier','City':'City',
+  'Region':'Region / State','State':'Region / State',
+  'App Name':'App Name','App Bundle':'App / Bundle ID',
+  'Client IP':'Client IP','Browser':'Browser',
+  'Connection Type':'Connection Type','Device Brand':'Device Brand',
+  'Device Model':'Device Model','Device OS':'Device OS',
+  'Platform':'Platform','Postal Code':'Postal Code',
+  'Metro Code':'Metro Code','Site':'Site',
+  'Affiliate':'Affiliate','HTTP Referrer':'HTTP Referrer'
+};
+
+var EXAMPLES = [
+  'eliminar el tráfico de Vodafone España',
+  'permitir tráfico de estados unidos pero sólo en Wisconsin',
+  'el tráfico en US sólo los estados Mississippi, Nueva York y la operadora T-Mobile, pero no la ciudad de Nueva York. Aparte para España sólo Salamanca pero no Movistar.',
+  'para España excluir Vodafone y Movistar. Para Francia solo Orange. Para Alemania sin restricciones.'
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STAGE 1: NORMALIZATION
+// ══════════════════════════════════════════════════════════════════════════════
+
+function normalize(text) {
+  return text.toLowerCase()
+    .replace(/[áàäâã]/g,'a').replace(/[éèëê]/g,'e')
+    .replace(/[íìïî]/g,'i').replace(/[óòöôõ]/g,'o')
+    .replace(/[úùüû]/g,'u').replace(/ñ/g,'n')
+    .replace(/[""'']/g,'"').replace(/[—–]/g,'-')
+    .replace(/\s+/g,' ').trim();
+}
+
+function fixMisspellings(text) {
+  var result = text;
+  for (var k in MISSPELLINGS) {
+    if (MISSPELLINGS.hasOwnProperty(k)) {
+      result = result.split(k).join(MISSPELLINGS[k]);
+    }
+  }
+  return result;
+}
+
+function levenshtein(a, b) {
+  var m = a.length, n = b.length;
+  var dp = [];
+  for (var i = 0; i <= m; i++) { dp[i] = [i]; }
+  for (var j = 0; j <= n; j++) { dp[0][j] = j; }
+  for (var i = 1; i <= m; i++) {
+    for (var j = 1; j <= n; j++) {
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] :
+        1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+
+function fuzzyMatch(word, dict) {
+  var maxDist = Math.max(1, Math.floor(word.length / 4));
+  var best = null, bestDist = Infinity;
+  for (var k in dict) {
+    if (!dict.hasOwnProperty(k)) continue;
+    var d = levenshtein(word, k);
+    if (d < bestDist && d <= maxDist) { bestDist = d; best = k; }
+  }
+  return best;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STAGE 2: CLAUSE SPLITTING
+// ══════════════════════════════════════════════════════════════════════════════
+
+function isNoop(text) {
+  for (var i = 0; i < NOOP_RX.length; i++) {
+    if (NOOP_RX[i].test(text)) return true;
+  }
+  return false;
+}
+
+function splitAtFirst(text, keywords) {
+  // Sort by length desc to match longer patterns first
+  var sorted = keywords.slice().sort(function(a,b){ return b.length - a.length; });
+  for (var i = 0; i < sorted.length; i++) {
+    var kw = sorted[i];
+    // Convert simple kw to regex-safe
+    var rx = new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'i');
+    var idx = text.search(rx);
+    if (idx > 0) {
+      return [text.slice(0, idx).trim(), text.slice(idx).trim()];
+    }
+  }
+  return null;
+}
+
+function splitByScopeDelimiters(text) {
+  // Replace sentence-ending periods so they don't block keyword matching
+  var clean = text.replace(/\.\s+/g, ' ').replace(/\.$/, '');
+
+  var parts = [clean];
+  var scopeKws = SCOPE_SPLIT_KW.slice().sort(function(a,b){ return b.length-a.length; });
+
+  var i = 0;
+  while (i < parts.length) {
+    var part = parts[i];
+    var found = false;
+    for (var j = 0; j < scopeKws.length; j++) {
+      var kw = scopeKws[j];
+      var rx = new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'i');
+      var m = rx.exec(part);
+      if (m && m.index > 2) {
+        var before = part.slice(0, m.index).trim();
+        var after = part.slice(m.index + m[0].length).trim();
+        parts.splice(i, 1, before, after);
+        found = true;
+        break;
+      }
+    }
+    if (!found) i++;
+  }
+
+  return parts.filter(function(p){ return p.trim().length > 0 && !isNoop(normalize(p)); });
+}
+
+function splitSubClauses(text) {
+  // Returns array of {text, isExclude}
+  var result = [];
+  var remaining = text;
+  var kwSorted = EXCL_SPLIT_KW.slice().sort(function(a,b){ return b.length-a.length; });
+  
+  while (remaining.length > 0) {
+    var found = false;
+    for (var i = 0; i < kwSorted.length; i++) {
+      var kw = kwSorted[i];
+      var rx = new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'i');
+      var idx = remaining.search(rx);
+      if (idx >= 0) {
+        var before = remaining.slice(0, idx).trim();
+        var kwMatch = remaining.match(rx)[0];
+        var after = remaining.slice(idx + kwMatch.length).trim();
+        if (before) result.push({text:before, isExclude:false});
+        remaining = after;
+        // Mark next segment as exclude
+        // Find next split or end
+        var nextIdx = -1;
+        for (var j = 0; j < kwSorted.length; j++) {
+          var rx2 = new RegExp(kwSorted[j].replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'i');
+          var idx2 = remaining.search(rx2);
+          if (idx2 > 0 && (nextIdx < 0 || idx2 < nextIdx)) nextIdx = idx2;
+        }
+        if (nextIdx > 0) {
+          result.push({text:remaining.slice(0, nextIdx).trim(), isExclude:true});
+          remaining = remaining.slice(nextIdx).trim();
+        } else {
+          result.push({text:remaining, isExclude:true});
+          remaining = '';
+        }
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      result.push({text:remaining, isExclude:false});
+      break;
+    }
+  }
+  return result.filter(function(s){ return s.text.trim().length > 0; });
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STAGE 3: ENTITY RECOGNITION
+// ══════════════════════════════════════════════════════════════════════════════
+
+function wbReplace(text, keyword) {
+  // Replace keyword with spaces using word-boundary matching to avoid substring hits
+  var esc = keyword.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return text.replace(new RegExp('(^|[\\s,\\.!?;:\\(\\)])(' + esc + ')([\\s,\\.!?;:\\(\\)]|$)', 'gi'),
+    function(m, p1, p2, p3){ return p1 + ' '.repeat(p2.length) + p3; });
+}
+
+function extractAllCountries(norm) {
+  // Returns ALL country entries found, greedy longest-match first, using word-boundary matching
+  var found = [];
+  var remaining = norm;
+  var keys = Object.keys(COUNTRIES).sort(function(a,b){ return b.length-a.length; });
+  for (var i = 0; i < keys.length; i++) {
+    var k = keys[i];
+    var esc = k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    var rx = new RegExp('(^|[\\s,\\.!?;:\\(\\)])(' + esc + ')([\\s,\\.!?;:\\(\\)]|$)', 'i');
+    if (rx.test(remaining)) {
+      found.push({iso2:COUNTRIES[k].iso2, canonical:COUNTRIES[k].canonical, key:k});
+      remaining = wbReplace(remaining, k);
+    }
+  }
+  // Fuzzy fallback if nothing found
+  if (found.length === 0) {
+    var words = norm.split(' ');
+    for (var i = 0; i < words.length; i++) {
+      var m = fuzzyMatch(words[i], COUNTRIES);
+      if (m) { found.push({iso2:COUNTRIES[m].iso2, canonical:COUNTRIES[m].canonical, key:m}); break; }
+    }
+  }
+  return found;
+}
+
+function hasDisambigCitySignal(text) {
+  return /ciudad de|city of/.test(text);
+}
+
+function hasDisambigStateSignal(text) {
+  return /estado de|state of|estados de|estados /.test(text);
+}
+
+function detectExcludeIntent(text) {
+  for (var i = 0; i < EXCLUDE_KW.length; i++) {
+    var kw = EXCLUDE_KW[i];
+    var rx = new RegExp('(^|\\s)' + kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(\\s|$)', 'i');
+    if (rx.test(text)) return true;
+  }
+  return false;
+}
+
+function extractEntitiesFromText(normText, contextCountry, isExcludeFromSplit) {
+  // Returns {rules:[], warnings:[]}
+  var rules = [];
+  var warnings = [];
+  var remaining = normText;
+  
+  // Detect overall intent override from keywords in this sub-clause
+  var isExclude = isExcludeFromSplit || detectExcludeIntent(normText);
+  var op = isExclude ? 'not_in' : 'in';
+  
+  var isCityForced = hasDisambigCitySignal(normText);
+  var isStateForced = hasDisambigStateSignal(normText);
+  
+  // ── States (US specific) ──
+  var stateValues = [];
+  var stateKeys = Object.keys(US_STATES).sort(function(a,b){ return b.length-a.length; });
+  var usedSpans = [];
+  
+  for (var i = 0; i < stateKeys.length; i++) {
+    var k = stateKeys[i];
+    var idx = remaining.indexOf(k);
+    if (idx >= 0) {
+      var state = US_STATES[k];
+      var isAlsoCity = state.isAlsoCity;
+      
+      // Disambiguation for things like "nueva york" that can be city or state
+      if (isAlsoCity) {
+        if (isCityForced) {
+          // Skip as state, will pick up as city below
+          continue;
+        }
+        // Default ambiguous → state (more common in targeting)
+      }
+      
+      stateValues.push(state.code);
+      remaining = remaining.slice(0, idx) + ' '.repeat(k.length) + remaining.slice(idx + k.length);
+    }
+  }
+  if (stateValues.length > 0) {
+    rules.push({field:'Region', operator: isExclude ? 'not_in':'in', values: dedup(stateValues)});
+  }
+  
+  // ── Cities ──
+  var cityValues = [];
+  var countryForCities = contextCountry || 'US';
+  var cityDict = CITIES[countryForCities] || {};
+  var cityKeys = Object.keys(cityDict).sort(function(a,b){ return b.length-a.length; });
+  // Also check _GLOBAL-like approach: scan all countries if no specific context
+  if (!contextCountry) {
+    for (var cc in CITIES) {
+      if (!CITIES.hasOwnProperty(cc)) continue;
+      var keys2 = Object.keys(CITIES[cc]);
+      for (var j = 0; j < keys2.length; j++) {
+        if (cityKeys.indexOf(keys2[j]) < 0) cityKeys.push(keys2[j]);
+      }
+    }
+  }
+  
+  for (var i = 0; i < cityKeys.length; i++) {
+    var k = cityKeys[i];
+    var cityEntry = cityDict[k] || (function(){
+      for (var cc in CITIES) {
+        if (CITIES.hasOwnProperty(cc) && CITIES[cc][k]) return CITIES[cc][k];
+      }
+      return null;
+    })();
+    if (!cityEntry) continue;
+    
+    // For "nueva york" — only match as city if city signal present
+    var isStateKey = US_STATES[k] && US_STATES[k].isAlsoCity;
+    if (isStateKey && !isCityForced) continue;
+    
+    var idx = remaining.indexOf(k);
+    if (idx >= 0) {
+      cityValues.push(cityEntry.canonical);
+      remaining = remaining.slice(0, idx) + ' '.repeat(k.length) + remaining.slice(idx + k.length);
+    }
+  }
+  if (cityValues.length > 0) {
+    rules.push({field:'City', operator: isExclude ? 'not_in':'in', values: dedup(cityValues)});
+  }
+  
+  // ── Carriers ──
+  var carrierValues = [];
+  var carrierCountries = contextCountry ? [contextCountry] : Object.keys(CARRIERS);
+  
+  for (var ci = 0; ci < carrierCountries.length; ci++) {
+    var cc = carrierCountries[ci];
+    var cdict = CARRIERS[cc];
+    if (!cdict) continue;
+    var ckeys = Object.keys(cdict).sort(function(a,b){ return b.length-a.length; });
+    for (var i = 0; i < ckeys.length; i++) {
+      var k = ckeys[i];
+      var idx = remaining.indexOf(k);
+      if (idx >= 0) {
+        carrierValues.push(cdict[k].canonical);
+        remaining = remaining.slice(0, idx) + ' '.repeat(k.length) + remaining.slice(idx + k.length);
+      }
+    }
+  }
+  if (carrierValues.length > 0) {
+    rules.push({field:'Carrier', operator: isExclude ? 'not_in':'in', values: dedup(carrierValues)});
+  }
+  
+  // Collect leftover non-trivial tokens as warnings
+  var trivialWords = ['el','la','los','las','de','del','en','con','para','que','se','y','e','o','u',
+    'pero','no','si','es','un','una','unos','solo','sólo','todo','toda','todos','todas',
+    'trafico','tráfico','targeting','oferta','operadora','operadoras','pais','país','paises','países','ciudad',
+    'estado','estados','quiero','quiera','deseo','necesito','solo','para','carrier','and','or','the','a','an','of','from','with','all','only','traffic',
+    'country','carrier','city','region','quiero','quiera','deseo','necesito','tener','cuenta',
+    'en','de','los','las','que','lo','lo que','su','sus','al','le','les',
+    'permite','permite','permitir','bloquear','eliminar','excluir','incluir','anadir',
+    'agregar','sin','con','i','to','be','is','are','by','at',
+    'aparte','restricciones','movil','móvil','ni','tampoco','nada','tambien','también',
+    'quiero','hacia','desde','sobre','entre','bajo','ante','tras',
+    'por','otro','lado','ademas','además','también','tambien'];
+  var leftover = remaining.trim().split(/\s+/).filter(function(w){
+    var wc = w.replace(/[.,!?;:]+$/, '');
+    return wc.length > 2 && trivialWords.indexOf(wc) < 0 && !/^\s*$/.test(wc);
+  }).map(function(w){ return w.replace(/[.,!?;:]+$/, ''); });
+  if (leftover.length > 0) {
+    warnings = warnings.concat(leftover);
+  }
+  
+  return {rules:rules, warnings:warnings, isExclude:isExclude};
+}
+
+function dedup(arr) {
+  var seen = {}, out = [];
+  for (var i = 0; i < arr.length; i++) {
+    if (!seen[arr[i]]) { seen[arr[i]] = true; out.push(arr[i]); }
+  }
+  return out;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PARSE ONE SCOPE CLAUSE → AND GROUP
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Helper: merge a rules array into target, combining same field+operator entries
+function mergeRulesInto(target, rules) {
+  for (var j = 0; j < rules.length; j++) {
+    var r = rules[j];
+    var existing = null;
+    for (var k = 0; k < target.length; k++) {
+      if (target[k].field === r.field && target[k].operator === r.operator) {
+        existing = target[k]; break;
+      }
+    }
+    if (existing) {
+      existing.values = dedup(existing.values.concat(r.values));
+    } else {
+      target.push(r);
+    }
+  }
+}
+
+// OR sub-group trigger: ", o " / ", or " / "o bien" / "; o "
+var OR_ALT_RX = /,\s*o\s+|,\s*or\s+|\bo\s+bien\b|;\s*o\s+/i;
+
+function parseClause(rawClause) {
+  // Returns {country, rules[], children[], warnings[]}
+  var norm = fixMisspellings(normalize(rawClause));
+  var allWarnings = [];
+  var allRules = [];
+  var allChildren = [];
+
+  // 1. Extract ALL countries found in this clause
+  var countryEntries = extractAllCountries(norm);
+  var countryISO = countryEntries.length > 0 ? countryEntries[0].iso2 : null;
+
+  if (countryEntries.length > 0) {
+    allRules.push({field:'Country', operator:'in', values: countryEntries.map(function(c){ return c.canonical; })});
+    // Remove all country names from norm to avoid re-matching
+    for (var ci = 0; ci < countryEntries.length; ci++) {
+      var iso = countryEntries[ci].iso2;
+      var ck = Object.keys(COUNTRIES).filter(function(k){ return COUNTRIES[k].iso2 === iso; });
+      for (var i = 0; i < ck.length; i++) { norm = wbReplace(norm, ck[i]); }
+    }
+  }
+
+  // 2. Split sub-clauses (include / exclude segments)
+  var subClauses = splitSubClauses(norm);
+
+  // 3. For each sub-clause: detect OR alternatives (", o ") in include clauses
+  var orAndChildren = []; // AND groups to wrap in an OR child
+
+  for (var i = 0; i < subClauses.length; i++) {
+    var sub = subClauses[i];
+
+    if (!sub.isExclude && OR_ALT_RX.test(sub.text)) {
+      // Split into OR alternatives — each becomes an AND child group
+      var alts = sub.text.split(OR_ALT_RX).map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+      for (var ai = 0; ai < alts.length; ai++) {
+        var altRes = extractEntitiesFromText(alts[ai], countryISO, false);
+        allWarnings = allWarnings.concat(altRes.warnings);
+        if (altRes.rules.length > 0) {
+          // Each alternative can itself have ", o " deeper — recurse one level
+          var altChildren = [];
+          var altText2 = alts[ai];
+          // (no further splitting for simplicity at this depth)
+          orAndChildren.push({type:'and', rules: altRes.rules, children: altChildren});
+        }
+      }
+    } else {
+      // Normal include or exclude → flat rules in this AND group
+      var res = extractEntitiesFromText(sub.text, countryISO, sub.isExclude);
+      mergeRulesInto(allRules, res.rules);
+      allWarnings = allWarnings.concat(res.warnings);
+    }
+  }
+
+  // 4. If OR alternatives found, wrap them in an OR child group
+  if (orAndChildren.length > 1) {
+    allChildren.push({type:'or', rules:[], children: orAndChildren});
+  } else if (orAndChildren.length === 1) {
+    // Only one side survived — flatten into rules
+    mergeRulesInto(allRules, orAndChildren[0].rules);
+  }
+
+  return {country: countryISO, rules: allRules, children: allChildren, warnings: allWarnings};
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STAGE 4: BUILD TREE
+// ══════════════════════════════════════════════════════════════════════════════
+
+function buildTree(parsedClauses) {
+  var validClauses = parsedClauses.filter(function(c){ return c.rules.length > 0 || (c.children && c.children.length > 0); });
+
+  if (validClauses.length === 0) return null;
+
+  if (validClauses.length === 1) {
+    var c = validClauses[0];
+    return {type:'and', rules: c.rules, children: c.children || []};
+  }
+
+  // Multiple scopes → root AND wraps an OR group; each clause → AND child
+  var andChildren = validClauses.map(function(c){
+    return {type:'and', rules: c.rules, children: c.children || []};
+  });
+  return {
+    type:'and',
+    rules:[],
+    children:[{type:'or', rules:[], children: andChildren}]
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// EDIT MODE
+// ══════════════════════════════════════════════════════════════════════════════
+
+function parseEditMode(nlText, existingJSON) {
+  var existingTree = null;
+  try { existingTree = JSON.parse(existingJSON); } catch(e) {}
+  
+  var norm = fixMisspellings(normalize(nlText));
+  
+  // Detect operation
+  var isAdd = false, isRemove = false;
+  for (var i = 0; i < EDIT_ADD_KW.length; i++) {
+    if (norm.indexOf(EDIT_ADD_KW[i]) >= 0) { isAdd = true; break; }
+  }
+  for (var i = 0; i < EDIT_REM_KW.length; i++) {
+    if (norm.indexOf(EDIT_REM_KW[i]) >= 0) { isRemove = true; break; }
+  }
+  
+  // Parse the NL as a fresh ruleset
+  var clauses = splitByScopeDelimiters(norm);
+  var parsed = clauses.map(parseClause);
+  var newTree = buildTree(parsed);
+  
+  if (!existingTree || (!isAdd && !isRemove)) {
+    // Treat as full replacement
+    return {tree: newTree, warnings: collectWarnings(parsed), mode:'replace'};
+  }
+  
+  // Patch existing tree
+  var patched = JSON.parse(JSON.stringify(existingTree));
+  if (isAdd && newTree) {
+    patched = mergeTree(patched, newTree, 'add');
+  } else if (isRemove && newTree) {
+    patched = mergeTree(patched, newTree, 'remove');
+  }
+  
+  return {tree: patched, warnings: collectWarnings(parsed), mode: isAdd?'add':'remove'};
+}
+
+function mergeTree(base, patch, op) {
+  // Simple: add/remove AND groups matching the patch's country scope
+  if (!base || !patch) return base || patch;
+  
+  var patchGroups = getAndGroups(patch);
+  var baseGroups = getAndGroups(base);
+  
+  if (op === 'add') {
+    for (var i = 0; i < patchGroups.length; i++) {
+      var pg = patchGroups[i];
+      var pgCountry = getGroupCountry(pg);
+      // Find matching group in base
+      var found = false;
+      for (var j = 0; j < baseGroups.length; j++) {
+        if (getGroupCountry(baseGroups[j]) === pgCountry) {
+          // Merge rules
+          for (var k = 0; k < pg.rules.length; k++) {
+            mergeRule(baseGroups[j].rules, pg.rules[k]);
+          }
+          found = true; break;
+        }
+      }
+      if (!found) {
+        // Add new AND group
+        if (base.children && base.children[0] && base.children[0].type === 'or') {
+          base.children[0].children.push(pg);
+        } else if (base.type === 'and' && base.rules.length > 0) {
+          // Single group → convert to OR
+          var oldGroup = {type:'and', rules: base.rules, children:[]};
+          base.rules = [];
+          base.children = [{type:'or', rules:[], children:[oldGroup, pg]}];
+        }
+      }
+    }
+  } else if (op === 'remove') {
+    for (var i = 0; i < patchGroups.length; i++) {
+      var pg = patchGroups[i];
+      var pgCountry = getGroupCountry(pg);
+      for (var j = 0; j < baseGroups.length; j++) {
+        if (getGroupCountry(baseGroups[j]) === pgCountry) {
+          for (var k = 0; k < pg.rules.length; k++) {
+            removeRuleValues(baseGroups[j].rules, pg.rules[k]);
+          }
+        }
+      }
+    }
+  }
+  return base;
+}
+
+function getAndGroups(tree) {
+  if (!tree) return [];
+  if (tree.type === 'and' && tree.rules && tree.rules.length > 0) return [tree];
+  var result = [];
+  if (tree.children) {
+    for (var i = 0; i < tree.children.length; i++) {
+      result = result.concat(getAndGroups(tree.children[i]));
+    }
+  }
+  return result;
+}
+
+function getGroupCountry(group) {
+  for (var i = 0; i < group.rules.length; i++) {
+    if (group.rules[i].field === 'Country') return group.rules[i].values[0];
+  }
+  return null;
+}
+
+function mergeRule(rules, newRule) {
+  for (var i = 0; i < rules.length; i++) {
+    if (rules[i].field === newRule.field && rules[i].operator === newRule.operator) {
+      rules[i].values = dedup(rules[i].values.concat(newRule.values));
+      return;
+    }
+  }
+  rules.push(newRule);
+}
+
+function removeRuleValues(rules, remRule) {
+  for (var i = 0; i < rules.length; i++) {
+    if (rules[i].field === remRule.field) {
+      rules[i].values = rules[i].values.filter(function(v){
+        return remRule.values.indexOf(v) < 0;
+      });
+      if (rules[i].values.length === 0) {
+        rules.splice(i, 1); i--;
+      }
+    }
+  }
+}
+
+function collectWarnings(parsedClauses) {
+  var all = [];
+  for (var i = 0; i < parsedClauses.length; i++) {
+    all = all.concat(parsedClauses[i].warnings);
+  }
+  return dedup(all);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RENDERER
+// ══════════════════════════════════════════════════════════════════════════════
+
+function renderTree(tree) {
+  if (!tree) return '<div class="tree-placeholder"><div class="icon">&#9888;&#65039;</div><p>No se pudieron extraer reglas del texto.</p></div>';
+
+  var html = '<div class="tree-root">';
+  // Skip the AND root wrapper when it has no rules of its own (pure container)
+  if (tree.type === 'and' && tree.rules.length === 0 && tree.children.length > 0) {
+    for (var i = 0; i < tree.children.length; i++) {
+      html += renderGroup(tree.children[i], 0);
+    }
+  } else {
+    html += renderGroup(tree, 0);
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderGroup(group, depth) {
+  if (!group) return '';
+  
+  var isOr = group.type === 'or';
+  var cls = isOr ? 'tree-group tree-group-or' : 'tree-group tree-group-and';
+  var label = isOr ? 'Group &ldquo;or&rdquo;' : 'Group &ldquo;and&rdquo;';
+  
+  var html = '<div class="' + cls + '">';
+  html += '<div class="tree-group-header">';
+  html += '<div class="tree-toggle-dot"></div>';
+  html += '<span class="tree-group-label">' + label + '</span>';
+  html += '</div>';
+  
+  // Rules
+  if (group.rules && group.rules.length > 0) {
+    for (var i = 0; i < group.rules.length; i++) {
+      html += renderRule(group.rules[i]);
+    }
+  }
+  
+  // Children
+  if (group.children && group.children.length > 0) {
+    for (var i = 0; i < group.children.length; i++) {
+      html += renderGroup(group.children[i], depth + 1);
+    }
+  }
+  
+  html += '</div>';
+  return html;
+}
+
+function renderRule(rule) {
+  var fieldLabel = FIELD_LABELS[rule.field] || rule.field;
+  var opHtml = rule.operator === 'in'
+    ? '<span class="tree-op-in">In</span>'
+    : '<span class="tree-op-not-in">Not in</span>';
+  
+  var valHtml = rule.values.map(function(v){
+    return '<span class="tree-val-chip">' + escHtml(v) + ' <span class="chip-x">&#215;</span></span>';
+  }).join('');
+  
+  return '<div class="tree-rule-row">' +
+    '<span class="tree-field-pill">' + escHtml(fieldLabel) + '</span>' +
+    opHtml + valHtml + '</div>';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// UI CONTROLLER
+// ══════════════════════════════════════════════════════════════════════════════
+
+var currentMode = 'create';
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('pill-create').className = 'mode-pill' + (mode==='create'?' active':'');
+  document.getElementById('pill-edit').className   = 'mode-pill' + (mode==='edit'  ?' active':'');
+  document.getElementById('editJsonArea').style.display = mode === 'edit' ? 'block' : 'none';
+  document.getElementById('nlLabel').textContent = mode === 'edit'
+    ? 'Describe los cambios que quieres hacer'
+    : 'Describe lo que quieres';
+  localStorage.setItem('ht_nlp_mode', mode);
+}
+
+function parseRules() {
+  var nlText = document.getElementById('nlInput').value.trim();
+  if (!nlText) return;
+  
+  var warnings = [];
+  var tree;
+  
+  if (currentMode === 'edit') {
+    var existingJSON = document.getElementById('existingJson').value.trim();
+    var result = parseEditMode(nlText, existingJSON);
+    tree = result.tree;
+    warnings = result.warnings;
+  } else {
+    // Pre-split on newlines so each line is an independent scope clause
+    var lines = nlText.split(/\n+/).map(function(l){ return l.trim(); }).filter(function(l){ return l.length > 0; });
+    if (lines.length <= 1) lines = [nlText]; // single-line fallback
+    var allParsed = [];
+    for (var li = 0; li < lines.length; li++) {
+      var norm = fixMisspellings(normalize(lines[li]));
+      var scopeParts = splitByScopeDelimiters(norm);
+      if (scopeParts.length === 0) scopeParts = [norm];
+      allParsed = allParsed.concat(scopeParts.map(parseClause));
+    }
+    tree = buildTree(allParsed);
+    warnings = collectWarnings(allParsed);
+  }
+  
+  // Show warnings
+  var warnStrip = document.getElementById('warnStrip');
+  if (warnings.length > 0) {
+    var warnHtml = '<strong>&#9888; Tokens no reconocidos:</strong> ' +
+      warnings.map(function(w){ return '<span class="warn-token">' + escHtml(w) + '</span>'; }).join(' ');
+    warnStrip.innerHTML = warnHtml;
+    warnStrip.style.display = 'block';
+  } else {
+    warnStrip.style.display = 'none';
+  }
+  
+  // Render tree
+  var output = document.getElementById('treeOutput');
+  var placeholder = document.getElementById('treePlaceholder');
+  if (placeholder) placeholder.style.display = 'none';
+  output.innerHTML = renderTree(tree);
+}
+
+function loadExample(idx) {
+  document.getElementById('nlInput').value = EXAMPLES[idx];
+  parseRules();
+}
+
+function toggleTheme() {
+  var body = document.body;
+  var toggle = document.getElementById('themeToggle');
+  var slider = document.getElementById('themeSlider');
+  body.classList.toggle('dark-mode');
+  var isDark = body.classList.contains('dark-mode');
+  toggle.classList.toggle('dark', isDark);
+  slider.innerHTML = isDark ? '&#127769;' : '&#9728;&#65039;';
+  localStorage.setItem('ht_nlp_theme', isDark ? 'dark' : 'light');
+}
+
+// ── Init ──
+(function init(){
+  var savedTheme = localStorage.getItem('ht_nlp_theme');
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-mode');
+    document.getElementById('themeToggle').classList.add('dark');
+    document.getElementById('themeSlider').innerHTML = '&#127769;';
+  }
+  var savedMode = localStorage.getItem('ht_nlp_mode');
+  if (savedMode === 'edit') setMode('edit');
+})();
+</script>
+</body>
+</html>

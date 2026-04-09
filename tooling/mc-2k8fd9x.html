@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="version" content="1.2.0">
+    <title>Macro Calculator</title>
+
+    <!-- Security Meta Tags -->
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <meta name="googlebot" content="noindex, nofollow">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔢</text></svg>">
+
+    <style>
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --section-bg: #f8f9fa;
+            --border-color: #e0e0e0;
+            --input-bg: #ffffff;
+        }
+
+        body.dark-mode {
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --container-bg: #0f1419;
+            --text-color: #e4e6eb;
+            --section-bg: #1a1d24;
+            --border-color: #2d3748;
+            --input-bg: #1a1d24;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            background: var(--container-bg);
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        body.dark-mode .header { background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); }
+
+        .header h1 { font-size: 15px; margin-bottom: 1px; }
+        .header p  { opacity: 0.9; font-size: 11px; }
+
+        .type-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.5);
+            color: white; font-size: 10px; font-weight: 700;
+            padding: 2px 10px; border-radius: 20px;
+            letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px;
+        }
+
+        .theme-toggle {
+            position: absolute; top: 50%; transform: translateY(-50%); right: 20px;
+            background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px; width: 60px; height: 30px;
+            cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; padding: 2px;
+        }
+
+        .theme-toggle:hover { background: rgba(255,255,255,0.3); }
+
+        .theme-toggle-slider {
+            width: 24px; height: 24px; background: white; border-radius: 50%;
+            transition: transform 0.3s;
+            display: flex; align-items: center; justify-content: center; font-size: 12px;
+        }
+
+        .theme-toggle.dark .theme-toggle-slider { transform: translateX(30px); }
+
+        /* ── Layout ── */
+        .content { padding: 16px 20px; }
+        .section  { margin-bottom: 18px; }
+
+        .section-title {
+            font-size: 11px; font-weight: 700;
+            color: var(--text-color); opacity: 0.6;
+            margin-bottom: 10px; padding-bottom: 6px;
+            border-bottom: 2px solid #667eea;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* ── Form elements ── */
+        .form-row {
+            display: flex; gap: 10px; align-items: flex-end;
+            flex-wrap: wrap; margin-bottom: 8px;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 3px; }
+
+        .form-group label {
+            font-size: 10px; font-weight: 700;
+            color: var(--text-color); opacity: 0.6;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        .form-input, .form-select {
+            padding: 7px 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px; font-size: 13px; font-family: inherit;
+            background: var(--input-bg); color: var(--text-color);
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus { outline: none; border-color: #667eea; }
+
+        .form-input.num  { width: 90px; }
+        .form-input.wide { width: 220px; }
+        .form-input.full { width: 100%; font-family: 'Courier New', monospace; }
+        .form-select     { cursor: pointer; min-width: 200px; }
+
+        .field-divider {
+            border: none; border-top: 1px dashed var(--border-color); margin: 10px 0;
+        }
+
+        /* ── Case selector pills ── */
+        .case-pills {
+            display: flex; gap: 4px; align-items: center;
+        }
+
+        .case-pill {
+            padding: 5px 12px; border: 2px solid var(--border-color);
+            border-radius: 20px; font-size: 11px; font-weight: 700;
+            cursor: pointer; transition: all 0.15s;
+            color: var(--text-color); opacity: 0.6;
+            font-family: 'Courier New', monospace;
+            background: var(--input-bg);
+            user-select: none;
+        }
+
+        .case-pill:hover { border-color: #667eea; opacity: 0.9; }
+
+        .case-pill.active {
+            background: #667eea; border-color: #667eea;
+            color: white; opacity: 1;
+        }
+
+        /* ── Toggle switch ── */
+        .toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+        .toggle-row input[type="checkbox"] {
+            width: 34px; height: 18px; appearance: none; -webkit-appearance: none;
+            background: var(--border-color); border-radius: 20px;
+            position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0;
+        }
+
+        .toggle-row input[type="checkbox"]:checked { background: #667eea; }
+
+        .toggle-row input[type="checkbox"]::after {
+            content: ''; position: absolute;
+            width: 14px; height: 14px; background: white; border-radius: 50%;
+            top: 2px; left: 2px; transition: transform 0.2s;
+        }
+
+        .toggle-row input[type="checkbox"]:checked::after { transform: translateX(16px); }
+
+        .toggle-row span {
+            font-size: 12px; font-weight: 700; color: var(--text-color);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        /* ── Subsections ── */
+        .subsection {
+            background: var(--section-bg);
+            border-left: 3px solid #667eea;
+            border-radius: 0 6px 6px 0;
+            padding: 10px 12px; margin-top: 6px;
+        }
+
+        .subsection.card-sub { border-left-color: #764ba2; }
+
+        .sub-title {
+            font-size: 10px; font-weight: 700; color: #667eea;
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+        }
+
+        .sub-title.card-color { color: #764ba2; }
+
+        /* ── date_tz badge ── */
+        .dtz-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white; font-size: 11px; font-weight: 700;
+            padding: 4px 10px; border-radius: 20px; margin-top: 4px;
+        }
+
+        /* ── Macro string ── */
+        .macro-detected { margin-top: 10px; }
+
+        .macro-detected-title {
+            font-size: 10px; font-weight: 700;
+            color: var(--text-color); opacity: 0.5;
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+        }
+
+        .macro-value-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 6px; }
+
+        .macro-name-tag {
+            font-family: 'Courier New', monospace;
+            font-size: 11px; font-weight: 700; color: #667eea;
+            background: rgba(102,126,234,0.12);
+            border: 1px solid rgba(102,126,234,0.3);
+            padding: 5px 10px; border-radius: 4px;
+            white-space: nowrap; flex-shrink: 0;
+        }
+
+        .macro-name-tag.is-date {
+            color: #f5576c; background: rgba(245,87,108,0.1); border-color: rgba(245,87,108,0.3);
+        }
+
+        .macro-values-note { font-size: 10px; color: var(--text-color); opacity: 0.45; margin-top: 4px; font-style: italic; }
+
+        /* ── Formula box ── */
+        .formula-box {
+            background: #1e1e1e; color: #d4d4d4;
+            padding: 12px 15px; border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px; word-break: break-all; line-height: 1.6;
+            margin-bottom: 8px; min-height: 44px;
+        }
+
+        /* ── Buttons ── */
+        .copy-btn {
+            background: #667eea; color: white; border: none;
+            padding: 7px 16px; border-radius: 6px;
+            cursor: pointer; font-size: 12px; font-weight: 600; transition: background 0.2s;
+        }
+
+        .copy-btn:hover   { background: #5568d3; }
+        .copy-btn:active  { transform: scale(0.95); }
+        .copy-btn.success { background: #10b981; }
+
+        .regen-btn {
+            background: var(--section-bg); color: var(--text-color);
+            border: 2px solid var(--border-color);
+            padding: 5px 12px; border-radius: 6px;
+            cursor: pointer; font-size: 12px; font-weight: 600; transition: border-color 0.2s;
+        }
+
+        .regen-btn:hover { border-color: #667eea; color: #667eea; }
+
+        /* ── Output controls ── */
+        .output-controls { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 12px; }
+
+        .output-control-group { display: flex; align-items: center; gap: 8px; }
+
+        .output-control-group label {
+            font-size: 11px; font-weight: 700;
+            color: var(--text-color); opacity: 0.6;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        .days-input {
+            width: 64px; padding: 5px 8px;
+            border: 2px solid var(--border-color); border-radius: 5px;
+            font-size: 13px; background: var(--input-bg); color: var(--text-color);
+        }
+
+        .days-input:focus { outline: none; border-color: #667eea; }
+
+        /* ── Output empty ── */
+        .output-empty {
+            text-align: center; padding: 30px;
+            color: var(--text-color); opacity: 0.4; font-size: 13px;
+        }
+
+        /* ── Day card ── */
+        .day-card {
+            background: var(--section-bg); border-radius: 8px;
+            padding: 12px 14px; margin-bottom: 10px; border-left: 4px solid #667eea;
+        }
+
+        .day-card.card-purple { border-left-color: #764ba2; }
+        .day-card.card-orange { border-left-color: #f59e0b; }
+
+        .day-card-header {
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;
+        }
+
+        .day-label {
+            font-weight: 700; font-size: 11px; color: #667eea;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        .day-label.purple { color: #764ba2; }
+        .day-label.orange { color: #d97706; }
+
+        .day-date { font-size: 11px; color: var(--text-color); opacity: 0.55; font-family: 'Courier New', monospace; }
+
+        .card-meta { font-size: 11px; color: var(--text-color); opacity: 0.6; margin-bottom: 8px; }
+
+        .card-tag {
+            margin-left: auto;
+            background: rgba(102,126,234,0.15); color: #667eea;
+            font-size: 10px; font-weight: 700;
+            padding: 2px 8px; border-radius: 10px; letter-spacing: 0.3px;
+        }
+
+        .card-tag.purple { background: rgba(118,75,162,0.15); color: #764ba2; }
+
+        /* ── Value chips ── */
+        .values-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+
+        .value-chip {
+            background: var(--container-bg); border: 1px solid var(--border-color);
+            padding: 4px 10px; border-radius: 4px;
+            font-family: 'Courier New', monospace; font-size: 12px; color: var(--text-color);
+            cursor: pointer; transition: border-color 0.15s, background 0.15s; user-select: none;
+        }
+
+        .value-chip:hover { border-color: #667eea; background: rgba(102,126,234,0.05); }
+        .value-chip.num   { border-left: 3px solid #667eea; }
+        .value-chip.str   { border-left: 3px solid #764ba2; }
+        .value-chip.ok    { border-color: #10b981; color: #10b981; }
+
+        /* ── Matrix rows ── */
+        .matrix-rows { display: flex; flex-direction: column; gap: 4px; }
+
+        .matrix-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 4px 0; border-bottom: 1px solid var(--border-color);
+        }
+
+        .matrix-row:last-child { border-bottom: none; }
+
+        .matrix-label {
+            font-family: 'Courier New', monospace; font-size: 11px;
+            color: var(--text-color); opacity: 0.65;
+            min-width: 160px; flex-shrink: 0;
+        }
+
+        .samples-note {
+            font-size: 10px; color: var(--text-color); opacity: 0.4; margin-top: 8px; font-style: italic;
+        }
+
+        /* ── Calculate button ── */
+        .calc-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none;
+            padding: 10px 28px; border-radius: 8px;
+            cursor: pointer; font-size: 13px; font-weight: 700;
+            transition: all 0.2s; letter-spacing: 0.3px;
+            box-shadow: 0 4px 14px rgba(102,126,234,0.35);
+        }
+
+        .calc-btn:hover  { opacity: 0.9; transform: translateY(-1px); }
+        .calc-btn:active { transform: scale(0.97); }
+
+        .calc-btn.stale {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 4px 14px rgba(245,158,11,0.45);
+            animation: pulse-stale 1.6s ease-in-out infinite;
+        }
+
+        @keyframes pulse-stale {
+            0%, 100% { box-shadow: 0 4px 14px rgba(245,158,11,0.4); }
+            50%       { box-shadow: 0 4px 22px rgba(245,158,11,0.75); }
+        }
+
+        #outputArea.stale { opacity: 0.45; transition: opacity 0.25s; pointer-events: none; }
+
+        /* ── Validator ── */
+        .val-ok {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(16,185,129,0.12);
+            border: 1px solid rgba(16,185,129,0.35);
+            color: #10b981; padding: 8px 12px; border-radius: 6px;
+            font-size: 13px; font-weight: 600;
+        }
+
+        .val-error {
+            background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3);
+            color: #ef4444; padding: 8px 12px; border-radius: 6px; font-size: 12px;
+        }
+
+        .val-error ul { margin: 4px 0 0 16px; }
+        .val-error li { margin-bottom: 2px; }
+
+        .val-summary {
+            background: var(--section-bg);
+            border-left: 3px solid #10b981;
+            border-radius: 0 6px 6px 0;
+            padding: 10px 14px; margin-top: 6px;
+        }
+
+        .val-summary-row {
+            display: flex; gap: 14px; padding: 4px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+        }
+
+        .val-summary-row:last-child { border-bottom: none; }
+
+        .val-summary-key {
+            font-weight: 700; color: #10b981;
+            min-width: 110px; font-size: 10px;
+            text-transform: uppercase; letter-spacing: 0.4px;
+            display: flex; align-items: center;
+        }
+
+        .val-summary-val {
+            color: var(--text-color); font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .val-summary-val code {
+            background: rgba(0,0,0,0.07); padding: 0 4px;
+            border-radius: 3px;
+        }
+
+        body.dark-mode .val-summary-val code { background: rgba(255,255,255,0.1); }
+
+        .section-separator {
+            border: none; border-top: 2px dashed var(--border-color); margin: 4px 0 18px;
+        }
+
+        /* ── Errors ── */
+        .error-box {
+            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+            color: #ef4444; padding: 10px 14px; border-radius: 6px; font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <div class="type-badge">URL Macro Calculator</div>
+        <h1>Macro Value Preview</h1>
+        <p>Simulate possible output values for URL macro functions</p>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+            <div class="theme-toggle-slider" id="themeSlider">☀️</div>
+        </button>
+    </div>
+
+    <div class="content">
+
+        <!-- ══ Section 1: Builder ══ -->
+        <div class="section">
+            <div class="section-title">Formula Builder</div>
+
+            <!-- Function type -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Function</label>
+                    <select class="form-select" id="fnType" onchange="onFnTypeChange()">
+                        <option value="random_number">random_number</option>
+                        <option value="random_string">random_string</option>
+                        <option value="random_string_set">random_string_set</option>
+                    </select>
+                </div>
+
+                <!-- Character case pills — only for string functions -->
+                <div class="form-group" id="caseGroup" style="display:none;">
+                    <label>Character case</label>
+                    <div class="case-pills">
+                        <span class="case-pill active" data-case="mixed"  onclick="setCase('mixed')">Aa0-9</span>
+                        <span class="case-pill"        data-case="upper"  onclick="setCase('upper')">A0-9</span>
+                        <span class="case-pill"        data-case="lower"  onclick="setCase('lower')">a0-9</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Core params -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label id="minLabel">Min Number</label>
+                    <input type="number" class="form-input num" id="coreMin" value="1" min="0" oninput="onStateChange()">
+                </div>
+                <div class="form-group">
+                    <label id="maxLabel">Max Number</label>
+                    <input type="number" class="form-input num" id="coreMax" value="100" min="0" oninput="onStateChange()">
+                </div>
+            </div>
+
+            <!-- Prefix / Suffix -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Prefix</label>
+                    <input type="text" class="form-input wide" id="valuePrefix" placeholder="e.g. UTM_" oninput="onStateChange()">
+                </div>
+                <div class="form-group">
+                    <label>Suffix</label>
+                    <input type="text" class="form-input wide" id="valueSuffix" placeholder="e.g. _v2" oninput="onStateChange()">
+                </div>
+            </div>
+
+            <hr class="field-divider">
+
+            <!-- ── Seed ── -->
+            <div class="toggle-row">
+                <input type="checkbox" id="seedEnabled" onchange="onSeedEnabledChange()">
+                <span>Seed</span>
+            </div>
+
+            <div id="seedArea" style="display:none;">
+                <div class="subsection">
+                    <div class="sub-title">Seed configuration</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select class="form-select" id="seedType" onchange="onSeedTypeChange()">
+                                <option value="date_tz">{date_tz} — daily reset</option>
+                                <option value="macro">Macro string — e.g. {af_pid}</option>
+                                <option value="static">Static value</option>
+                                <option value="rn">{fn:random_number(...)}</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="seedStaticGroup" style="display:none;">
+                            <label>Value</label>
+                            <input type="text" class="form-input wide" id="seedStaticValue" placeholder="e.g. my_seed_123" oninput="onStateChange()">
+                        </div>
+                    </div>
+
+                    <!-- date_tz info -->
+                    <div id="seedDtzInfo">
+                        <span class="dtz-badge">📅 Daily reset — seed changes every 24h</span>
+                    </div>
+
+                    <!-- macro string builder -->
+                    <div id="seedMacroArea" style="display:none;">
+                        <div class="form-group" style="width:100%; margin-top:4px;">
+                            <label>Seed formula (macros in {curly braces})</label>
+                            <input type="text" class="form-input full" id="seedMacroStr"
+                                   placeholder="e.g. {af_pid}  or  {af_pid}{time_date_tz}  (no commas between macros)"
+                                   oninput="onMacroStrChange()">
+                        </div>
+                        <div id="macroDetected" class="macro-detected" style="display:none;">
+                            <div class="macro-detected-title">Detected macros — provide sample values for preview</div>
+                            <div id="macroValuesContainer"></div>
+                            <div class="macro-values-note">Comma-separated. Date macros cycle automatically per day.</div>
+                        </div>
+                    </div>
+
+                    <!-- nested rn builder -->
+                    <div id="seedRnArea" style="display:none;">
+                        <div class="form-row" style="margin-top:6px;">
+                            <div class="form-group">
+                                <label>Min</label>
+                                <input type="number" class="form-input num" id="seedRnMin" value="1" min="0" oninput="onStateChange()">
+                            </div>
+                            <div class="form-group">
+                                <label>Max</label>
+                                <input type="number" class="form-input num" id="seedRnMax" value="100" min="0" oninput="onStateChange()">
+                            </div>
+                            <div class="form-group">
+                                <label>Inner Seed</label>
+                                <select class="form-select" id="seedRnSeedType" onchange="onSeedRnSeedTypeChange()">
+                                    <option value="none">None (random each call)</option>
+                                    <option value="date_tz">{date_tz}</option>
+                                    <option value="static">Static value</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="seedRnSeedValueGroup" style="display:none;">
+                                <label>Value</label>
+                                <input type="text" class="form-input" id="seedRnSeedValue" placeholder="seed..." oninput="onStateChange()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="field-divider">
+
+            <!-- ── Cardinality — random_string only (toggle) ── -->
+            <div id="cardSection" style="display:none;">
+                <div class="toggle-row">
+                    <input type="checkbox" id="cardEnabled" onchange="onCardEnabledChange()">
+                    <span>Cardinality</span>
+                </div>
+
+                <div id="cardArea" style="display:none;">
+                    <div class="subsection card-sub">
+                        <div class="sub-title card-color">Cardinality configuration</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Type</label>
+                                <select class="form-select" id="cardType" onchange="onCardTypeChange()">
+                                    <option value="static">Static number</option>
+                                    <option value="rn">{fn:random_number(...)} — range</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="cardStaticGroup">
+                                <label>Count</label>
+                                <input type="number" class="form-input num" id="cardStaticValue" value="5" min="1" oninput="onStateChange()">
+                            </div>
+                        </div>
+
+                        <div id="cardRnArea" style="display:none;">
+                            <div class="form-row" style="margin-top:6px;">
+                                <div class="form-group">
+                                    <label>Min count</label>
+                                    <input type="number" class="form-input num" id="cardRnMin" value="1" min="1" oninput="onStateChange()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Max count</label>
+                                    <input type="number" class="form-input num" id="cardRnMax" value="10" min="1" oninput="onStateChange()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Inner Seed</label>
+                                    <select class="form-select" id="cardRnSeedType" onchange="onCardRnSeedTypeChange()">
+                                        <option value="none">None (random each call)</option>
+                                        <option value="date_tz">{date_tz}</option>
+                                        <option value="static">Static value</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="cardRnSeedValueGroup" style="display:none;">
+                                    <label>Value</label>
+                                    <input type="text" class="form-input" id="cardRnSeedValue" placeholder="seed..." oninput="onStateChange()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Cardinality range — random_string_set (always visible) ── -->
+            <div id="setCardSection" style="display:none;">
+                <div class="subsection card-sub">
+                    <div class="sub-title card-color">Cardinality range</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Min cardinality</label>
+                            <input type="number" class="form-input num" id="setCardMin" value="1" min="1" oninput="onStateChange()">
+                        </div>
+                        <div class="form-group">
+                            <label>Max cardinality</label>
+                            <input type="number" class="form-input num" id="setCardMax" value="10" min="1" oninput="onStateChange()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /section builder -->
+
+        <!-- ══ Section 2: Formula Preview ══ -->
+        <div class="section">
+            <div class="section-title">Formula</div>
+            <div class="formula-box" id="formulaPreview">—</div>
+            <button class="copy-btn" id="copyFormulaBtn" onclick="copyFormula()">Copy Formula</button>
+        </div>
+
+        <!-- ══ Section 3: Output ══ -->
+        <div class="section">
+            <div class="section-title" style="display:flex; align-items:center; justify-content:space-between;">
+                <span>Generated Values</span>
+                <button class="calc-btn" id="calcBtn" onclick="renderOutput()">▶ Calculate</button>
+            </div>
+            <div id="outputControls" class="output-controls" style="display:none;">
+                <div class="output-control-group" id="daysControlGroup">
+                    <label>Days to preview:</label>
+                    <input type="number" class="days-input" id="daysToShow" value="10" min="1" max="30" oninput="markStale()">
+                </div>
+            </div>
+            <div id="outputArea">
+                <div class="output-empty">Configure a formula above and click <strong>Calculate</strong> to generate values</div>
+            </div>
+        </div>
+
+        <!-- ══ Section 4: Validator ══ -->
+        <hr class="section-separator">
+        <div class="section">
+            <div class="section-title">Formula Validator</div>
+            <div class="form-group" style="width:100%; margin-bottom:10px;">
+                <label>Paste your formula</label>
+                <input type="text" class="form-input full" id="valInput"
+                       placeholder="{fn:random_string(8,8,{date_tz})}"
+                       oninput="onValInputChange()">
+            </div>
+            <div id="valStatus" style="display:none;"></div>
+            <div id="valSummary" style="display:none; margin-top:8px;"></div>
+            <div id="valMacroArea" style="display:none; margin-top:10px;">
+                <hr class="field-divider">
+                <div class="macro-detected-title">Detected macros — provide sample values for preview</div>
+                <div id="valMacroContainer"></div>
+                <div class="macro-values-note">Comma-separated. Date macros cycle automatically.</div>
+            </div>
+            <div id="valDaysControl" style="display:none; margin-top:8px;" class="output-control-group">
+                <label>Days to preview:</label>
+                <input type="number" class="days-input" id="valDaysToShow" value="10" min="1" max="30">
+            </div>
+            <div style="margin-top:12px;">
+                <button class="calc-btn" id="valPreviewBtn" onclick="validateAndPreview()" disabled>▶ Preview Values</button>
+            </div>
+            <div id="valOutputArea" style="margin-top:12px;"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// Constants & charsets
+// ════════════════════════════════════════
+
+const CHARSETS = {
+    mixed: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+    upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+    lower: 'abcdefghijklmnopqrstuvwxyz0123456789',
+};
+
+const DATE_MACRO_NAMES = new Set(['date_tz', 'time_date_tz']);
+
+let currentCase = 'mixed'; // global, updated by pill clicks
+
+// ════════════════════════════════════════
+// PRNG + Utilities
+// ════════════════════════════════════════
+
+function hashSeed(val) {
+    const str = String(val);
+    let h = 0;
+    for (let i = 0; i < str.length; i++)
+        h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+    return h;
+}
+
+function mulberry32(seed) {
+    return function () {
+        seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+        let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+}
+
+function getDateTzForDay(dayOffset) {
+    const d = new Date();
+    d.setDate(d.getDate() + dayOffset);
+    return d.toDateString();
+}
+
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ════════════════════════════════════════
+// Macro string parsing
+// ════════════════════════════════════════
+
+function parseCustomMacros(str) {
+    const found = new Set();
+    const re = /\{([^}]+)\}/g;
+    let m;
+    while ((m = re.exec(str)) !== null) {
+        const name = m[1].trim();
+        if (!DATE_MACRO_NAMES.has(name)) found.add(name);
+    }
+    return [...found];
+}
+
+function macroStrHasDate(str) {
+    const re = /\{([^}]+)\}/g;
+    let m;
+    while ((m = re.exec(str)) !== null) {
+        if (DATE_MACRO_NAMES.has(m[1].trim())) return true;
+    }
+    return false;
+}
+
+function evalMacroStr(str, dayOffset, combo) {
+    return str.replace(/\{([^}]+)\}/g, (_, name) => {
+        name = name.trim();
+        if (DATE_MACRO_NAMES.has(name)) return getDateTzForDay(dayOffset);
+        return (combo && combo[name] !== undefined) ? combo[name] : `{${name}}`;
+    });
+}
+
+// ════════════════════════════════════════
+// Core generators
+// ════════════════════════════════════════
+
+function genNumber(min, max, seedVal) {
+    min = parseInt(min, 10) || 0;
+    max = parseInt(max, 10) || 0;
+    if (min > max) { const t = min; min = max; max = t; }
+    if (seedVal === null || seedVal === undefined || seedVal === '') {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+    const rng = mulberry32(hashSeed(seedVal));
+    return Math.floor(rng() * (max - min + 1)) + min;
+}
+
+function genString(minLen, maxLen, seedVal, index, charset) {
+    minLen = Math.max(1, parseInt(minLen, 10) || 1);
+    maxLen = Math.max(1, parseInt(maxLen, 10) || 1);
+    if (minLen > maxLen) { const t = minLen; minLen = maxLen; maxLen = t; }
+    const cs = charset || CHARSETS.mixed;
+
+    let rng;
+    if (seedVal === null || seedVal === undefined || seedVal === '') {
+        rng = () => Math.random();
+    } else {
+        rng = mulberry32(hashSeed(String(seedVal) + '::' + (index || 0)));
+    }
+
+    const len = minLen === maxLen ? minLen : minLen + Math.floor(rng() * (maxLen - minLen + 1));
+    let result = '';
+    for (let i = 0; i < len; i++)
+        result += cs[Math.floor(rng() * cs.length)];
+    return result;
+}
+
+// ════════════════════════════════════════
+// Seed / Cardinality evaluators
+// ════════════════════════════════════════
+
+function evalSeed(s, dayOffset, combo) {
+    if (!s.enabled) return null;
+    switch (s.type) {
+        case 'date_tz': return getDateTzForDay(dayOffset);
+        case 'static':  return s.value || null;
+        case 'macro':   return evalMacroStr(s.macroStr || '', dayOffset, combo || {});
+        case 'rn': {
+            let inner = null;
+            if (s.rnSeedType === 'date_tz') inner = getDateTzForDay(dayOffset);
+            if (s.rnSeedType === 'static')  inner = s.rnSeedValue || null;
+            return genNumber(s.rnMin, s.rnMax, inner);
+        }
+    }
+    return null;
+}
+
+function evalCardinality(c, dayOffset) {
+    if (!c.enabled) return 1;
+    switch (c.type) {
+        case 'static': return Math.max(1, parseInt(c.value, 10) || 1);
+        case 'rn': {
+            let inner = null;
+            if (c.rnSeedType === 'date_tz') inner = getDateTzForDay(dayOffset);
+            if (c.rnSeedType === 'static')  inner = c.rnSeedValue || null;
+            return Math.max(1, genNumber(c.rnMin, c.rnMax, inner));
+        }
+    }
+    return 1;
+}
+
+// For random_string_set: cardinality is a range seeded by the main seed
+function evalSetCardinality(minCard, maxCard, seedVal) {
+    const cardSeed = (seedVal !== null && seedVal !== undefined && seedVal !== '')
+        ? String(seedVal) + ':cardinality'
+        : null;
+    return Math.max(1, genNumber(minCard, maxCard, cardSeed));
+}
+
+// ════════════════════════════════════════
+// State classification
+// ════════════════════════════════════════
+
+function usesDateTz(state) {
+    const s = state.seed, c = state.cardinality;
+    if (s.enabled && s.type === 'date_tz') return true;
+    if (s.enabled && s.type === 'macro' && macroStrHasDate(s.macroStr || '')) return true;
+    if (s.enabled && s.type === 'rn' && s.rnSeedType === 'date_tz') return true;
+    if (c.enabled && c.type === 'rn' && c.rnSeedType === 'date_tz') return true;
+    return false;
+}
+
+function hasMacroSeed(state) {
+    return state.seed.enabled && state.seed.type === 'macro';
+}
+
+function isFullyRandom(state) {
+    if (!state.seed.enabled) return true;
+    if (state.seed.type === 'rn' && state.seed.rnSeedType === 'none') return true;
+    return false;
+}
+
+// ════════════════════════════════════════
+// Formula string builder
+// ════════════════════════════════════════
+
+function seedToStr(s) {
+    if (!s.enabled) return null;
+    switch (s.type) {
+        case 'date_tz': return '{date_tz}';
+        case 'static':  return s.value || 'SEED';
+        case 'macro': {
+            // Macros must be adjacent — strip any commas/spaces between them
+            const cleaned = (s.macroStr || '').replace(/\}\s*,+\s*\{/g, '}{').trim();
+            return cleaned || 'SEED';
+        }
+        case 'rn': {
+            const inner = s.rnSeedType === 'none'    ? '' :
+                          s.rnSeedType === 'date_tz' ? ',{date_tz}' :
+                          ',' + (s.rnSeedValue || 'SEED');
+            return `{fn:random_number(${s.rnMin},${s.rnMax}${inner})}`;
+        }
+    }
+    return null;
+}
+
+function cardToStr(c) {
+    if (!c.enabled) return null;
+    switch (c.type) {
+        case 'static': return String(c.value || 1);
+        case 'rn': {
+            const inner = c.rnSeedType === 'none'    ? '' :
+                          c.rnSeedType === 'date_tz' ? ',{date_tz}' :
+                          ',' + (c.rnSeedValue || 'SEED');
+            return `{fn:random_number(${c.rnMin},${c.rnMax}${inner})}`;
+        }
+    }
+    return null;
+}
+
+function buildFormulaString(state) {
+    const prefix = state.prefix || '';
+    const suffix = state.suffix || '';
+    const s   = seedToStr(state.seed);
+    const min = state.min, max = state.max;
+
+    let formula;
+    if (state.fnType === 'random_number') {
+        formula = s ? `{fn:random_number(${min},${max},${s})}` : `{fn:random_number(${min},${max})}`;
+    } else if (state.fnType === 'random_string_set') {
+        const seedPart = s || '';
+        formula = `{fn:random_string_set(${min},${max},${seedPart},${state.setCardMin},${state.setCardMax})}`;
+    } else if (state.cardinality.enabled) {
+        // random_string with cardinality → output as random_string_set
+        const c = state.cardinality;
+        const seedPart = s || '';
+        formula = c.type === 'static'
+            ? `{fn:random_string_set(${min},${max},${seedPart},${c.value},${c.value})}`
+            : `{fn:random_string_set(${min},${max},${seedPart},${cardToStr(c)})}`;
+    } else {
+        formula = s ? `{fn:random_string(${min},${max},${s})}` : `{fn:random_string(${min},${max})}`;
+    }
+
+    return prefix + formula + suffix;
+}
+
+// ════════════════════════════════════════
+// Value generation
+// ════════════════════════════════════════
+
+function generateValues(state, dayOffset, combo) {
+    const prefix = state.prefix || '';
+    const suffix = state.suffix || '';
+    const wrap   = v => prefix + String(v) + suffix;
+    const seedVal = evalSeed(state.seed, dayOffset, combo);
+    const charset = CHARSETS[state.charCase] || CHARSETS.mixed;
+
+    if (state.fnType === 'random_number') {
+        return { cardinality: 1, values: [wrap(genNumber(state.min, state.max, seedVal))] };
+    }
+
+    if (state.fnType === 'random_string_set') {
+        const cardinality = evalSetCardinality(state.setCardMin, state.setCardMax, seedVal);
+        const values = [];
+        for (let i = 0; i < cardinality; i++)
+            values.push(wrap(genString(state.min, state.max, seedVal, i, charset)));
+        return { cardinality, values };
+    }
+
+    // random_string
+    const cardinality = evalCardinality(state.cardinality, dayOffset);
+    const values = [];
+    for (let i = 0; i < cardinality; i++)
+        values.push(wrap(genString(state.min, state.max, seedVal, i, charset)));
+    return { cardinality, values };
+}
+
+function generateSamples(state, count) {
+    const prefix  = state.prefix || '';
+    const suffix  = state.suffix || '';
+    const wrap    = v => prefix + String(v) + suffix;
+    const charset = CHARSETS[state.charCase] || CHARSETS.mixed;
+    const results = [];
+    if (state.fnType === 'random_number') {
+        for (let i = 0; i < count; i++) results.push(wrap(genNumber(state.min, state.max, null)));
+    } else {
+        for (let i = 0; i < count; i++) results.push(wrap(genString(state.min, state.max, null, i, charset)));
+    }
+    return results;
+}
+
+// ════════════════════════════════════════
+// Read UI state
+// ════════════════════════════════════════
+
+function getMacroSampleValues() {
+    const result = {};
+    document.querySelectorAll('#macroValuesContainer .macro-value-row').forEach(row => {
+        const name  = row.dataset.macro;
+        const input = row.querySelector('input');
+        if (name && input) {
+            result[name] = input.value.split(',').map(v => v.trim()).filter(Boolean);
+            if (!result[name].length) result[name] = [name + '_1'];
+        }
+    });
+    return result;
+}
+
+function readState() {
+    return {
+        fnType:   document.getElementById('fnType').value,
+        charCase: currentCase,
+        min: parseInt(document.getElementById('coreMin').value, 10) || 0,
+        max: parseInt(document.getElementById('coreMax').value, 10) || 0,
+        prefix: document.getElementById('valuePrefix').value,
+        suffix: document.getElementById('valueSuffix').value,
+        seed: {
+            enabled:     document.getElementById('seedEnabled').checked,
+            type:        document.getElementById('seedType').value,
+            macroStr:    document.getElementById('seedMacroStr').value,
+            value:       document.getElementById('seedStaticValue').value,
+            rnMin:       parseInt(document.getElementById('seedRnMin').value, 10) || 0,
+            rnMax:       parseInt(document.getElementById('seedRnMax').value, 10) || 0,
+            rnSeedType:  document.getElementById('seedRnSeedType').value,
+            rnSeedValue: document.getElementById('seedRnSeedValue').value,
+        },
+        cardinality: {
+            enabled:     document.getElementById('cardEnabled').checked &&
+                         document.getElementById('fnType').value === 'random_string',
+            type:        document.getElementById('cardType').value,
+            value:       parseInt(document.getElementById('cardStaticValue').value, 10) || 1,
+            rnMin:       parseInt(document.getElementById('cardRnMin').value, 10) || 1,
+            rnMax:       parseInt(document.getElementById('cardRnMax').value, 10) || 1,
+            rnSeedType:  document.getElementById('cardRnSeedType').value,
+            rnSeedValue: document.getElementById('cardRnSeedValue').value,
+        },
+        setCardMin: parseInt(document.getElementById('setCardMin').value, 10) || 1,
+        setCardMax: parseInt(document.getElementById('setCardMax').value, 10) || 1,
+    };
+}
+
+// ════════════════════════════════════════
+// Render helpers
+// ════════════════════════════════════════
+
+function chipHtml(v, type) {
+    const safe = escHtml(String(v));
+    return `<span class="value-chip ${type}" onclick="copyChip(this,'${safe}')">${safe}</span>`;
+}
+
+function cardTag(n, cls) {
+    return n > 1 ? `<span class="card-tag ${cls || ''}">${n} values</span>` : '';
+}
+
+// ════════════════════════════════════════
+// Render
+// ════════════════════════════════════════
+
+function renderOutput() {
+    markClean();
+    const state = readState();
+
+    if (state.min > state.max) {
+        document.getElementById('formulaPreview').textContent = '—';
+        document.getElementById('outputArea').innerHTML = '<div class="error-box">Min must be ≤ Max</div>';
+        return;
+    }
+    if (state.fnType === 'random_string_set' && state.setCardMin > state.setCardMax) {
+        document.getElementById('formulaPreview').textContent = '—';
+        document.getElementById('outputArea').innerHTML = '<div class="error-box">Min cardinality must be ≤ Max cardinality</div>';
+        return;
+    }
+
+    document.getElementById('formulaPreview').textContent = buildFormulaString(state);
+
+    const dtz        = usesDateTz(state);
+    const macroMode  = hasMacroSeed(state);
+    const rnd        = isFullyRandom(state);
+    const ctrl       = document.getElementById('outputControls');
+    const outputArea = document.getElementById('outputArea');
+    const chipType   = state.fnType === 'random_number' ? 'num' : 'str';
+    const days       = Math.max(1, Math.min(30, parseInt(document.getElementById('daysToShow').value, 10) || 10));
+
+    ctrl.style.display = dtz ? 'flex' : 'none';
+
+    // ── Macro seed with custom macros ──────────────────────────────────
+    if (macroMode) {
+        const macroStr     = state.seed.macroStr || '';
+        const customMacros = parseCustomMacros(macroStr);
+        const hasDtz       = macroStrHasDate(macroStr);
+        const macroValues  = getMacroSampleValues();
+        const combos       = buildCombos(customMacros, macroValues);
+
+        if (combos.length === 0 && !hasDtz) {
+            const res = generateValues(state, 0, {});
+            outputArea.innerHTML = `
+            <div class="day-card card-purple">
+                <div class="day-card-header">
+                    <span class="day-label purple">Deterministic Output</span>
+                    ${cardTag(res.cardinality, 'purple')}
+                </div>
+                <div class="card-meta">No dynamic macros detected — fixed output.</div>
+                <div class="values-grid">${res.values.map(v => chipHtml(v, chipType)).join('')}</div>
+                <div class="samples-note">Click any value to copy.</div>
+            </div>`;
+            return;
+        }
+
+        let html = '';
+        if (hasDtz) {
+            for (let d = 0; d < days; d++) {
+                const dateStr = getDateTzForDay(d);
+                const dayLbl  = d === 0 ? 'Today' : `Day +${d}`;
+                html += `
+                <div class="day-card">
+                    <div class="day-card-header">
+                        <span class="day-label">${dayLbl}</span>
+                        <span class="day-date">${dateStr}</span>
+                    </div>
+                    <div class="matrix-rows">${renderComboRows(combos, state, d, chipType)}</div>
+                </div>`;
+            }
+        } else {
+            html = `
+            <div class="day-card card-purple">
+                <div class="day-card-header">
+                    <span class="day-label purple">Per-macro Output</span>
+                    <span class="card-tag purple">${combos.length} combo${combos.length !== 1 ? 's' : ''}</span>
+                </div>
+                <div class="matrix-rows">${renderComboRows(combos, state, 0, chipType)}</div>
+                <div class="samples-note">Fixed seed per macro value. Click any value to copy.</div>
+            </div>`;
+        }
+        html += '<div class="samples-note">Each row = one macro value combination. Click any value to copy.</div>';
+        outputArea.innerHTML = html;
+        return;
+    }
+
+    // ── date_tz (non-macro) ────────────────────────────────────────────
+    if (dtz) {
+        let html = '';
+        for (let d = 0; d < days; d++) {
+            const res    = generateValues(state, d);
+            const dayLbl = d === 0 ? 'Today' : `Day +${d}`;
+            html += `
+            <div class="day-card">
+                <div class="day-card-header">
+                    <span class="day-label">${dayLbl}</span>
+                    <span class="day-date">${getDateTzForDay(d)}</span>
+                    ${cardTag(res.cardinality, '')}
+                </div>
+                <div class="values-grid">${res.values.map(v => chipHtml(v, chipType)).join('')}</div>
+            </div>`;
+        }
+        html += '<div class="samples-note">Click any value to copy.</div>';
+        outputArea.innerHTML = html;
+        return;
+    }
+
+    // ── Fully random (no seed) ─────────────────────────────────────────
+    if (rnd) {
+        const SAMPLES = state.fnType === 'random_number' ? 20 : 15;
+        let cardDesc = '';
+        if (state.fnType === 'random_string') {
+            cardDesc = state.cardinality.enabled
+                ? (state.cardinality.type === 'static'
+                    ? `${state.cardinality.value} string(s) per call`
+                    : `${state.cardinality.rnMin}–${state.cardinality.rnMax} strings per call`)
+                : '1 string per call';
+        } else if (state.fnType === 'random_string_set') {
+            cardDesc = `${state.setCardMin}–${state.setCardMax} strings per call`;
+        }
+        const meta = state.fnType === 'random_number'
+            ? `Generates a random integer from <strong>${state.min}</strong> to <strong>${state.max}</strong>. Each call produces a different value.`
+            : `Generates ${cardDesc} of <strong>${state.min}–${state.max}</strong> chars each call.`;
+
+        const chips = generateSamples(state, SAMPLES).map(v => chipHtml(v, chipType)).join('');
+        outputArea.innerHTML = `
+        <div class="day-card card-orange">
+            <div class="day-card-header">
+                <span class="day-label orange">Sample Values</span>
+                <button class="regen-btn" onclick="renderOutput()">↺ Regenerate</button>
+            </div>
+            <div class="card-meta">${meta}</div>
+            <div class="values-grid">${chips}</div>
+            <div class="samples-note">Showing ${SAMPLES} random samples — differ each call. Click any to copy.</div>
+        </div>`;
+        return;
+    }
+
+    // ── Deterministic ──────────────────────────────────────────────────
+    const res   = generateValues(state, 0);
+    const chips = res.values.map(v => chipHtml(v, chipType)).join('');
+    outputArea.innerHTML = `
+    <div class="day-card card-purple">
+        <div class="day-card-header">
+            <span class="day-label purple">Deterministic Output</span>
+            ${cardTag(res.cardinality, 'purple')}
+        </div>
+        <div class="card-meta">Fixed seed — same value(s) every time.</div>
+        <div class="values-grid">${chips}</div>
+        <div class="samples-note">Click any value to copy.</div>
+    </div>`;
+}
+
+// ════════════════════════════════════════
+// Combo helpers (macro matrix)
+// ════════════════════════════════════════
+
+function buildCombos(macroNames, macroValues) {
+    let combos = [{}];
+    for (const name of macroNames) {
+        const vals = (macroValues[name] && macroValues[name].length)
+            ? macroValues[name] : [name + '_1'];
+        const next = [];
+        for (const ex of combos)
+            for (const v of vals)
+                next.push({ ...ex, [name]: v });
+        combos = next;
+    }
+    return combos;
+}
+
+function renderComboRows(combos, state, dayOffset, chipType) {
+    return combos.map(combo => {
+        const res   = generateValues(state, dayOffset, combo);
+        const label = Object.entries(combo).map(([k, v]) => `${k}=${v}`).join(', ');
+        const chips = res.values.map(v => chipHtml(v, chipType)).join(' ');
+        return `
+        <div class="matrix-row">
+            <span class="matrix-label" title="${escHtml(label)}">${escHtml(label)}</span>
+            <div class="values-grid">${chips}</div>
+        </div>`;
+    }).join('');
+}
+
+// ════════════════════════════════════════
+// UI event handlers
+// ════════════════════════════════════════
+
+function onFnTypeChange() {
+    const fn    = document.getElementById('fnType').value;
+    const isStr = fn === 'random_string' || fn === 'random_string_set';
+    const isSet = fn === 'random_string_set';
+
+    document.getElementById('minLabel').textContent = isStr ? 'Min Length' : 'Min Number';
+    document.getElementById('maxLabel').textContent = isStr ? 'Max Length' : 'Max Number';
+
+    // Character case — string types only
+    document.getElementById('caseGroup').style.display = isStr ? 'flex' : 'none';
+
+    // Cardinality sections
+    document.getElementById('cardSection').style.display    = fn === 'random_string'     ? 'block' : 'none';
+    document.getElementById('setCardSection').style.display = fn === 'random_string_set' ? 'block' : 'none';
+
+    if (fn !== 'random_string') {
+        document.getElementById('cardEnabled').checked = false;
+        document.getElementById('cardArea').style.display = 'none';
+    }
+
+    onStateChange();
+}
+
+function onSeedEnabledChange() {
+    document.getElementById('seedArea').style.display =
+        document.getElementById('seedEnabled').checked ? 'block' : 'none';
+    onStateChange();
+}
+
+function onSeedTypeChange() {
+    const type = document.getElementById('seedType').value;
+    document.getElementById('seedDtzInfo').style.display     = type === 'date_tz' ? 'block' : 'none';
+    document.getElementById('seedMacroArea').style.display   = type === 'macro'   ? 'block' : 'none';
+    document.getElementById('seedStaticGroup').style.display = type === 'static'  ? 'flex'  : 'none';
+    document.getElementById('seedRnArea').style.display      = type === 'rn'      ? 'block' : 'none';
+    onStateChange();
+}
+
+function onSeedRnSeedTypeChange() {
+    document.getElementById('seedRnSeedValueGroup').style.display =
+        document.getElementById('seedRnSeedType').value === 'static' ? 'flex' : 'none';
+    onStateChange();
+}
+
+function onCardEnabledChange() {
+    document.getElementById('cardArea').style.display =
+        document.getElementById('cardEnabled').checked ? 'block' : 'none';
+    onStateChange();
+}
+
+function onCardTypeChange() {
+    const type = document.getElementById('cardType').value;
+    document.getElementById('cardStaticGroup').style.display = type === 'static' ? 'flex'  : 'none';
+    document.getElementById('cardRnArea').style.display      = type === 'rn'     ? 'block' : 'none';
+    onStateChange();
+}
+
+function onCardRnSeedTypeChange() {
+    document.getElementById('cardRnSeedValueGroup').style.display =
+        document.getElementById('cardRnSeedType').value === 'static' ? 'flex' : 'none';
+    onStateChange();
+}
+
+function setCase(mode) {
+    currentCase = mode;
+    document.querySelectorAll('.case-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.case === mode);
+    });
+    onStateChange();
+}
+
+function onMacroStrChange() {
+    const str          = document.getElementById('seedMacroStr').value;
+    const customMacros = parseCustomMacros(str);
+    const hasDtz       = macroStrHasDate(str);
+    const container    = document.getElementById('macroValuesContainer');
+    const detected     = document.getElementById('macroDetected');
+
+    if (customMacros.length === 0 && !hasDtz) {
+        detected.style.display = 'none';
+        container.innerHTML = '';
+    } else {
+        detected.style.display = 'block';
+
+        // Preserve existing values
+        const existing = {};
+        container.querySelectorAll('.macro-value-row[data-macro]').forEach(row => {
+            const inp = row.querySelector('input');
+            if (inp) existing[row.dataset.macro] = inp.value;
+        });
+
+        let html = '';
+
+        if (hasDtz) {
+            const dateNames = [...new Set(
+                [...str.matchAll(/\{([^}]+)\}/g)]
+                    .map(m => m[1].trim())
+                    .filter(n => DATE_MACRO_NAMES.has(n))
+            )];
+            dateNames.forEach(name => {
+                html += `<div class="macro-value-row">
+                    <span class="macro-name-tag is-date">{${escHtml(name)}}</span>
+                    <span style="font-size:11px;opacity:0.55;">← cycles automatically by day</span>
+                </div>`;
+            });
+        }
+
+        customMacros.forEach(name => {
+            const val = existing[name] !== undefined ? existing[name] : buildDefaultValues(name);
+            html += `<div class="macro-value-row" data-macro="${escHtml(name)}">
+                <span class="macro-name-tag">{${escHtml(name)}}</span>
+                <div class="form-group" style="flex:1;">
+                    <label>Sample values (comma-separated)</label>
+                    <input type="text" class="form-input full" value="${escHtml(val)}"
+                           oninput="onStateChange()" placeholder="val1, val2, val3">
+                </div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+    }
+
+    onStateChange();
+}
+
+function buildDefaultValues(macroName) {
+    const short = macroName.length > 12 ? macroName.slice(0, 12) : macroName;
+    return [1,2,3,4,5].map(i => `${short}_${i}`).join(', ');
+}
+
+// ════════════════════════════════════════
+// Stale state management
+// ════════════════════════════════════════
+
+let isStale = false;
+
+function markStale() {
+    if (isStale) return;
+    isStale = true;
+    const btn = document.getElementById('calcBtn');
+    btn.classList.add('stale');
+    btn.textContent = '▶ Recalculate';
+    document.getElementById('outputArea').classList.add('stale');
+}
+
+function markClean() {
+    isStale = false;
+    const btn = document.getElementById('calcBtn');
+    btn.classList.remove('stale');
+    btn.textContent = '▶ Calculate';
+    document.getElementById('outputArea').classList.remove('stale');
+}
+
+function updateFormulaPreview() {
+    const state = readState();
+    let formula = '—';
+    try { formula = buildFormulaString(state); } catch (e) {}
+    document.getElementById('formulaPreview').textContent = formula;
+    markStale();
+}
+
+function onStateChange() { updateFormulaPreview(); }
+
+// ════════════════════════════════════════
+// Copy helpers
+// ════════════════════════════════════════
+
+function copyFormula() {
+    const text = document.getElementById('formulaPreview').textContent;
+    if (text === '—') return;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyFormulaBtn');
+        btn.textContent = 'Copied!';
+        btn.classList.add('success');
+        setTimeout(() => { btn.textContent = 'Copy Formula'; btn.classList.remove('success'); }, 1500);
+    });
+}
+
+function copyChip(el, val) {
+    navigator.clipboard.writeText(val).then(() => {
+        const orig = el.textContent;
+        el.classList.add('ok');
+        el.textContent = '✓';
+        setTimeout(() => { el.textContent = orig; el.classList.remove('ok'); }, 700);
+    });
+}
+
+// ════════════════════════════════════════
+// Formula Validator — Parser
+// ════════════════════════════════════════
+
+function splitTopLevelParams(str) {
+    const params = [];
+    let depth = 0, start = 0;
+    for (let i = 0; i < str.length; i++) {
+        if (str[i] === '{') depth++;
+        else if (str[i] === '}') depth--;
+        else if (str[i] === ',' && depth === 0) {
+            params.push(str.slice(start, i).trim());
+            start = i + 1;
+        }
+    }
+    params.push(str.slice(start).trim());
+    return params.filter(p => p.length > 0);
+}
+
+function parseFormulaTree(str) {
+    str = (str || '').trim();
+    const m = str.match(/^\{fn:([a-z_]+)\((.*)\)\}$/s);
+    if (!m) return null;
+    const rawParams = m[2].length ? splitTopLevelParams(m[2]) : [];
+    return { fn: m[1], params: rawParams.map(parseParam) };
+}
+
+function parseParam(str) {
+    str = str.trim();
+    if (/^\{fn:/.test(str)) {
+        const tree = parseFormulaTree(str);
+        return tree ? { type: 'formula', tree } : { type: 'unknown', raw: str };
+    }
+    if (/^\{[^}]+\}$/.test(str)) return { type: 'macro', name: str.slice(1, -1).trim() };
+    const n = Number(str);
+    if (!isNaN(n) && str !== '') return { type: 'number', value: n };
+    return { type: 'literal', value: str };
+}
+
+const VALID_FNS = {
+    random_number:     { min: 2, max: 3 },
+    random_string:     { min: 2, max: 3 },
+    random_string_set: { min: 4, max: 5 },
+};
+
+function validateTree(tree, depth) {
+    depth = depth || 0;
+    const errors = [];
+    if (!tree) { errors.push('Could not parse formula'); return errors; }
+    const spec = VALID_FNS[tree.fn];
+    if (!spec) { errors.push(`Unknown function: ${tree.fn}`); return errors; }
+    const pc = tree.params.length;
+    if (pc < spec.min || pc > spec.max) {
+        errors.push(`${tree.fn} expects ${spec.min}–${spec.max} params, got ${pc}`);
+        return errors;
+    }
+    // params 0 & 1 must be numbers
+    for (let i = 0; i < 2; i++) {
+        if (tree.params[i].type !== 'number')
+            errors.push(`Param ${i+1} of ${tree.fn} must be a number, got: ${paramToStr(tree.params[i])}`);
+    }
+    if (tree.params[0].type === 'number' && tree.params[1].type === 'number') {
+        if (tree.params[0].value > tree.params[1].value)
+            errors.push(`Min (${tree.params[0].value}) must be ≤ Max (${tree.params[1].value})`);
+    }
+    // validate SEED param (index 2) for random_number and random_string
+    if (pc >= 3 && tree.fn !== 'random_string_set') {
+        const seed = tree.params[2];
+        if (seed.type === 'formula') {
+            if (seed.tree.fn !== 'random_number')
+                errors.push('Nested seed must be a random_number formula');
+            else
+                validateTree(seed.tree, depth + 1).forEach(e => errors.push(`(seed) ${e}`));
+        }
+    }
+    // random_string_set specifics
+    if (tree.fn === 'random_string_set') {
+        const seed = tree.params[2];
+        if (seed.type === 'formula') {
+            if (seed.tree.fn !== 'random_number')
+                errors.push('Nested seed for random_string_set must be random_number');
+            else
+                validateTree(seed.tree, depth + 1).forEach(e => errors.push(`(seed) ${e}`));
+        }
+        const card = tree.params[3];
+        if (card.type === 'formula') {
+            if (card.tree.fn !== 'random_number')
+                errors.push('Cardinality formula must be random_number');
+            else
+                validateTree(card.tree, depth + 1).forEach(e => errors.push(`(cardinality) ${e}`));
+        } else if (card.type !== 'number') {
+            errors.push('Cardinality must be a number or {fn:random_number(...)}');
+        }
+        if (pc === 5) {
+            const maxCard = tree.params[4];
+            if (maxCard.type !== 'number')
+                errors.push('Max cardinality must be a number');
+            else if (card.type === 'number' && card.value > maxCard.value)
+                errors.push(`Min cardinality (${card.value}) must be ≤ Max cardinality (${maxCard.value})`);
+        }
+    }
+    return errors;
+}
+
+function paramToStr(p) {
+    if (!p) return '?';
+    if (p.type === 'number')  return String(p.value);
+    if (p.type === 'macro')   return `{${p.name}}`;
+    if (p.type === 'literal') return p.value;
+    if (p.type === 'formula') return `{fn:${p.tree.fn}(${p.tree.params.map(paramToStr).join(',')})}`;
+    return p.raw || '?';
+}
+
+// ════════════════════════════════════════
+// Formula Validator — Execution
+// ════════════════════════════════════════
+
+function resolveParam(param, dayOffset, combo) {
+    if (param.type === 'number')  return param.value;
+    if (param.type === 'literal') return param.value;
+    if (param.type === 'macro') {
+        const name = param.name;
+        if (DATE_MACRO_NAMES.has(name)) return getDateTzForDay(dayOffset);
+        return (combo && combo[name] !== undefined) ? combo[name] : `{${name}}`;
+    }
+    if (param.type === 'formula') return execFormulaTree(param.tree, dayOffset, combo, 'mixed').values[0];
+    return null;
+}
+
+function execFormulaTree(tree, dayOffset, combo, caseMode) {
+    const p   = tree.params;
+    const min = resolveParam(p[0], dayOffset, combo);
+    const max = resolveParam(p[1], dayOffset, combo);
+    const cs  = CHARSETS[caseMode] || CHARSETS.mixed;
+
+    if (tree.fn === 'random_number') {
+        const seedVal = p.length >= 3 ? resolveParam(p[2], dayOffset, combo) : null;
+        return { cardinality: 1, values: [genNumber(min, max, seedVal)] };
+    }
+    if (tree.fn === 'random_string') {
+        const seedVal = p.length >= 3 ? resolveParam(p[2], dayOffset, combo) : null;
+        return { cardinality: 1, values: [genString(min, max, seedVal, 0, cs)] };
+    }
+    if (tree.fn === 'random_string_set') {
+        const seedVal = resolveParam(p[2], dayOffset, combo);
+        let minCard, maxCard;
+        if (p.length === 5) {
+            minCard = resolveParam(p[3], dayOffset, combo);
+            maxCard = resolveParam(p[4], dayOffset, combo);
+        } else {
+            const cardParam = p[3];
+            if (cardParam.type === 'formula') {
+                const inner = execFormulaTree(cardParam.tree, dayOffset, combo, caseMode);
+                minCard = maxCard = inner.values[0];
+            } else {
+                minCard = maxCard = resolveParam(cardParam, dayOffset, combo);
+            }
+        }
+        const cardinality = evalSetCardinality(minCard, maxCard, seedVal);
+        const values = [];
+        for (let i = 0; i < cardinality; i++) values.push(genString(min, max, seedVal, i, cs));
+        return { cardinality, values };
+    }
+    return { cardinality: 0, values: [] };
+}
+
+function treeHasDateMacro(tree) {
+    if (!tree) return false;
+    return tree.params.some(p =>
+        (p.type === 'macro' && DATE_MACRO_NAMES.has(p.name)) ||
+        (p.type === 'formula' && treeHasDateMacro(p.tree))
+    );
+}
+
+function extractCustomMacrosFromTree(tree) {
+    const result = new Set();
+    if (!tree) return result;
+    function walk(t) {
+        for (const p of t.params) {
+            if (p.type === 'macro' && !DATE_MACRO_NAMES.has(p.name)) result.add(p.name);
+            if (p.type === 'formula') walk(p.tree);
+        }
+    }
+    walk(tree);
+    return result;
+}
+
+function buildValSummary(tree) {
+    const fn = tree.fn, p = tree.params;
+    const rows = [{ key: 'Function', val: `<code>{fn:${fn}(…)}</code>` }];
+
+    if (fn === 'random_number' || fn === 'random_string') {
+        rows.push({ key: 'Min', val: `<code>${paramToStr(p[0])}</code>` });
+        rows.push({ key: 'Max', val: `<code>${paramToStr(p[1])}</code>` });
+        const seed = p.length >= 3 ? p[2] : null;
+        rows.push({ key: 'Seed', val: seed
+            ? `<code>${escHtml(paramToStr(seed))}</code>`
+            : '<span style="opacity:0.5">none — random each call</span>' });
+    } else if (fn === 'random_string_set') {
+        rows.push({ key: 'Min Length', val: `<code>${paramToStr(p[0])}</code>` });
+        rows.push({ key: 'Max Length', val: `<code>${paramToStr(p[1])}</code>` });
+        rows.push({ key: 'Seed', val: `<code>${escHtml(paramToStr(p[2]))}</code>` });
+        if (p.length === 5) {
+            rows.push({ key: 'Min Card.', val: `<code>${paramToStr(p[3])}</code>` });
+            rows.push({ key: 'Max Card.', val: `<code>${paramToStr(p[4])}</code>` });
+        } else {
+            rows.push({ key: 'Cardinality', val: `<code>${escHtml(paramToStr(p[3]))}</code>` });
+        }
+    }
+
+    return `<div class="val-summary">${rows.map(r =>
+        `<div class="val-summary-row">
+            <span class="val-summary-key">${r.key}</span>
+            <span class="val-summary-val">${r.val}</span>
+        </div>`).join('')}</div>`;
+}
+
+// ════════════════════════════════════════
+// Formula Validator — UI
+// ════════════════════════════════════════
+
+function onValInputChange() {
+    const str        = document.getElementById('valInput').value.trim();
+    const statusEl   = document.getElementById('valStatus');
+    const summaryEl  = document.getElementById('valSummary');
+    const macroArea  = document.getElementById('valMacroArea');
+    const daysCtrl   = document.getElementById('valDaysControl');
+    const previewBtn = document.getElementById('valPreviewBtn');
+
+    document.getElementById('valOutputArea').innerHTML = '';
+
+    if (!str) {
+        [statusEl, summaryEl, macroArea, daysCtrl].forEach(el => el.style.display = 'none');
+        previewBtn.disabled = true;
+        return;
+    }
+
+    const tree = parseFormulaTree(str);
+    if (!tree) {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = `<div class="val-error">Not a valid macro formula. Expected: <code>{fn:function_name(params)}</code></div>`;
+        [summaryEl, macroArea, daysCtrl].forEach(el => el.style.display = 'none');
+        previewBtn.disabled = true;
+        return;
+    }
+
+    const errors = validateTree(tree);
+    if (errors.length > 0) {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = `<div class="val-error"><strong>Invalid formula:</strong><ul>${errors.map(e => `<li>${escHtml(e)}</li>`).join('')}</ul></div>`;
+        [summaryEl, macroArea, daysCtrl].forEach(el => el.style.display = 'none');
+        previewBtn.disabled = true;
+        return;
+    }
+
+    statusEl.style.display  = 'block';
+    statusEl.innerHTML      = `<div class="val-ok">✓ Valid formula</div>`;
+    summaryEl.style.display = 'block';
+    summaryEl.innerHTML     = buildValSummary(tree);
+
+    const hasDtz       = treeHasDateMacro(tree);
+    const customMacros = [...extractCustomMacrosFromTree(tree)];
+    updateValMacroInputs(customMacros, hasDtz);
+    macroArea.style.display = (customMacros.length > 0 || hasDtz) ? 'block' : 'none';
+    daysCtrl.style.display  = hasDtz ? 'flex' : 'none';
+    previewBtn.disabled     = false;
+}
+
+function updateValMacroInputs(macros, hasDtz) {
+    const container = document.getElementById('valMacroContainer');
+    const existing  = {};
+    container.querySelectorAll('[data-macro]').forEach(row => {
+        const inp = row.querySelector('input');
+        if (inp) existing[row.dataset.macro] = inp.value;
+    });
+
+    let html = '';
+    if (hasDtz) {
+        html += `<div class="macro-value-row">
+            <span class="macro-name-tag is-date">{date_tz}</span>
+            <span style="font-size:11px;opacity:0.55;">← cycles automatically by day</span>
+        </div>`;
+    }
+    macros.forEach(name => {
+        const val = existing[name] !== undefined ? existing[name] : buildDefaultValues(name);
+        html += `<div class="macro-value-row" data-macro="${escHtml(name)}">
+            <span class="macro-name-tag">{${escHtml(name)}}</span>
+            <div class="form-group" style="flex:1;">
+                <label>Sample values (comma-separated)</label>
+                <input type="text" class="form-input full" value="${escHtml(val)}"
+                       placeholder="val1, val2, val3">
+            </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function getValMacroValues() {
+    const result = {};
+    document.querySelectorAll('#valMacroContainer [data-macro]').forEach(row => {
+        const name  = row.dataset.macro;
+        const input = row.querySelector('input');
+        if (name && input) {
+            result[name] = input.value.split(',').map(v => v.trim()).filter(Boolean);
+            if (!result[name].length) result[name] = [name + '_1'];
+        }
+    });
+    return result;
+}
+
+function validateAndPreview() {
+    const str  = document.getElementById('valInput').value.trim();
+    const tree = parseFormulaTree(str);
+    if (!tree || validateTree(tree).length > 0) return;
+
+    const outputArea   = document.getElementById('valOutputArea');
+    const hasDtz       = treeHasDateMacro(tree);
+    const customMacros = [...extractCustomMacrosFromTree(tree)];
+    const macroValues  = getValMacroValues();
+    const days         = Math.max(1, Math.min(30, parseInt(document.getElementById('valDaysToShow').value, 10) || 10));
+    const chipType     = tree.fn === 'random_number' ? 'num' : 'str';
+    const combos       = buildCombos(customMacros, macroValues);
+
+    let html = '';
+
+    if (hasDtz) {
+        for (let d = 0; d < days; d++) {
+            const dateStr = getDateTzForDay(d);
+            const dayLbl  = d === 0 ? 'Today' : `Day +${d}`;
+            if (combos.length > 1) {
+                const rows = combos.map(combo => {
+                    const res   = execFormulaTree(tree, d, combo, 'mixed');
+                    const label = Object.entries(combo).map(([k, v]) => `${k}=${v}`).join(', ');
+                    return `<div class="matrix-row">
+                        <span class="matrix-label">${escHtml(label)}</span>
+                        <div class="values-grid">${res.values.map(v => chipHtml(v, chipType)).join('')}</div>
+                    </div>`;
+                }).join('');
+                html += `<div class="day-card"><div class="day-card-header">
+                    <span class="day-label">${dayLbl}</span>
+                    <span class="day-date">${dateStr}</span>
+                </div><div class="matrix-rows">${rows}</div></div>`;
+            } else {
+                const res = execFormulaTree(tree, d, combos[0] || {}, 'mixed');
+                html += `<div class="day-card"><div class="day-card-header">
+                    <span class="day-label">${dayLbl}</span>
+                    <span class="day-date">${dateStr}</span>
+                    ${cardTag(res.cardinality, '')}
+                </div><div class="values-grid">${res.values.map(v => chipHtml(v, chipType)).join('')}</div></div>`;
+            }
+        }
+    } else if (combos.length > 1) {
+        const rows = combos.map(combo => {
+            const res   = execFormulaTree(tree, 0, combo, 'mixed');
+            const label = Object.entries(combo).map(([k, v]) => `${k}=${v}`).join(', ');
+            return `<div class="matrix-row">
+                <span class="matrix-label">${escHtml(label)}</span>
+                <div class="values-grid">${res.values.map(v => chipHtml(v, chipType)).join('')}</div>
+            </div>`;
+        }).join('');
+        html = `<div class="day-card card-purple"><div class="day-card-header">
+            <span class="day-label purple">Per-macro Output</span>
+            <span class="card-tag purple">${combos.length} combo${combos.length !== 1 ? 's' : ''}</span>
+        </div><div class="matrix-rows">${rows}</div></div>`;
+    } else {
+        const res   = execFormulaTree(tree, 0, combos[0] || {}, 'mixed');
+        const isRnd = (tree.fn === 'random_number' || tree.fn === 'random_string') && tree.params.length < 3;
+        if (isRnd) {
+            html = `<div class="day-card card-orange"><div class="day-card-header">
+                <span class="day-label orange">Sample Output</span>
+                ${cardTag(res.cardinality, '')}
+            </div><div class="values-grid">${res.values.map(v => chipHtml(v, chipType)).join('')}</div>
+            <div class="samples-note">No seed — values differ each call.</div></div>`;
+        } else {
+            html = `<div class="day-card card-purple"><div class="day-card-header">
+                <span class="day-label purple">Deterministic Output</span>
+                ${cardTag(res.cardinality, 'purple')}
+            </div><div class="card-meta">Fixed seed — same value(s) every time.</div>
+            <div class="values-grid">${res.values.map(v => chipHtml(v, chipType)).join('')}</div>
+            <div class="samples-note">Click any value to copy.</div></div>`;
+        }
+    }
+    html += '<div class="samples-note">Click any value to copy.</div>';
+    outputArea.innerHTML = html;
+}
+
+// ════════════════════════════════════════
+// Theme
+// ════════════════════════════════════════
+
+function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    document.getElementById('themeToggle').classList.toggle('dark', isDark);
+    document.getElementById('themeSlider').textContent = isDark ? '🌙' : '☀️';
+    localStorage.setItem('mc_theme', isDark ? 'dark' : 'light');
+}
+
+// ════════════════════════════════════════
+// Init
+// ════════════════════════════════════════
+(function init() {
+    if (localStorage.getItem('mc_theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('themeToggle').classList.add('dark');
+        document.getElementById('themeSlider').textContent = '🌙';
+    }
+    updateFormulaPreview();
+    markClean(); // start clean — no output yet, button is neutral
+})();
+</script>
+</body>
+</html>

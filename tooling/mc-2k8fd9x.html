@@ -646,18 +646,45 @@
                 </div>
             </div>
 
-            <!-- ── Cardinality range — random_string_set (always visible) ── -->
+            <!-- ── Cardinality — random_string_set (always visible) ── -->
             <div id="setCardSection" style="display:none;">
                 <div class="subsection card-sub">
-                    <div class="sub-title card-color">Cardinality range</div>
+                    <div class="sub-title card-color">Cardinality</div>
                     <div class="form-row">
                         <div class="form-group">
+                            <label>Mode</label>
+                            <select class="form-select" id="setCardMode" onchange="onSetCardModeChange()">
+                                <option value="simple">Simple — fixed integer</option>
+                                <option value="range">Range — min to max</option>
+                                <option value="formula">Formula</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- simple -->
+                    <div id="setCardSimpleGroup" class="form-row">
+                        <div class="form-group">
+                            <label>Cardinality</label>
+                            <input type="number" class="form-input num" id="setCardSimple" value="3" min="1" oninput="onStateChange()">
+                        </div>
+                    </div>
+                    <!-- range -->
+                    <div id="setCardRangeGroup" class="form-row" style="display:none;">
+                        <div class="form-group">
                             <label>Min cardinality</label>
-                            <input type="number" class="form-input num" id="setCardMin" value="1" min="1" oninput="onStateChange()">
+                            <input type="number" class="form-input num" id="setCardMin" value="2" min="1" oninput="onStateChange()">
                         </div>
                         <div class="form-group">
                             <label>Max cardinality</label>
-                            <input type="number" class="form-input num" id="setCardMax" value="10" min="1" oninput="onStateChange()">
+                            <input type="number" class="form-input num" id="setCardMax" value="6" min="1" oninput="onStateChange()">
+                        </div>
+                    </div>
+                    <!-- formula -->
+                    <div id="setCardFormulaGroup" style="display:none; margin-top:6px;">
+                        <div class="form-group" style="width:100%;">
+                            <label>Cardinality formula</label>
+                            <input type="text" class="form-input full" id="setCardFormula"
+                                   placeholder="{fn:random_number(1,10,{date_tz})}"
+                                   oninput="onStateChange()">
                         </div>
                     </div>
                 </div>
@@ -887,6 +914,10 @@ function usesDateTz(state) {
     if (s.enabled && s.type === 'macro' && macroStrHasDate(s.macroStr || '')) return true;
     if (s.enabled && s.type === 'rn' && s.rnSeedType === 'date_tz') return true;
     if (c.enabled && c.type === 'rn' && c.rnSeedType === 'date_tz') return true;
+    if (state.fnType === 'random_string_set' && state.setCardMode === 'formula' && state.setCardFormula) {
+        const cardTree = parseFormulaTree(state.setCardFormula);
+        if (cardTree && treeHasDateMacro(cardTree)) return true;
+    }
     return false;
 }
 
@@ -949,7 +980,15 @@ function buildFormulaString(state) {
         formula = s ? `{fn:random_number(${min},${max},${s})}` : `{fn:random_number(${min},${max})}`;
     } else if (state.fnType === 'random_string_set') {
         const seedPart = s || '';
-        formula = `{fn:random_string_set(${min},${max},${seedPart},${state.setCardMin},${state.setCardMax})}`;
+        if (state.setCardMode === 'simple') {
+            formula = `{fn:random_string_set(${min},${max},${seedPart},${state.setCardSimple})}`;
+        } else if (state.setCardMode === 'range') {
+            formula = `{fn:random_string_set(${min},${max},${seedPart},${state.setCardMin},${state.setCardMax})}`;
+        } else {
+            // formula mode — embed as-is; fallback to 1 if empty
+            const cf = state.setCardFormula || '1';
+            formula = `{fn:random_string_set(${min},${max},${seedPart},${cf})}`;
+        }
     } else if (state.cardinality.enabled) {
         // random_string with cardinality → output as random_string_set
         const c = state.cardinality;
@@ -980,7 +1019,22 @@ function generateValues(state, dayOffset, combo) {
     }
 
     if (state.fnType === 'random_string_set') {
-        const cardinality = evalSetCardinality(state.setCardMin, state.setCardMax, seedVal);
+        let minCard, maxCard;
+        if (state.setCardMode === 'simple') {
+            minCard = maxCard = state.setCardSimple;
+        } else if (state.setCardMode === 'range') {
+            minCard = state.setCardMin; maxCard = state.setCardMax;
+        } else {
+            // formula mode
+            const cardTree = parseFormulaTree(state.setCardFormula || '');
+            if (cardTree) {
+                const res = execFormulaTree(cardTree, dayOffset, combo, 'mixed');
+                minCard = maxCard = res.values[0];
+            } else {
+                minCard = maxCard = 1;
+            }
+        }
+        const cardinality = evalSetCardinality(minCard, maxCard, seedVal);
         const values = [];
         for (let i = 0; i < cardinality; i++)
             values.push(wrap(genString(state.min, state.max, seedVal, i, charset)));
@@ -1054,8 +1108,11 @@ function readState() {
             rnSeedType:  document.getElementById('cardRnSeedType').value,
             rnSeedValue: document.getElementById('cardRnSeedValue').value,
         },
-        setCardMin: parseInt(document.getElementById('setCardMin').value, 10) || 1,
-        setCardMax: parseInt(document.getElementById('setCardMax').value, 10) || 1,
+        setCardMode:    document.getElementById('setCardMode').value,
+        setCardSimple:  parseInt(document.getElementById('setCardSimple').value, 10) || 1,
+        setCardMin:     parseInt(document.getElementById('setCardMin').value, 10) || 1,
+        setCardMax:     parseInt(document.getElementById('setCardMax').value, 10) || 1,
+        setCardFormula: document.getElementById('setCardFormula').value.trim(),
     };
 }
 
@@ -1085,10 +1142,18 @@ function renderOutput() {
         document.getElementById('outputArea').innerHTML = '<div class="error-box">Min must be ≤ Max</div>';
         return;
     }
-    if (state.fnType === 'random_string_set' && state.setCardMin > state.setCardMax) {
+    if (state.fnType === 'random_string_set' && state.setCardMode === 'range' && state.setCardMin > state.setCardMax) {
         document.getElementById('formulaPreview').textContent = '—';
         document.getElementById('outputArea').innerHTML = '<div class="error-box">Min cardinality must be ≤ Max cardinality</div>';
         return;
+    }
+    if (state.fnType === 'random_string_set' && state.setCardMode === 'formula') {
+        const cardTree = parseFormulaTree(state.setCardFormula || '');
+        if (!cardTree) {
+            document.getElementById('formulaPreview').textContent = '—';
+            document.getElementById('outputArea').innerHTML = '<div class="error-box">Cardinality formula is not valid — expected e.g. {fn:random_number(1,10,{date_tz})}</div>';
+            return;
+        }
     }
 
     document.getElementById('formulaPreview').textContent = buildFormulaString(state);
@@ -1257,6 +1322,14 @@ function renderComboRows(combos, state, dayOffset, chipType) {
 // ════════════════════════════════════════
 // UI event handlers
 // ════════════════════════════════════════
+
+function onSetCardModeChange() {
+    const mode = document.getElementById('setCardMode').value;
+    document.getElementById('setCardSimpleGroup').style.display  = mode === 'simple'  ? 'flex'  : 'none';
+    document.getElementById('setCardRangeGroup').style.display   = mode === 'range'   ? 'flex'  : 'none';
+    document.getElementById('setCardFormulaGroup').style.display = mode === 'formula' ? 'block' : 'none';
+    onStateChange();
+}
 
 function onFnTypeChange() {
     const fn    = document.getElementById('fnType').value;
@@ -1711,6 +1784,9 @@ function onValInputChange() {
     macroArea.style.display = (customMacros.length > 0 || hasDtz) ? 'block' : 'none';
     daysCtrl.style.display  = hasDtz ? 'flex' : 'none';
     previewBtn.disabled     = false;
+
+    // Auto-run immediately when no macro values need to be filled in manually
+    if (customMacros.length === 0) validateAndPreview();
 }
 
 function updateValMacroInputs(macros, hasDtz) {

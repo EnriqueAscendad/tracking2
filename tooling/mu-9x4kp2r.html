@@ -387,6 +387,53 @@
         @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
         #auth-input.shake{animation:shake 0.4s ease;border-color:#e53e3e}
 
+
+        /* ── TOP NAV TABS ── */
+        .top-tab {
+            background: none; border: none; padding: 10px 18px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            color: var(--text-color); opacity: 0.55;
+            border-bottom: 2px solid transparent; margin-bottom: -2px;
+            transition: all 0.15s; letter-spacing: 0.3px;
+        }
+        .top-tab:hover { opacity: 0.85; }
+        .top-tab.active { opacity: 1; color: #667eea; border-bottom-color: #667eea; }
+        body.dark-mode .top-tab.active { color: #a5b4fc; border-bottom-color: #a5b4fc; }
+        /* compare diff table */
+        .diff-table { width:100%; border-collapse:collapse; font-size:11px; }
+        .diff-table th { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;
+            color:var(--text-color); opacity:0.5; padding:6px 8px; text-align:left; border-bottom:2px solid var(--border-color); }
+        .diff-table td { padding:5px 8px; border-bottom:1px solid var(--border-color); vertical-align:top; font-family:monospace; }
+        .diff-table tr:last-child td { border-bottom:none; }
+        .diff-only-a { background:rgba(239,68,68,0.06); }
+        .diff-only-b { background:rgba(34,197,94,0.06); }
+        .diff-both   { background:transparent; }
+        .diff-changed{ background:rgba(245,158,11,0.06); }
+        .diff-badge  { font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px;
+            text-transform:uppercase; letter-spacing:0.3px; white-space:nowrap; }
+        .diff-badge-a    { background:rgba(239,68,68,0.12); color:#dc2626; border:1px solid rgba(239,68,68,0.3); }
+        .diff-badge-b    { background:rgba(34,197,94,0.12); color:#16a34a; border:1px solid rgba(34,197,94,0.3); }
+        .diff-badge-both { background:rgba(102,126,234,0.10); color:#4f46e5; border:1px solid rgba(102,126,234,0.25); }
+        .diff-badge-chg  { background:rgba(245,158,11,0.12); color:#b45309; border:1px solid rgba(245,158,11,0.3); }
+        body.dark-mode .diff-badge-a    { color:#f87171; }
+        body.dark-mode .diff-badge-b    { color:#4ade80; }
+        body.dark-mode .diff-badge-both { color:#a5b4fc; }
+        body.dark-mode .diff-badge-chg  { color:#fbbf24; }
+        /* chimera check */
+        .chim-row { display:grid; grid-template-columns:180px 180px 1fr auto;
+            align-items:center; gap:8px; padding:6px 10px;
+            border-radius:6px; margin-bottom:4px; border:1px solid transparent; }
+        .chim-ok   { background:rgba(34,197,94,0.05);  border-color:rgba(34,197,94,0.2); }
+        .chim-warn { background:rgba(245,158,11,0.06); border-color:rgba(245,158,11,0.2); }
+        .chim-err  { background:rgba(239,68,68,0.05);  border-color:rgba(239,68,68,0.2); }
+        .chim-info { background:rgba(102,126,234,0.05);border-color:rgba(102,126,234,0.2); }
+        .chim-macro{ font-family:monospace; font-size:11px; font-weight:700; color:#4f46e5; }
+        .chim-arrow{ font-size:10px; opacity:0.4; }
+        .chim-aftrad{ font-family:monospace; font-size:11px; color:#764ba2; }
+        .chim-note  { font-size:11px; color:var(--text-color); opacity:0.65; }
+        body.dark-mode .chim-macro  { color:#a5b4fc; }
+        body.dark-mode .chim-aftrad { color:#c4b5fd; }
+
         @media (max-width: 600px) { body { padding: 10px; } }
     </style>
 </head>
@@ -402,7 +449,14 @@
         </button>
     </div>
 
-    <div class="content">
+    <!-- ── TOP NAV TABS ── -->
+    <div style="display:flex;border-bottom:2px solid var(--border-color);background:var(--section-bg);padding:0 20px;flex-wrap:wrap;">
+        <button class="top-tab active" id="tab-validator" onclick="switchTab('validator')">🔗 URL Validator</button>
+        <button class="top-tab" id="tab-chimera"   onclick="switchTab('chimera')">🔄 Chimera Check</button>
+        <button class="top-tab" id="tab-compare"   onclick="switchTab('compare')">⚖️ URL Compare</button>
+    </div>
+
+    <div class="content" id="pane-validator">
         <div class="section">
             <div class="section-title">Input</div>
             <div class="form-group">
@@ -512,8 +566,86 @@
                 </div>
             </div>
         </div>
+
+    </div><!-- /pane-validator -->
+
+    <!-- ═══════════════════════════════════════ CHIMERA CHECK ═════════════════════════════════════ -->
+    <div class="content" id="pane-chimera" style="display:none">
+        <div class="section">
+            <div class="section-title">Chimera → Aftrad Macro Check</div>
+            <p style="font-size:11px;color:var(--text-color);opacity:0.65;margin-bottom:12px;line-height:1.6;">
+                Paste a <strong>Chimera tracking URL</strong> (with Chimera macros like <code style="font-family:monospace;background:var(--section-bg);padding:1px 4px;border-radius:3px">{tid}</code>, <code style="font-family:monospace;background:var(--section-bg);padding:1px 4px;border-radius:3px">{ip}</code>, <code style="font-family:monospace;background:var(--section-bg);padding:1px 4px;border-radius:3px">{ua}</code>, <code style="font-family:monospace;background:var(--section-bg);padding:1px 4px;border-radius:3px">{androidid}</code>) and verify that all essential Aftrad parameters are present and use the correct Chimera macros.
+            </p>
+            <div class="form-group">
+                <label>Chimera Tracking URL</label>
+                <textarea class="form-input" id="chimeraInput" rows="5"
+                    placeholder="https://app.appsflyer.com/com.example.app?pid={af_pid}&af_siteid=[pbdrph#8#afft0#date:70:90#date#1]&af_sub_siteid={att_info}&clickid={tid}&af_ip={ip}&af_ua={ua}&advertising_id={androidid}&idfa={iosidfa}&is_incentivized=false&af_media_type=app…"
+                    oninput="onChimeraInput()"></textarea>
+            </div>
+            <div class="examples-row" style="margin-bottom:4px">
+                <span class="ex-chip" onclick="loadChimeraExample('af')">AppsFlyer (Chimera)</span>
+                <span class="ex-chip" onclick="loadChimeraExample('singular')">Singular (Chimera)</span>
+            </div>
+            <div class="btn-row">
+                <button class="calc-btn" onclick="validateChimera()">Check Macros</button>
+                <button class="calc-btn secondary" onclick="clearChimera()">Clear</button>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-title">Results</div>
+            <div id="chimeraResults">
+                <div class="result-placeholder"><div class="icon">🔄</div><p>Paste a Chimera URL above and click Check Macros</p></div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-title" style="cursor:pointer;user-select:none;display:flex;justify-content:space-between" onclick="toggleChimerRef()">
+                <span>Chimera ↔ Aftrad Macro Reference <span style="font-size:9px;opacity:0.5;font-weight:400;margin-left:6px">Source: Link Builder</span></span>
+                <span id="chimerRefIcon" style="font-size:10px;opacity:0.5">▼</span>
+            </div>
+            <div id="chimerRefPanel" style="margin-top:12px">
+                <table class="params-table">
+                    <thead><tr>
+                        <th>Chimera macro</th><th>Aftrad / AF param key</th><th>Description</th><th>Essential?</th>
+                    </tr></thead>
+                    <tbody id="chimerRefBody"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
-</div>
+
+    <!-- ═══════════════════════════════════════ URL COMPARE ════════════════════════════════════════ -->
+    <div class="content" id="pane-compare" style="display:none">
+        <div class="section">
+            <div class="section-title">URL Compare</div>
+            <p style="font-size:11px;color:var(--text-color);opacity:0.65;margin-bottom:12px;line-height:1.6;">
+                Compare two tracking URLs parameter by parameter. Highlights params only in A, only in B, and params present in both but with different values.
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group">
+                    <label>URL A</label>
+                    <textarea class="form-input" id="compareA" rows="6" placeholder="https://…" oninput="autoCompare()"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>URL B</label>
+                    <textarea class="form-input" id="compareB" rows="6" placeholder="https://…" oninput="autoCompare()"></textarea>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button class="calc-btn" onclick="runCompare()">Compare</button>
+                <button class="calc-btn secondary" onclick="clearCompare()">Clear</button>
+                <span class="ex-chip" onclick="loadCompareExample()">Load example</span>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-title">Diff</div>
+            <div id="compareResults">
+                <div class="result-placeholder"><div class="icon">⚖️</div><p>Paste two URLs above and click Compare</p></div>
+            </div>
+        </div>
+    </div>
+
+
+</div><!-- /container -->
 
 <script>
 // ══════════════════════════════════════════════════════════════
@@ -1483,6 +1615,400 @@ function toggleTheme() {
   document.getElementById('themeSlider').textContent = isDark ? '🌙' : '☀️';
   localStorage.setItem('tooling_hub_theme', isDark ? 'dark' : 'light');
 }
+
+
+// ══════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════════════════════
+function switchTab(name) {
+  ['validator','chimera','compare'].forEach(function(t) {
+    var pane = document.getElementById('pane-' + t);
+    var tab  = document.getElementById('tab-' + t);
+    if (pane) pane.style.display = t === name ? '' : 'none';
+    if (tab)  tab.classList.toggle('active', t === name);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// CHIMERA MACRO MAP  (from Link Builder sheet)
+// Each entry: { chimera, aftradParam, afKey, desc, essential, notes }
+// chimera   = the macro used in Chimera URLs
+// afKey     = the AppsFlyer parameter key where this macro goes
+// essential = true → required in every Chimera AF link
+// ══════════════════════════════════════════════════════════════
+var CHIMERA_MAP = [
+  // ── Core attribution ──
+  { chimera:'{tid}',          afKey:'clickid',           afAltKeys:['click_id'],        desc:'Click ID / postback attribution',           essential:true,  notes:'Chimera click identifier. Maps to clickid= in AF link.' },
+  { chimera:'{att_info}',     afKey:'af_sub_siteid',     afAltKeys:[],                  desc:'Privacy postback / probabilistic attribution', essential:true, notes:'Required for probabilistic attribution without click ID.' },
+  // ── Traffic metadata ──
+  { chimera:'{ip}',           afKey:'af_ip',             afAltKeys:[],                  desc:'User IP address',                           essential:true,  notes:'Required for geo-attribution and fraud detection.' },
+  { chimera:'{ua}',           afKey:'af_ua',             afAltKeys:[],                  desc:'User agent string',                         essential:true,  notes:'Required for device/OS detection.' },
+  { chimera:'{device_os}',    afKey:'af_os_version',     afAltKeys:[],                  desc:'Device OS (platform)',                      essential:false, notes:'Used in Singular as p= param.' },
+  { chimera:'{device_version}',afKey:'af_os_version',    afAltKeys:[],                  desc:'OS version string',                         essential:false, notes:'Correct Chimera macro for OS version (not {af_os_version}).' },
+  { chimera:'{device_model}', afKey:'af_model',          afAltKeys:[],                  desc:'Device model',                              essential:false, notes:'' },
+  { chimera:'{lang}',         afKey:'af_lang',           afAltKeys:[],                  desc:'Device language / locale',                  essential:false, notes:'' },
+  // ── Device IDs ──
+  { chimera:'{androidid}',    afKey:'advertising_id',    afAltKeys:['android_id'],      desc:'Android advertising ID (GAID)',              essential:true,  notes:'Use advertising_id= (not android_id=). Remove idfa= if Android-only.' },
+  { chimera:'{iosidfa}',      afKey:'idfa',              afAltKeys:[],                  desc:'iOS IDFA',                                  essential:false, notes:'Include for iOS or cross-platform. Should NOT co-exist with {androidid} in same param.' },
+  { chimera:'{gaid}',         afKey:'advertising_id',    afAltKeys:['android_id'],      desc:'Google advertising ID (GAID) — alt macro',  essential:false, notes:'Alternative to {androidid}. Use one or the other, not both.' },
+  // ── Site / publisher ──
+  { chimera:'[pbdrph#8#afft0#date:70:90#date#1]', afKey:'af_siteid', afAltKeys:[],     desc:'Aftrad site ID expression (af_siteid)',      essential:true,  notes:'Standard Chimera af_siteid value. Length 70-90 chars, date-based.' },
+  { chimera:'{siteid}',       afKey:'af_siteid',         afAltKeys:['psn'],             desc:'Site ID (Singular: psn=)',                  essential:false, notes:'Used in Singular links as psn= param.' },
+  // ── Content / campaign ──
+  { chimera:'{af_pid}',       afKey:'pid',               afAltKeys:[],                  desc:'AppsFlyer partner / media source ID',       essential:true,  notes:'Must remain {af_pid} — filled by Aftrad at click time.' },
+  { chimera:'{af_prt}',       afKey:'af_prt',            afAltKeys:[],                  desc:'AppsFlyer agency PRT',                      essential:false, notes:'Only required when handshakes are configured in the offer.' },
+  { chimera:'{af_ad}',        afKey:'af_ad',             afAltKeys:[],                  desc:'Ad / creative name',                        essential:false, notes:'' },
+  { chimera:'{af_ad_id}',     afKey:'af_ad_id',          afAltKeys:[],                  desc:'Ad ID',                                     essential:false, notes:'' },
+  { chimera:'{af_adset}',     afKey:'af_adset',          afAltKeys:[],                  desc:'Ad set name',                               essential:false, notes:'' },
+  { chimera:'{af_adset_id}',  afKey:'af_adset_id',       afAltKeys:[],                  desc:'Ad set ID',                                 essential:false, notes:'' },
+  // ── Cost ──
+  { chimera:'USD',            afKey:'af_cost_currency',  afAltKeys:[],                  desc:'Cost currency (hardcoded)',                 essential:false, notes:'Keep as USD unless advertiser specifies otherwise.' },
+  // ── Flags ──
+  { chimera:'false',          afKey:'is_incentivized',   afAltKeys:[],                  desc:'Incentivized traffic flag',                 essential:false, notes:'Always false unless campaign is explicitly incentivized.' },
+  { chimera:'app',            afKey:'af_media_type',     afAltKeys:[],                  desc:'Media type',                                essential:false, notes:'Always app for mobile app campaigns.' },
+  // ── Singular-specific ──
+  { chimera:'{os_version}',   afKey:'ve',                afAltKeys:[],                  desc:'OS version (Singular ve= param)',            essential:false, notes:'Correct macro is {os_version}, NOT {os_veion} (typo in some older links).' },
+  { chimera:'a8f',            afKey:'agency_id',         afAltKeys:[],                  desc:'Aftrad agency ID in Singular',              essential:true,  notes:'Must be a8f for Aftrad. Do not use j4g or other values.' }
+];
+
+// WRONG macros lookup — if we see these in a Chimera URL, flag them
+var CHIMERA_WRONG = {
+  '{click_id}':     { shouldBe:'{tid}',          context:'Click ID should use {tid} in Chimera links, not {click_id}.' },
+  '{gaid}':         { shouldBe:'{androidid}',    context:'Prefer {androidid} over {gaid} for consistency with Chimera standard.' },
+  '{af_ip}':        { shouldBe:'{ip}',           context:'Use {ip} (not {af_ip}) in Chimera-format URLs.' },
+  '{af_ua}':        { shouldBe:'{ua}',           context:'Use {ua} (not {af_ua}) in Chimera-format URLs.' },
+  '{af_os_version}':{ shouldBe:'{device_version}', context:'Use {device_version} (not {af_os_version}) in Chimera-format URLs.' },
+  '{af_model}':     { shouldBe:'{device_model}', context:'Use {device_model} (not {af_model}) in Chimera-format URLs.' },
+  '{af_lang}':      { shouldBe:'{lang}',         context:'Use {lang} (not {af_lang}) in Chimera-format URLs.' },
+  '{aggregate_id}': { shouldBe:'{att_info}',     context:'Use {att_info} (not {aggregate_id}) in Chimera-format URLs.' },
+  '{af_siteid}':    { shouldBe:'[pbdrph#8#afft0#date:70:90#date#1]', context:'af_siteid value should be the Chimera expression [pbdrph#8#afft0#date:70:90#date#1], not {af_siteid}.' },
+  '{os_veion}':     { shouldBe:'{os_version}',   context:'Typo detected: {os_veion} should be {os_version}.' }
+};
+
+// CHIMERA EXAMPLES
+var CHIMERA_EXAMPLES = {
+  af: 'https://app.appsflyer.com/com.example.app?pid={af_pid}&af_siteid=[pbdrph#8#afft0#date:70:90#date#1]&af_sub_siteid={att_info}&af_c_id=1444&af_ad={af_ad}&af_ad_id={af_ad_id}&af_adset={af_adset}&af_adset_id={af_adset_id}&af_cost_currency=USD&af_cost_model=CPA&af_cost_value=5&af_click_lookback=7d&af_ip={ip}&af_ua={ua}&af_media_type=app&clickid={tid}&advertising_id={androidid}&idfa={iosidfa}&is_incentivized=false&af_prt={af_prt}&af_os_version={device_version}&af_model={device_model}&af_lang={lang}',
+  singular: 'https://i.sng.link/Dpy3j/rdza?cl={tid}&psid=[pbdrph#8#afft0#date:10:20#date#1]&p={device_os}&ip={ip}&ua={ua}&lc={lang}&pssid={att_info}&ve={os_version}&agency_id=a8f&idfa={iosidfa}&psn={siteid}'
+};
+
+function loadChimeraExample(k) {
+  document.getElementById('chimeraInput').value = CHIMERA_EXAMPLES[k] || '';
+  validateChimera();
+}
+function clearChimera() {
+  document.getElementById('chimeraInput').value = '';
+  document.getElementById('chimeraResults').innerHTML = '<div class="result-placeholder"><div class="icon">🔄</div><p>Paste a Chimera URL above and click Check Macros</p></div>';
+}
+function onChimeraInput() {
+  var v = document.getElementById('chimeraInput').value.trim();
+  if (v.startsWith('http') && v.indexOf('?') > 0) validateChimera();
+}
+
+function toggleChimerRef() {
+  var p = document.getElementById('chimerRefPanel');
+  var i = document.getElementById('chimerRefIcon');
+  var open = p.style.display !== 'none';
+  p.style.display = open ? 'none' : '';
+  i.textContent = open ? '▼' : '▲';
+}
+
+function buildChimerRefTable() {
+  var tbody = document.getElementById('chimerRefBody');
+  if (!tbody) return;
+  tbody.innerHTML = CHIMERA_MAP.map(function(r) {
+    var ess = r.essential
+      ? '<span class="status-badge badge-req-ok">Essential</span>'
+      : '<span class="status-badge badge-extra" style="opacity:0.5">Optional</span>';
+    return '<tr>' +
+      '<td><code style="font-family:monospace;font-size:11px;color:#4f46e5">' + escH(r.chimera) + '</code></td>' +
+      '<td><code style="font-family:monospace;font-size:11px;color:#764ba2">' + escH(r.afKey) + (r.afAltKeys.length ? '<span style="opacity:0.4"> / ' + r.afAltKeys.join(' / ') + '</span>' : '') + '</code></td>' +
+      '<td style="color:var(--text-color);opacity:0.7">' + escH(r.desc) + '</td>' +
+      '<td>' + ess + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function validateChimera() {
+  var raw = document.getElementById('chimeraInput').value.trim();
+  if (!raw) { return; }
+
+  var resultsEl = document.getElementById('chimeraResults');
+  var html = '';
+
+  // ── Parse URL ──
+  var parsed = null;
+  try { parsed = new URL(raw); } catch(e) {
+    var fixed = raw.replace(/\{[^}]*\}/g, function(m){ return encodeURIComponent(m); })
+                   .replace(/\[[^\]]*\]/g, function(m){ return encodeURIComponent(m); });
+    try { parsed = new URL(fixed); } catch(e2) {}
+  }
+
+  // Extract params robustly
+  var qIdx = raw.indexOf('?');
+  var qs   = qIdx >= 0 ? raw.substring(qIdx + 1) : '';
+  var paramMap = {};  // key → raw value
+  qs.split('&').forEach(function(pair) {
+    var eq = pair.indexOf('=');
+    if (eq > 0) {
+      var k = pair.substring(0, eq);
+      var v = pair.substring(eq + 1);
+      if (/^[a-zA-Z_~$][a-zA-Z0-9_~$]*$/.test(k)) {
+        try { v = decodeURIComponent(v); } catch(e) {}
+        paramMap[k] = v;
+      }
+    }
+  });
+
+  // ── Detect MMP type ──
+  var domain = parsed ? parsed.hostname : '';
+  var isSingular = domain.indexOf('sng.link') >= 0 || domain.indexOf('singular') >= 0;
+  var isAF       = domain.indexOf('appsflyer') >= 0 || domain.indexOf('onelink') >= 0;
+  var mmpLabel   = isSingular ? 'Singular' : (isAF ? 'AppsFlyer' : 'Unknown MMP');
+  var mmpEmoji   = isSingular ? '🟪' : (isAF ? '🟦' : '❓');
+
+  // ── MMP banner ──
+  html += '<div class="mmp-banner"><span class="mmp-logo">' + mmpEmoji + '</span>';
+  html += '<div class="mmp-info"><div class="mmp-name">' + mmpLabel + ' (Chimera URL)</div>';
+  html += '<div class="mmp-domain">' + escH(domain) + '</div></div></div>';
+
+  // ── Check for WRONG macros ──
+  var wrongFound = [];
+  Object.keys(CHIMERA_WRONG).forEach(function(wrongMacro) {
+    if (raw.indexOf(wrongMacro) >= 0) {
+      wrongFound.push({ macro: wrongMacro, info: CHIMERA_WRONG[wrongMacro] });
+    }
+  });
+  if (wrongFound.length > 0) {
+    html += '<div class="struct-issues">';
+    wrongFound.forEach(function(w) {
+      html += '<div class="struct-issue err"><span class="struct-icon">⚠️</span>';
+      html += '<span>Found <code style="font-family:monospace">' + escH(w.macro) + '</code> — ' + escH(w.info.context) + '';
+      if (w.info.shouldBe) html += ' Use <code style="font-family:monospace">' + escH(w.info.shouldBe) + '</code> instead.';
+      html += '</span></div>';
+    });
+    html += '</div>';
+  }
+
+  // ── Check essential Chimera macros ──
+  var essentialRules = CHIMERA_MAP.filter(function(r){ return r.essential; });
+  // Filter by MMP type
+  if (isSingular) {
+    essentialRules = CHIMERA_MAP.filter(function(r){
+      return r.essential && (r.afKey === 'cl' || r.afKey === 've' || r.afKey === 'ip' || r.afKey === 'ua' ||
+             r.afKey === 'af_sub_siteid' || r.afKey === 'clickid' || r.chimera === 'a8f' ||
+             r.afKey === 'agency_id' || r.chimera === '{tid}' || r.chimera === '{att_info}' ||
+             r.chimera === '{ip}' || r.chimera === '{ua}');
+    });
+  }
+
+  var missing = [];
+  var present = [];
+  var warnings = [];
+
+  essentialRules.forEach(function(rule) {
+    var chimeraVal = rule.chimera;
+    // Check if this chimera value appears anywhere in the URL
+    var found = raw.indexOf(chimeraVal) >= 0;
+    // For {tid} also check cl= for Singular
+    if (!found && rule.chimera === '{tid}' && isSingular) {
+      found = (paramMap['cl'] === '{tid}');
+    }
+    // For att_info in Singular it's pssid=
+    if (!found && rule.chimera === '{att_info}' && isSingular) {
+      found = (paramMap['pssid'] === '{att_info}');
+    }
+    // For agency_id=a8f in Singular
+    if (rule.chimera === 'a8f') {
+      var agVal = paramMap['agency_id'];
+      if (agVal === 'a8f') { present.push(rule); return; }
+      if (agVal && agVal !== 'a8f') { warnings.push({ rule:rule, msg:'agency_id is "' + agVal + '" — expected "a8f" for Aftrad.' }); return; }
+      if (!agVal) { missing.push(rule); return; }
+    }
+    if (found) { present.push(rule); }
+    else { missing.push(rule); }
+  });
+
+  // ── Summary pills ──
+  var totalEss = essentialRules.length;
+  html += '<div class="summary-row">';
+  html += '<span class="summary-pill pill-ok">✓ ' + present.length + ' essential present</span>';
+  if (missing.length) html += '<span class="summary-pill pill-miss">✗ ' + missing.length + ' missing</span>';
+  if (warnings.length) html += '<span class="summary-pill pill-warn">⚠ ' + warnings.length + ' warnings</span>';
+  if (wrongFound.length) html += '<span class="summary-pill pill-miss">⚠ ' + wrongFound.length + ' wrong macro' + (wrongFound.length>1?'s':'') + '</span>';
+  html += '</div>';
+
+  // ── Missing essentials ──
+  if (missing.length > 0) {
+    html += '<div class="missing-block">';
+    missing.forEach(function(r) {
+      html += '<div class="missing-row">';
+      html += '<span class="missing-key">' + escH(r.afKey) + '=</span>';
+      html += '<span class="missing-desc">' + escH(r.desc) + '</span>';
+      html += '<span class="missing-macro">' + escH(r.chimera) + '</span>';
+      html += '<span></span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // ── Warnings ──
+  if (warnings.length > 0) {
+    html += '<div class="struct-issues">';
+    warnings.forEach(function(w) {
+      html += '<div class="struct-issue warn"><span class="struct-icon">⚠️</span>';
+      html += '<span>' + escH(w.msg) + '</span></div>';
+    });
+    html += '</div>';
+  }
+
+  // ── All params with Chimera annotation ──
+  html += '<table class="params-table"><thead><tr><th>Parameter</th><th>Value in URL</th><th>Chimera status</th></tr></thead><tbody>';
+
+  // Build reverse lookup: afKey → chimera rule
+  var afKeyToRule = {};
+  CHIMERA_MAP.forEach(function(r){ if (!afKeyToRule[r.afKey]) afKeyToRule[r.afKey] = r; });
+
+  Object.keys(paramMap).forEach(function(k) {
+    var v = paramMap[k];
+    var rule = afKeyToRule[k];
+    var statusHtml = '';
+
+    if (rule) {
+      var valueOk = (v === rule.chimera) || (rule.afAltKeys && rule.afAltKeys.indexOf(k) >= 0 && v === rule.chimera);
+      // Also check if value contains the chimera macro
+      var valueContainsMacro = (v.indexOf(rule.chimera) >= 0) || (rule.chimera === 'a8f' && v === 'a8f');
+      if (valueContainsMacro || v === rule.chimera) {
+        statusHtml = '<span class="status-badge badge-req-ok">' + (rule.essential ? 'Essential ✓' : 'Mapped ✓') + '</span>';
+        if (rule.notes) statusHtml += '<div class="param-hint" style="margin-top:3px">' + escH(rule.notes) + '</div>';
+      } else {
+        // Check if value is a wrong Aftrad macro
+        var wrongInfo = CHIMERA_WRONG[v];
+        if (wrongInfo) {
+          statusHtml = '<span class="status-badge badge-typo">Wrong macro → use ' + escH(wrongInfo.shouldBe) + '</span>';
+          statusHtml += '<div class="param-hint" style="margin-top:3px">' + escH(wrongInfo.context) + '</div>';
+        } else {
+          statusHtml = '<span class="status-badge badge-wmacro">Expected: ' + escH(rule.chimera) + '</span>';
+          if (rule.notes) statusHtml += '<div class="param-hint" style="margin-top:3px">' + escH(rule.notes) + '</div>';
+        }
+      }
+    } else {
+      statusHtml = '<span class="status-badge badge-extra" style="opacity:0.5">Extra / custom</span>';
+    }
+
+    html += '<tr>';
+    html += '<td><span class="param-key">' + escH(k) + '</span></td>';
+    html += '<td><span class="param-val" style="word-break:break-all;max-width:300px">' + escH(v || '(empty)') + '</span></td>';
+    html += '<td>' + statusHtml + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+
+  resultsEl.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════
+// URL COMPARE
+// ══════════════════════════════════════════════════════════════
+function parseParamsFromUrl(raw) {
+  var map = {};
+  var qIdx = raw.indexOf('?');
+  if (qIdx < 0) return map;
+  var qs = raw.substring(qIdx + 1);
+  qs.split('&').forEach(function(pair) {
+    var eq = pair.indexOf('=');
+    if (eq > 0) {
+      var k = pair.substring(0, eq);
+      var v = pair.substring(eq + 1);
+      try { v = decodeURIComponent(v); } catch(e) {}
+      if (/^[a-zA-Z_~$][a-zA-Z0-9_~$]*$/.test(k)) map[k] = v;
+    }
+  });
+  return map;
+}
+
+function runCompare() {
+  var rawA = document.getElementById('compareA').value.trim();
+  var rawB = document.getElementById('compareB').value.trim();
+  if (!rawA || !rawB) {
+    document.getElementById('compareResults').innerHTML = '<div class="result-placeholder"><div class="icon">⚖️</div><p>Paste both URLs first</p></div>';
+    return;
+  }
+
+  var pA = parseParamsFromUrl(rawA);
+  var pB = parseParamsFromUrl(rawB);
+  var allKeys = {};
+  Object.keys(pA).forEach(function(k){ allKeys[k]=1; });
+  Object.keys(pB).forEach(function(k){ allKeys[k]=1; });
+  var keys = Object.keys(allKeys).sort();
+
+  // Domain comparison
+  var domA = '', domB = '';
+  try { domA = (new URL(rawA.replace(/\{[^}]*\}/g,'_').replace(/\[[^\]]*\]/g,'_'))).hostname; } catch(e){}
+  try { domB = (new URL(rawB.replace(/\{[^}]*\}/g,'_').replace(/\[[^\]]*\]/g,'_'))).hostname; } catch(e){}
+
+  var onlyA = keys.filter(function(k){ return k in pA && !(k in pB); }).length;
+  var onlyB = keys.filter(function(k){ return !(k in pA) && k in pB; }).length;
+  var both  = keys.filter(function(k){ return k in pA && k in pB; }).length;
+  var changed = keys.filter(function(k){ return k in pA && k in pB && pA[k] !== pB[k]; }).length;
+
+  var html = '<div class="summary-row">';
+  html += '<span class="summary-pill pill-info">Total: ' + keys.length + ' params</span>';
+  html += '<span class="summary-pill pill-ok">Both: ' + both + '</span>';
+  if (changed) html += '<span class="summary-pill pill-warn">Changed: ' + changed + '</span>';
+  if (onlyA)   html += '<span class="summary-pill pill-miss">Only A: ' + onlyA + '</span>';
+  if (onlyB)   html += '<span class="summary-pill" style="background:rgba(34,197,94,0.12);color:#16a34a;border:1px solid rgba(34,197,94,0.3)">Only B: ' + onlyB + '</span>';
+  html += '</div>';
+
+  // Domain row
+  if (domA !== domB) {
+    html += '<div class="struct-issue warn" style="margin-bottom:10px"><span class="struct-icon">⚠️</span>';
+    html += '<span>Different domains: <strong>' + escH(domA) + '</strong> vs <strong>' + escH(domB) + '</strong></span></div>';
+  }
+
+  html += '<table class="diff-table"><thead><tr><th>Parameter</th><th>URL A</th><th>URL B</th><th>Status</th></tr></thead><tbody>';
+
+  keys.forEach(function(k) {
+    var inA = k in pA, inB = k in pB;
+    var vA = inA ? pA[k] : '', vB = inB ? pB[k] : '';
+    var rowClass, badge, badgeClass;
+    if (inA && !inB)           { rowClass='diff-only-a'; badge='Only A';  badgeClass='diff-badge-a'; }
+    else if (!inA && inB)      { rowClass='diff-only-b'; badge='Only B';  badgeClass='diff-badge-b'; }
+    else if (vA === vB)        { rowClass='diff-both';   badge='Same';    badgeClass='diff-badge-both'; }
+    else                       { rowClass='diff-changed';badge='Changed'; badgeClass='diff-badge-chg'; }
+
+    html += '<tr class="' + rowClass + '">';
+    html += '<td><span class="param-key">' + escH(k) + '</span></td>';
+    html += '<td style="max-width:220px;word-break:break-all"><span class="param-val">' + (inA ? escH(vA) : '<span style="opacity:0.3">—</span>') + '</span></td>';
+    html += '<td style="max-width:220px;word-break:break-all"><span class="param-val">' + (inB ? escH(vB) : '<span style="opacity:0.3">—</span>') + '</span></td>';
+    html += '<td><span class="diff-badge ' + badgeClass + '">' + badge + '</span></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+
+  document.getElementById('compareResults').innerHTML = html;
+}
+
+function autoCompare() {
+  var a = document.getElementById('compareA').value.trim();
+  var b = document.getElementById('compareB').value.trim();
+  if (a.indexOf('?') > 0 && b.indexOf('?') > 0) runCompare();
+}
+
+function clearCompare() {
+  document.getElementById('compareA').value = '';
+  document.getElementById('compareB').value = '';
+  document.getElementById('compareResults').innerHTML = '<div class="result-placeholder"><div class="icon">⚖️</div><p>Paste two URLs above and click Compare</p></div>';
+}
+
+function loadCompareExample() {
+  document.getElementById('compareA').value = 'https://underdogfantasy.onelink.me/vgwg?pid=msales_int&af_siteid=MSL&c=GG_ASD_TG&af_sub_siteid={att_info}&af_adset=MSL&af_adset_id={adset_id}&af_ad={ad}&af_ad_id={ad_id}&af_ad_type={ad_type}&af_sub2=SiteID_{siteid}&af_click_lookback=7d&af_ip={ip}&af_ua={ua}&af_media_type={media_type}&clickid={tid}&advertising_id={androidid}&idfa={iosidfa}&is_incentivized={is_incent}&af_prt=xlmediaplc';
+  document.getElementById('compareB').value = 'https://playgunlake.onelink.me/7N33?pid=msales_int&af_siteid=[pbdrph#8#afft0#date:10:20#date#1]&c=GG_ASD&af_sub_siteid={att_info}&af_ad=23&af_ad_id=45&af_adset=36&af_adset_id=882&af_ad_type=banner&af_cost_currency=USD&af_cost_model=CPA&af_click_lookback=7d&af_ip={ip}&af_ua={ua}&af_media_type=app&clickid={tid}&idfa={iosidfa}&is_incentivized=false&af_prt=xlmediaplc&af_channel=inapp';
+  runCompare();
+}
+
+// Build ref table on load
+(function() { setTimeout(buildChimerRefTable, 100); })();
+
 </script>
 </body>
 </html>

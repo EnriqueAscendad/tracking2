@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="version" content="1.2.0">
+    <meta name="version" content="1.3.0">
     <title>Macro Calculator</title>
 
     <!-- Security Meta Tags -->
@@ -723,7 +723,7 @@
             <div class="form-group" style="width:100%; margin-bottom:10px;">
                 <label>Paste your formula</label>
                 <input type="text" class="form-input full" id="valInput"
-                       placeholder="{fn:random_string(8,8,{date_tz})}"
+                       placeholder="{fn:random_periodic_string_set(5,10,myseed,2,5)} or {fn:period_h(6)}"
                        oninput="onValInputChange()">
             </div>
             <div id="valStatus" style="display:none;"></div>
@@ -787,6 +787,16 @@ function getDateTzForDay(dayOffset) {
     const d = new Date();
     d.setDate(d.getDate() + dayOffset);
     return d.toDateString();
+}
+
+// {fn:period_h(X)} — returns a numeric value that stays the same within
+// the same X-hour period and changes only after the period ends.
+function getPeriodH(hours, dayOffset) {
+    const now = new Date();
+    now.setDate(now.getDate() + dayOffset);
+    const epoch = now.getTime();
+    const periodMs = hours * 3600 * 1000;
+    return Math.floor(epoch / periodMs);
 }
 
 function escHtml(str) {
@@ -1558,9 +1568,11 @@ function parseParam(str) {
 }
 
 const VALID_FNS = {
-    random_number:     { min: 2, max: 3 },
-    random_string:     { min: 2, max: 3 },
-    random_string_set: { min: 4, max: 5 },
+    random_number:              { min: 2, max: 3 },
+    random_string:              { min: 2, max: 3 },
+    random_string_set:          { min: 4, max: 5 },
+    period_h:                   { min: 1, max: 1 },
+    random_periodic_string_set: { min: 5, max: 6 },
 };
 
 function validateTree(tree, depth) {
@@ -1574,7 +1586,72 @@ function validateTree(tree, depth) {
         errors.push(`${tree.fn} expects ${spec.min}–${spec.max} params, got ${pc}`);
         return errors;
     }
-    // params 0 & 1 must be numbers
+
+    // ── period_h: single numeric param (hours), must be > 0 ──
+    if (tree.fn === 'period_h') {
+        const p0 = tree.params[0];
+        if (p0.type === 'formula') {
+            // Allow nested formulas (e.g. random_number) as the hours param
+            validateTree(p0.tree, depth + 1).forEach(e => errors.push(`(hours) ${e}`));
+        } else if (p0.type !== 'number') {
+            errors.push('period_h: hours must be a positive number');
+        } else if (p0.value <= 0) {
+            errors.push('period_h: hours must be a positive number (> 0)');
+        }
+        return errors;
+    }
+
+    // ── random_periodic_string_set(minLen, maxLen, valueSeed, minSize, maxSize[, period_in_hours]) ──
+    if (tree.fn === 'random_periodic_string_set') {
+        // params 0 & 1: minLen, maxLen — must be numbers
+        for (let i = 0; i < 2; i++) {
+            if (tree.params[i].type !== 'number')
+                errors.push(`Param ${i+1} (${i===0?'minLen':'maxLen'}) must be a number, got: ${paramToStr(tree.params[i])}`);
+        }
+        if (tree.params[0].type === 'number' && tree.params[1].type === 'number') {
+            if (tree.params[0].value > tree.params[1].value)
+                errors.push(`minLen (${tree.params[0].value}) must be ≤ maxLen (${tree.params[1].value})`);
+        }
+        // param 2: valueSeed — any type (number, macro, formula, literal)
+        const seed = tree.params[2];
+        if (seed.type === 'formula') {
+            const allowedSeedFns = ['random_number', 'period_h'];
+            if (!allowedSeedFns.includes(seed.tree.fn))
+                errors.push(`valueSeed formula must be ${allowedSeedFns.join(' or ')}`);
+            else
+                validateTree(seed.tree, depth + 1).forEach(e => errors.push(`(seed) ${e}`));
+        }
+        // param 3: minSize — number or formula
+        const minSize = tree.params[3];
+        if (minSize.type === 'formula') {
+            if (minSize.tree.fn !== 'random_number')
+                errors.push('minSize formula must be random_number');
+            else
+                validateTree(minSize.tree, depth + 1).forEach(e => errors.push(`(minSize) ${e}`));
+        } else if (minSize.type !== 'number') {
+            errors.push('minSize must be a number or {fn:random_number(...)}');
+        }
+        // param 4: maxSize — number
+        const maxSize = tree.params[4];
+        if (maxSize.type !== 'number')
+            errors.push('maxSize must be a number');
+        else if (minSize.type === 'number' && minSize.value > maxSize.value)
+            errors.push(`minSize (${minSize.value}) must be ≤ maxSize (${maxSize.value})`);
+        // param 5 (optional): period_in_hours — must be positive number
+        if (pc === 6) {
+            const period = tree.params[5];
+            if (period.type === 'formula') {
+                validateTree(period.tree, depth + 1).forEach(e => errors.push(`(period) ${e}`));
+            } else if (period.type !== 'number') {
+                errors.push('period_in_hours must be a positive number');
+            } else if (period.value <= 0) {
+                errors.push('period_in_hours must be > 0');
+            }
+        }
+        return errors;
+    }
+
+    // ── Existing: params 0 & 1 must be numbers (random_number, random_string, random_string_set) ──
     for (let i = 0; i < 2; i++) {
         if (tree.params[i].type !== 'number')
             errors.push(`Param ${i+1} of ${tree.fn} must be a number, got: ${paramToStr(tree.params[i])}`);
@@ -1587,8 +1664,9 @@ function validateTree(tree, depth) {
     if (pc >= 3 && tree.fn !== 'random_string_set') {
         const seed = tree.params[2];
         if (seed.type === 'formula') {
-            if (seed.tree.fn !== 'random_number')
-                errors.push('Nested seed must be a random_number formula');
+            const allowedSeedFns = ['random_number', 'period_h'];
+            if (!allowedSeedFns.includes(seed.tree.fn))
+                errors.push('Nested seed must be a random_number or period_h formula');
             else
                 validateTree(seed.tree, depth + 1).forEach(e => errors.push(`(seed) ${e}`));
         }
@@ -1597,8 +1675,9 @@ function validateTree(tree, depth) {
     if (tree.fn === 'random_string_set') {
         const seed = tree.params[2];
         if (seed.type === 'formula') {
-            if (seed.tree.fn !== 'random_number')
-                errors.push('Nested seed for random_string_set must be random_number');
+            const allowedSeedFns = ['random_number', 'period_h'];
+            if (!allowedSeedFns.includes(seed.tree.fn))
+                errors.push('Nested seed for random_string_set must be random_number or period_h');
             else
                 validateTree(seed.tree, depth + 1).forEach(e => errors.push(`(seed) ${e}`));
         }
@@ -1648,10 +1727,47 @@ function resolveParam(param, dayOffset, combo) {
 }
 
 function execFormulaTree(tree, dayOffset, combo, caseMode) {
-    const p   = tree.params;
+    const p  = tree.params;
+    const cs = CHARSETS[caseMode] || CHARSETS.mixed;
+
+    // ── period_h(X) — deterministic period seed ──
+    if (tree.fn === 'period_h') {
+        const hours = resolveParam(p[0], dayOffset, combo);
+        const val = getPeriodH(hours, dayOffset);
+        return { cardinality: 1, values: [val] };
+    }
+
+    // ── random_periodic_string_set(minLen, maxLen, valueSeed, minSize, maxSize[, period_in_hours]) ──
+    if (tree.fn === 'random_periodic_string_set') {
+        const minLen = resolveParam(p[0], dayOffset, combo);
+        const maxLen = resolveParam(p[1], dayOffset, combo);
+        const valueSeed = resolveParam(p[2], dayOffset, combo);
+        let minSize, maxSize;
+        const minSizeP = p[3];
+        if (minSizeP.type === 'formula') {
+            const inner = execFormulaTree(minSizeP.tree, dayOffset, combo, caseMode);
+            minSize = inner.values[0];
+        } else {
+            minSize = resolveParam(minSizeP, dayOffset, combo);
+        }
+        maxSize = resolveParam(p[4], dayOffset, combo);
+        // Optional period_in_hours — affects the seed periodicity
+        let periodSeed;
+        if (p.length === 6) {
+            const periodH = resolveParam(p[5], dayOffset, combo);
+            periodSeed = String(valueSeed) + '::ph' + getPeriodH(periodH, dayOffset);
+        } else {
+            // Default: changes once per day (24h period)
+            periodSeed = String(valueSeed) + '::ph' + getPeriodH(24, dayOffset);
+        }
+        const cardinality = evalSetCardinality(minSize, maxSize, periodSeed);
+        const values = [];
+        for (let i = 0; i < cardinality; i++) values.push(genString(minLen, maxLen, periodSeed, i, cs));
+        return { cardinality, values };
+    }
+
     const min = resolveParam(p[0], dayOffset, combo);
     const max = resolveParam(p[1], dayOffset, combo);
-    const cs  = CHARSETS[caseMode] || CHARSETS.mixed;
 
     if (tree.fn === 'random_number') {
         const seedVal = p.length >= 3 ? resolveParam(p[2], dayOffset, combo) : null;
@@ -1686,6 +1802,8 @@ function execFormulaTree(tree, dayOffset, combo, caseMode) {
 
 function treeHasDateMacro(tree) {
     if (!tree) return false;
+    // period_h and random_periodic_string_set are inherently time-based
+    if (tree.fn === 'period_h' || tree.fn === 'random_periodic_string_set') return true;
     return tree.params.some(p =>
         (p.type === 'macro' && DATE_MACRO_NAMES.has(p.name)) ||
         (p.type === 'formula' && treeHasDateMacro(p.tree))
@@ -1709,7 +1827,21 @@ function buildValSummary(tree) {
     const fn = tree.fn, p = tree.params;
     const rows = [{ key: 'Function', val: `<code>{fn:${fn}(…)}</code>` }];
 
-    if (fn === 'random_number' || fn === 'random_string') {
+    if (fn === 'period_h') {
+        rows.push({ key: 'Hours', val: `<code>${paramToStr(p[0])}</code>` });
+        rows.push({ key: 'Behavior', val: '<span style="opacity:0.7">Returns a numeric seed that stays the same within each period and changes after it ends</span>' });
+    } else if (fn === 'random_periodic_string_set') {
+        rows.push({ key: 'Min Length', val: `<code>${paramToStr(p[0])}</code>` });
+        rows.push({ key: 'Max Length', val: `<code>${paramToStr(p[1])}</code>` });
+        rows.push({ key: 'Value Seed', val: `<code>${escHtml(paramToStr(p[2]))}</code>` });
+        rows.push({ key: 'Min Size', val: `<code>${paramToStr(p[3])}</code>` });
+        rows.push({ key: 'Max Size', val: `<code>${paramToStr(p[4])}</code>` });
+        if (p.length === 6) {
+            rows.push({ key: 'Period (h)', val: `<code>${paramToStr(p[5])}</code>` });
+        } else {
+            rows.push({ key: 'Period', val: '<span style="opacity:0.5">24h (default — changes once per day)</span>' });
+        }
+    } else if (fn === 'random_number' || fn === 'random_string') {
         rows.push({ key: 'Min', val: `<code>${paramToStr(p[0])}</code>` });
         rows.push({ key: 'Max', val: `<code>${paramToStr(p[1])}</code>` });
         const seed = p.length >= 3 ? p[2] : null;
@@ -1841,7 +1973,7 @@ function validateAndPreview() {
     const customMacros = [...extractCustomMacrosFromTree(tree)];
     const macroValues  = getValMacroValues();
     const days         = Math.max(1, Math.min(30, parseInt(document.getElementById('valDaysToShow').value, 10) || 10));
-    const chipType     = tree.fn === 'random_number' ? 'num' : 'str';
+    const chipType     = (tree.fn === 'random_number' || tree.fn === 'period_h') ? 'num' : 'str';
     const combos       = buildCombos(customMacros, macroValues);
 
     let html = '';

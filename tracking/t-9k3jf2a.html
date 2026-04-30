@@ -918,47 +918,80 @@
         <div class="content">
             <!-- Postback Section -->
             <div class="postback-section">
-                <div class="postback-title">🚀 Send Postback</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div class="postback-title" style="margin-bottom:0">🚀 Send Postback</div>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="postback-btn" onclick="exportStorage()" style="padding: 3px 10px; font-size: 10px; width: auto; text-transform: none;">Export config</button>
+                        <label class="postback-btn" style="padding: 3px 10px; font-size: 10px; width: auto; cursor: pointer; text-transform: none;">
+                            Import config
+                            <input type="file" accept=".json" onchange="importStorage(event)" style="display:none;">
+                        </label>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-end;">
+                    <div class="input-group" style="flex: 2;">
+                        <label class="input-label">Postback Base URL</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="postbackBaseUrl" class="postback-input" placeholder="https://your-domain.com/api/v1/events" list="baseUrlHistoryList" oninput="toggleClearBtn(this); saveField('postbackBaseUrl'); updatePostbackPreview();">
+                            <button type="button" class="clear-btn" onclick="clearInput('postbackBaseUrl')" title="Clear">✕</button>
+                            <button type="button" style="position:absolute;right:26px;background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:10px;padding:2px 4px;" onclick="showUrlList()" title="Show saved URLs">▼</button>
+                            <datalist id="baseUrlHistoryList"></datalist>
+                        </div>
+                    </div>
+                    <button class="postback-btn" type="button" onclick="saveConfig()" style="height:34px; padding: 0 14px; font-size: 11px; width: auto; white-space: nowrap; flex-shrink: 0;">
+                        Save
+                    </button>
+                </div>
                 <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                     <div class="input-group" style="flex: 1;">
-                        <label class="input-label">Environment</label>
-                        <select id="postbackEnvironment" class="postback-input" style="cursor: pointer;">
-                            <option value="mordor-prd" selected>Mordor-PRD (Production)</option>
-                            <option value="chameleon-jorge">Chameleon-Jorge (Production)</option>
-                            <option value="imladris-stg">Imladris (Staging)</option>
-                            <option value="developer-stg">Developer-STG (Staging)</option>
-                        </select>
+                        <label class="input-label">Parameters template — use {macro} for dynamic values</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="postbackParamsTemplate" class="postback-input" style="font-size:11px;" placeholder="click_id={click_id}&aggregate_id={aggregate_id}&event_parameter={event_parameter}&payout={payout}&advertiser_id=2" oninput="toggleClearBtn(this); saveField('postbackParamsTemplate'); updatePostbackPreview();">
+                            <button type="button" class="clear-btn" onclick="clearInput('postbackParamsTemplate')" title="Clear">✕</button>
+                        </div>
                     </div>
+                </div>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                     <div class="input-group" style="flex: 1;">
                         <label class="input-label">Event Parameter (Optional)</label>
                         <div class="input-wrapper">
-                            <input
-                                type="text"
-                                id="eventParameter"
-                                class="postback-input"
-                                placeholder="e.g., install, purchase, signup"
-                                list="eventParameterHistory"
-                                autocomplete="off"
-                                oninput="toggleClearBtn(this)"
-                            >
+                            <input type="text" id="eventParameter" class="postback-input" placeholder="e.g., install, purchase, signup" list="eventParameterHistoryList" oninput="toggleClearBtn(this); updatePostbackPreview();">
                             <button type="button" class="clear-btn" onclick="clearInput('eventParameter')" title="Clear">✕</button>
-                            <datalist id="eventParameterHistory"></datalist>
+                            <datalist id="eventParameterHistoryList"></datalist>
                         </div>
                     </div>
                     <div class="input-group" style="flex: 0.5;">
                         <label class="input-label">Payout (Optional)</label>
                         <div class="input-wrapper">
-                            <input
-                                type="text"
-                                id="payout"
-                                class="postback-input"
-                                placeholder="e.g., 1.50"
-                                list="payoutHistory"
-                                autocomplete="off"
-                                oninput="toggleClearBtn(this)"
-                            >
+                            <input type="text" id="payout" class="postback-input" placeholder="e.g., 1.50" list="payoutHistoryList" oninput="toggleClearBtn(this); updatePostbackPreview();">
                             <button type="button" class="clear-btn" onclick="clearInput('payout')" title="Clear">✕</button>
-                            <datalist id="payoutHistory"></datalist>
+                            <datalist id="payoutHistoryList"></datalist>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <div class="input-group" style="flex: 1;">
+                        <label class="input-label">Blocked Reason (Rejected)</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="blockedReason" class="postback-input" placeholder="e.g., fraud, duplicate, cap_reached" list="blockedReasonHistoryList" oninput="toggleClearBtn(this)">
+                            <button type="button" class="clear-btn" onclick="clearInput('blockedReason')" title="Clear">✕</button>
+                            <datalist id="blockedReasonHistoryList"></datalist>
+                        </div>
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <label class="input-label">Blocked Reason Value (Rejected)</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="blockedReasonValue" class="postback-input" placeholder="e.g., ip_blacklisted, ttl_expired" list="blockedReasonValueHistoryList" oninput="toggleClearBtn(this)">
+                            <button type="button" class="clear-btn" onclick="clearInput('blockedReasonValue')" title="Clear">✕</button>
+                            <datalist id="blockedReasonValueHistoryList"></datalist>
+                        </div>
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <label class="input-label">Blocked Sub Reason (Rejected)</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="blockedSubReason" class="postback-input" placeholder="e.g., geo_mismatch, device_farm" list="blockedSubReasonHistoryList" oninput="toggleClearBtn(this)">
+                            <button type="button" class="clear-btn" onclick="clearInput('blockedSubReason')" title="Clear">✕</button>
+                            <datalist id="blockedSubReasonHistoryList"></datalist>
                         </div>
                     </div>
                 </div>
@@ -1120,10 +1153,9 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
 
         // Initialize clear buttons visibility on page load
         window.addEventListener('DOMContentLoaded', function() {
-            const eventInput = document.getElementById('eventParameter');
-            const payoutInput = document.getElementById('payout');
-            if (eventInput) toggleClearBtn(eventInput);
-            if (payoutInput) toggleClearBtn(payoutInput);
+            document.querySelectorAll('.postback-input').forEach(inp => {
+                if (inp.tagName === 'INPUT') toggleClearBtn(inp);
+            });
         });
 
         // Track redirect chain
@@ -1446,27 +1478,45 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             }
 
             displayRedirectChain();
+            loadPostbackHistory();
             updatePostbackPreview();
             generateQRCode();
-            loadPostbackHistory();
-            
-            // Update postback preview when inputs change
-            document.getElementById('eventParameter').addEventListener('input', updatePostbackPreview);
-            document.getElementById('payout').addEventListener('input', updatePostbackPreview);
         });
 
         // Load postback history from localStorage
         function loadPostbackHistory() {
             try {
-                const eventHistory = JSON.parse(localStorage.getItem('eventParameterHistory') || '[]');
-                const payoutHistory = JSON.parse(localStorage.getItem('payoutHistory') || '[]');
-                
-                // Populate datalists
-                const eventDatalist = document.getElementById('eventParameterHistory');
-                const payoutDatalist = document.getElementById('payoutHistory');
-                
-                eventDatalist.innerHTML = eventHistory.map(item => `<option value="${escapeHtml(item)}">`).join('');
-                payoutDatalist.innerHTML = payoutHistory.map(item => `<option value="${escapeHtml(item)}">`).join('');
+                // Restore base URL and params template
+                const savedBaseUrl = localStorage.getItem('postbackBaseUrl');
+                const savedParams = localStorage.getItem('postbackParamsTemplate');
+                const baseUrlInput = document.getElementById('postbackBaseUrl');
+                const paramsInput = document.getElementById('postbackParamsTemplate');
+
+                if (savedBaseUrl && baseUrlInput) baseUrlInput.value = savedBaseUrl;
+                if (savedParams && paramsInput) {
+                    paramsInput.value = savedParams;
+                } else if (!paramsInput.value) {
+                    paramsInput.value = 'click_id={click_id}&aggregate_id={aggregate_id}&event_parameter={event_parameter}&payout={payout}&advertiser_id=2';
+                }
+
+                // Populate all datalists
+                const lists = {
+                    'baseUrlHistoryList': 'baseUrlHistory',
+                    'eventParameterHistoryList': 'eventParameterHistory',
+                    'payoutHistoryList': 'payoutHistory',
+                    'blockedReasonHistoryList': 'blockedReasonHistory',
+                    'blockedReasonValueHistoryList': 'blockedReasonValueHistory',
+                    'blockedSubReasonHistoryList': 'blockedSubReasonHistory'
+                };
+                for (const [datalistId, storageKey] of Object.entries(lists)) {
+                    const el = document.getElementById(datalistId);
+                    if (!el) continue;
+                    const items = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                    el.innerHTML = items.map(item => `<option value="${escapeHtml(item)}">`).join('');
+                }
+
+                // Update clear button visibility
+                [baseUrlInput, paramsInput].forEach(inp => { if (inp) toggleClearBtn(inp); });
             } catch (error) {
                 console.error('Error loading postback history:', error);
             }
@@ -1541,329 +1591,214 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             }
         }
 
+        // Save a single field to localStorage immediately
+        function saveField(id) {
+            try { localStorage.setItem(id, document.getElementById(id).value); } catch(e) {}
+        }
+
+        // Blank the URL input and focus it so the datalist shows all saved entries
+        function showUrlList() {
+            const input = document.getElementById('postbackBaseUrl');
+            input._prev = input.value;
+            input.value = '';
+            input.focus();
+            // Restore if user leaves without picking
+            input.addEventListener('blur', function restore() {
+                if (!input.value && input._prev) input.value = input._prev;
+                delete input._prev;
+                saveField('postbackBaseUrl');
+                updatePostbackPreview();
+                toggleClearBtn(input);
+                input.removeEventListener('blur', restore);
+            });
+        }
+
+        // Save current base URL + params template to history (for datalist selection)
+        function saveConfig() {
+            const baseUrl = document.getElementById('postbackBaseUrl').value.trim();
+            const tpl = document.getElementById('postbackParamsTemplate').value.trim();
+            if (!baseUrl) return;
+            saveToHistory('baseUrlHistory', baseUrl);
+            saveField('postbackBaseUrl');
+            saveField('postbackParamsTemplate');
+            loadPostbackHistory();
+            const statusDiv = document.getElementById('postbackStatus');
+            statusDiv.className = 'postback-status success';
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = '✅ Config saved — URL available in dropdown';
+            setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+        }
+
+        // Resolve {macros} in the params template with real values
+        function resolveTemplate(template, extraParams) {
+            const urlParams = getUrlParams();
+            const macros = {
+                'click_id': urlParams['click_id'] || '',
+                'aggregate_id': urlParams['aggregate_id'] || urlParams['aggregated_id'] || '',
+                'aggregated_id': urlParams['aggregated_id'] || urlParams['aggregate_id'] || '',
+                'event_parameter': document.getElementById('eventParameter').value,
+                'payout': document.getElementById('payout').value
+            };
+            let resolved = template.replace(/\{(\w+)\}/g, (m, key) => {
+                return macros.hasOwnProperty(key) ? encodeURIComponent(macros[key]) : encodeURIComponent(urlParams[key] || '');
+            });
+            if (extraParams) resolved += '&' + extraParams;
+            return resolved;
+        }
+
+        // Build full postback URL from the base URL + resolved template
+        function buildPostbackUrl(extraParams) {
+            const baseUrl = document.getElementById('postbackBaseUrl').value.trim();
+            const template = document.getElementById('postbackParamsTemplate').value.trim();
+            return baseUrl + '?' + resolveTemplate(template, extraParams);
+        }
+
         // Update postback URL preview
         function updatePostbackPreview() {
-            const params = getUrlParams();
-            const config = getPostbackConfig();
-            const clickId = params['click_id'] || '{click_id}';
-            const aggregateId = params['aggregate_id'] || '{aggregate_id}';
-            const eventParameter = document.getElementById('eventParameter').value || '{event_parameter}';
-            const payout = document.getElementById('payout').value || '{payout}';
-
-            let previewParams = `click_id=${encodeURIComponent(clickId)}&${config.aggregateParam}=${encodeURIComponent(aggregateId)}&event_parameter=${encodeURIComponent(eventParameter)}&payout=${encodeURIComponent(payout)}`;
-            if (config.advertiserId) previewParams += `&advertiser_id=${config.advertiserId}`;
-            const postbackUrl = `${config.baseUrl}?${previewParams}`;
-
-            document.getElementById('postbackUrlPreview').textContent = postbackUrl;
-            
-            // Disable button if required params are missing
-            const btn = document.getElementById('sendPostbackBtn');
-            if (!params['click_id'] && !params['aggregate_id']) {
-                btn.disabled = true;
-                btn.textContent = 'Missing tracking parameters';
-            } else {
-                btn.disabled = false;
-                btn.textContent = 'Send Postback';
+            const baseUrl = document.getElementById('postbackBaseUrl').value.trim();
+            const template = document.getElementById('postbackParamsTemplate').value.trim();
+            if (!baseUrl) {
+                document.getElementById('postbackUrlPreview').textContent = 'Enter a base URL above...';
+                return;
             }
+            // For preview, show macros as-is if no real value available
+            const urlParams = getUrlParams();
+            const macros = {
+                'click_id': urlParams['click_id'] || '{click_id}',
+                'aggregate_id': urlParams['aggregate_id'] || urlParams['aggregated_id'] || '{aggregate_id}',
+                'aggregated_id': urlParams['aggregated_id'] || urlParams['aggregate_id'] || '{aggregated_id}',
+                'event_parameter': document.getElementById('eventParameter').value || '{event_parameter}',
+                'payout': document.getElementById('payout').value || '{payout}'
+            };
+            const preview = template.replace(/\{(\w+)\}/g, (m, key) => {
+                if (macros.hasOwnProperty(key)) return encodeURIComponent(macros[key]);
+                return urlParams[key] ? encodeURIComponent(urlParams[key]) : m;
+            });
+            document.getElementById('postbackUrlPreview').textContent = baseUrl + '?' + preview;
         }
 
         // Send postback
-        let isSendingPostback = false; // Prevent double-sends
-        
-        // Get postback configuration based on selected environment
-        function getPostbackConfig() {
-            const environment = document.getElementById('postbackEnvironment').value;
+        let isSendingPostback = false;
 
-            const configs = {
-                'mordor-prd': {
-                    baseUrl: 'https://mordor.aftrad-event.com/api/v1/events',
-                    advertiserId: '2',
-                    aggregateParam: 'aggregate_id',
-                    name: 'Mordor-PRD'
-                },
-                'developer-stg': {
-                    baseUrl: 'https://developer.events.staging-mgas.io/api/v1/events',
-                    advertiserId: '168',
-                    aggregateParam: 'aggregate_id',
-                    name: 'Developer-STG'
-                },
-                'chameleon-jorge': {
-                    baseUrl: 'https://chameleon.aftrad-event.com/api/v1/events',
-                    advertiserId: null,
-                    aggregateParam: 'aggregated_id',
-                    name: 'Chameleon-Jorge'
-                },
-                'imladris-stg': {
-                    baseUrl: 'https://imladris.events.staging-mgas.io/api/v1/events',
-                    advertiserId: null,
-                    aggregateParam: 'aggregated_id',
-                    name: 'Imladris'
-                }
+        function saveAllHistories() {
+            const fields = {
+                'eventParameterHistory': 'eventParameter',
+                'payoutHistory': 'payout',
+                'blockedReasonHistory': 'blockedReason',
+                'blockedReasonValueHistory': 'blockedReasonValue',
+                'blockedSubReasonHistory': 'blockedSubReason',
+                'baseUrlHistory': 'postbackBaseUrl'
             };
+            for (const [histKey, inputId] of Object.entries(fields)) {
+                const val = document.getElementById(inputId)?.value;
+                if (val) saveToHistory(histKey, val);
+            }
+        }
 
-            return configs[environment] || configs['mordor-prd'];
+        function firePostback(postbackUrl, label, btn, originalText) {
+            isSendingPostback = true;
+            const statusDiv = document.getElementById('postbackStatus');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            statusDiv.className = 'postback-status';
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = `⏳ Sending ${label}...`;
+
+            console.log(`Final ${label} URL:`, postbackUrl);
+
+            try {
+                const windowFeatures = 'width=800,height=600,resizable=yes,scrollbars=yes,status=yes';
+                const postbackWindow = window.open(postbackUrl, label.replace(/\s/g,''), windowFeatures);
+
+                if (postbackWindow) {
+                    setTimeout(() => {
+                        if (postbackWindow && !postbackWindow.closed) postbackWindow.close();
+                    }, 6000);
+                    statusDiv.className = 'postback-status success';
+                    statusDiv.innerHTML = `✅ ${label} sent!\n<strong>URL:</strong> ${escapeHtml(postbackUrl)}`;
+                } else {
+                    statusDiv.className = 'postback-status error';
+                    statusDiv.innerHTML = `⚠️ Popup blocked\n<strong>URL:</strong> ${escapeHtml(postbackUrl)}\n<a href="${escapeHtml(postbackUrl)}" target="_blank" style="color: #11998e; text-decoration: underline;">Open manually</a>`;
+                }
+            } catch (error) {
+                statusDiv.className = 'postback-status error';
+                statusDiv.innerHTML = `⚠️ Error: ${escapeHtml(error.message)}\n<a href="${escapeHtml(postbackUrl)}" target="_blank" style="color: #e74c3c; text-decoration: underline;">Open manually</a>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+                isSendingPostback = false;
+                setTimeout(() => { statusDiv.style.display = 'none'; }, 15000);
+            }
         }
 
         async function sendPostback() {
-            // Prevent double-clicking
-            if (isSendingPostback) {
-                console.log('Postback already in progress, ignoring duplicate call');
-                return;
-            }
-
-            const params = getUrlParams();
-            const statusDiv = document.getElementById('postbackStatus');
-            const btn = document.getElementById('sendPostbackBtn');
-
-            // Get required parameters
-            const clickId = params['click_id'];
-            const aggregateId = params['aggregate_id'];
-
-            if (!clickId && !aggregateId) {
-                statusDiv.className = 'postback-status error';
-                statusDiv.textContent = '❌ Error: Missing click_id or aggregate_id in URL';
-                return;
-            }
-
-            // Get optional parameters
-            const eventParameter = document.getElementById('eventParameter').value;
-            const payout = document.getElementById('payout').value;
-
-            // Debug logging
-            console.log('=== Postback Debug Info ===');
-            console.log('Event Parameter value:', eventParameter);
-            console.log('Event Parameter length:', eventParameter.length);
-            console.log('Payout value:', payout);
-
-            // Save to history if values are provided
-            if (eventParameter) {
-                saveToHistory('eventParameterHistory', eventParameter);
-            }
-            if (payout) {
-                saveToHistory('payoutHistory', payout);
-            }
-
-            // Get environment configuration
-            const config = getPostbackConfig();
-            console.log('Environment config:', config);
-
-            // Build postback URL
-            let postbackUrl = `${config.baseUrl}?`;
-            const postbackParams = [];
-
-            if (clickId) postbackParams.push(`click_id=${encodeURIComponent(clickId)}`);
-            if (aggregateId) postbackParams.push(`${config.aggregateParam}=${encodeURIComponent(aggregateId)}`);
-            if (eventParameter) {
-                console.log('Adding event_parameter to URL:', eventParameter);
-                postbackParams.push(`event_parameter=${encodeURIComponent(eventParameter)}`);
-            } else {
-                console.log('⚠️ Event parameter is empty, not adding to URL');
-            }
-            if (payout) postbackParams.push(`payout=${encodeURIComponent(payout)}`);
-            if (config.advertiserId) postbackParams.push(`advertiser_id=${config.advertiserId}`);
-
-            console.log('All postback params:', postbackParams);
-
-            postbackUrl += postbackParams.join('&');
-
-            // Set flag to prevent double-sends
-            isSendingPostback = true;
-
-            // Disable button and show loading
-            btn.disabled = true;
-            btn.textContent = 'Sending...';
-            statusDiv.className = 'postback-status';
-            statusDiv.style.display = 'block';
-            statusDiv.textContent = '⏳ Sending postback...';
-
-            console.log('Final postback URL:', postbackUrl);
-
-            try {
-                // Open postback in a popup window to send the request and view response
-                // This avoids X-Frame-Options blocking issues and guarantees delivery
-                const windowFeatures = 'width=800,height=600,resizable=yes,scrollbars=yes,status=yes';
-                const postbackWindow = window.open(postbackUrl, 'PostbackResponse', windowFeatures);
-
-                if (postbackWindow) {
-                    console.log('Postback window opened successfully');
-
-                    // Auto-close popup after 10 seconds
-                    setTimeout(() => {
-                        if (postbackWindow && !postbackWindow.closed) {
-                            postbackWindow.close();
-                            console.log('Postback popup auto-closed after 10 seconds');
-                        }
-                    }, 6000);
-
-                    // Show success message
-                    statusDiv.className = 'postback-status success';
-                    statusDiv.innerHTML = `✅ Postback sent successfully!
-<strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Status:</strong> Request sent and opened in popup window
-<strong>Note:</strong> Popup will auto-close in 10 seconds.`;
-                } else {
-                    // Popup was blocked
-                    console.warn('Popup was blocked by browser');
-                    statusDiv.className = 'postback-status error';
-                    statusDiv.innerHTML = `⚠️ Popup blocked by browser
-<strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Action:</strong> Please allow popups for this site and try again, or <a href="${escapeHtml(postbackUrl)}" target="_blank" style="color: #11998e; text-decoration: underline;">click here to open manually</a>.`;
-                }
-
-            } catch (error) {
-                console.error('Postback error:', error);
-
-                // Show error with manual link
-                statusDiv.className = 'postback-status error';
-                statusDiv.innerHTML = `⚠️ Postback error
-<strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Error:</strong> ${escapeHtml(error.message)}
-<strong>Action:</strong> <a href="${escapeHtml(postbackUrl)}" target="_blank" style="color: #e74c3c; text-decoration: underline;">Click here to send manually</a>`;
-            } finally {
-                // Re-enable button and reset flag
-                btn.disabled = false;
-                btn.textContent = 'Send Postback';
-                isSendingPostback = false;
-
-                console.log('Postback complete, flag reset');
-
-                // Hide status after 15 seconds
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 15000);
-            }
+            if (isSendingPostback) return;
+            saveAllHistories();
+            const postbackUrl = buildPostbackUrl();
+            firePostback(postbackUrl, 'Postback', document.getElementById('sendPostbackBtn'), 'Send Postback');
         }
 
-        // Send rejected postback with is_rejected=1 parameter
         async function sendRejectedPostback() {
-            // Prevent double-clicking
-            if (isSendingPostback) {
-                console.log('Postback already in progress, ignoring duplicate call');
-                return;
-            }
+            if (isSendingPostback) return;
+            saveAllHistories();
 
-            const params = getUrlParams();
-            const statusDiv = document.getElementById('postbackStatus');
-            const btn = document.getElementById('sendRejectedPostbackBtn');
+            const extras = ['is_rejected=1'];
+            const br = document.getElementById('blockedReason').value;
+            const brv = document.getElementById('blockedReasonValue').value;
+            const bsr = document.getElementById('blockedSubReason').value;
+            if (br) extras.push(`blocked_reason=${encodeURIComponent(br)}`);
+            if (brv) extras.push(`blocked_reason_value=${encodeURIComponent(brv)}`);
+            if (bsr) extras.push(`blocked_sub_reason=${encodeURIComponent(bsr)}`);
 
-            // Get required parameters
-            const clickId = params['click_id'];
-            const aggregateId = params['aggregate_id'];
+            const postbackUrl = buildPostbackUrl(extras.join('&'));
+            firePostback(postbackUrl, 'Rejected Postback', document.getElementById('sendRejectedPostbackBtn'), 'Rejected Postback');
+        }
 
-            if (!clickId && !aggregateId) {
-                statusDiv.className = 'postback-status error';
-                statusDiv.textContent = '❌ Error: Missing click_id or aggregate_id in URL';
-                return;
-            }
-
-            // Get optional parameters
-            const eventParameter = document.getElementById('eventParameter').value;
-            const payout = document.getElementById('payout').value;
-
-            // Debug logging
-            console.log('=== Rejected Postback Debug Info ===');
-            console.log('Event Parameter value:', eventParameter);
-            console.log('Event Parameter length:', eventParameter.length);
-            console.log('Payout value:', payout);
-
-            // Save to history if values are provided
-            if (eventParameter) {
-                saveToHistory('eventParameterHistory', eventParameter);
-            }
-            if (payout) {
-                saveToHistory('payoutHistory', payout);
-            }
-
-            // Get environment configuration
-            const config = getPostbackConfig();
-            console.log('Environment config:', config);
-
-            // Build postback URL with is_rejected=1
-            let postbackUrl = `${config.baseUrl}?`;
-            const postbackParams = [];
-
-            if (clickId) postbackParams.push(`click_id=${encodeURIComponent(clickId)}`);
-            if (aggregateId) postbackParams.push(`${config.aggregateParam}=${encodeURIComponent(aggregateId)}`);
-            if (eventParameter) {
-                console.log('Adding event_parameter to URL:', eventParameter);
-                postbackParams.push(`event_parameter=${encodeURIComponent(eventParameter)}`);
-            } else {
-                console.log('⚠️ Event parameter is empty, not adding to URL');
-            }
-            if (payout) postbackParams.push(`payout=${encodeURIComponent(payout)}`);
-            if (config.advertiserId) postbackParams.push(`advertiser_id=${config.advertiserId}`);
-            postbackParams.push('is_rejected=1'); // Add rejected parameter
-
-            console.log('All postback params:', postbackParams);
-
-            postbackUrl += postbackParams.join('&');
-
-            // Set flag to prevent double-sends
-            isSendingPostback = true;
-
-            // Disable button and show loading
-            btn.disabled = true;
-            btn.textContent = 'Sending...';
-            statusDiv.className = 'postback-status';
-            statusDiv.style.display = 'block';
-            statusDiv.textContent = '⏳ Sending rejected postback...';
-
-            console.log('Final rejected postback URL:', postbackUrl);
-
-            try {
-                // Open postback in a popup window to send the request and view response
-                // This avoids X-Frame-Options blocking issues and guarantees delivery
-                const windowFeatures = 'width=800,height=600,resizable=yes,scrollbars=yes,status=yes';
-                const postbackWindow = window.open(postbackUrl, 'RejectedPostbackResponse', windowFeatures);
-
-                if (postbackWindow) {
-                    console.log('Rejected postback window opened successfully');
-
-                    // Auto-close popup after 10 seconds
-                    setTimeout(() => {
-                        if (postbackWindow && !postbackWindow.closed) {
-                            postbackWindow.close();
-                            console.log('Rejected postback popup auto-closed after 10 seconds');
-                        }
-                    }, 6000);
-
-                    // Show success message
-                    statusDiv.className = 'postback-status success';
-                    statusDiv.innerHTML = `✅ Rejected postback sent successfully!
-<strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Status:</strong> Request sent and opened in popup window
-<strong>Note:</strong> Popup will auto-close in 10 seconds.`;
-                } else {
-                    // Popup was blocked
-                    console.warn('Popup was blocked by browser');
-                    statusDiv.className = 'postback-status error';
-                    statusDiv.innerHTML = `⚠️ Popup blocked by browser
-<strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Action:</strong> Please allow popups for this site and try again, or <a href="${escapeHtml(postbackUrl)}" target="_blank" style="color: #11998e; text-decoration: underline;">click here to open manually</a>.`;
+        // Export all localStorage data as JSON
+        function exportStorage() {
+            const keys = [
+                'postbackBaseUrl', 'postbackParamsTemplate',
+                'baseUrlHistory', 'eventParameterHistory', 'payoutHistory',
+                'blockedReasonHistory', 'blockedReasonValueHistory', 'blockedSubReasonHistory'
+            ];
+            const data = {};
+            keys.forEach(k => {
+                const raw = localStorage.getItem(k);
+                if (raw !== null) {
+                    try { data[k] = JSON.parse(raw); } catch(e) { data[k] = raw; }
                 }
+            });
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'adtracker-config.json';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
 
-            } catch (error) {
-                console.error('Rejected postback error:', error);
-
-                // Show error with manual link
-                statusDiv.className = 'postback-status error';
-                statusDiv.innerHTML = `⚠️ Rejected postback error
-<strong>URL:</strong> ${escapeHtml(postbackUrl)}
-<strong>Error:</strong> ${escapeHtml(error.message)}
-<strong>Action:</strong> <a href="${escapeHtml(postbackUrl)}" target="_blank" style="color: #e74c3c; text-decoration: underline;">Click here to send manually</a>`;
-            } finally {
-                // Re-enable button and reset flag
-                btn.disabled = false;
-                btn.textContent = 'Rejected Postback';
-                isSendingPostback = false;
-
-                console.log('Rejected postback complete, flag reset');
-
-                // Hide status after 15 seconds
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 15000)
-            }
+        // Import localStorage data from JSON
+        function importStorage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    for (const [k, v] of Object.entries(data)) {
+                        localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+                    }
+                    loadPostbackHistory();
+                    const statusDiv = document.getElementById('postbackStatus');
+                    statusDiv.className = 'postback-status success';
+                    statusDiv.style.display = 'block';
+                    statusDiv.textContent = '✅ Config imported successfully!';
+                    setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
+                } catch (err) {
+                    alert('Invalid JSON file: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
         }
 
         // Postback button countdown timer

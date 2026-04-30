@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="version" content="2.0.0">
+    <meta name="version" content="2.1.0">
     <title>MMP URL Validator</title>
 
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -111,6 +111,25 @@
             background: var(--input-bg); transition: all 0.15s; opacity: 0.7;
         }
         .ex-chip:hover { border-color: #667eea; opacity: 1; color: #667eea; }
+
+        /* ── LINK MODE SWITCH ── */
+        .link-mode-row {
+            display: none; align-items: center; gap: 8px; margin-top: 8px;
+        }
+        .link-mode-label {
+            font-size: 10px; font-weight: 700; color: var(--text-color); opacity: 0.5;
+            text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
+        }
+        .link-mode-tabs { display: flex; gap: 0; }
+        .link-mode-tab {
+            font-size: 10px; font-weight: 700; padding: 4px 14px;
+            border: 1px solid var(--border-color); cursor: pointer;
+            background: var(--section-bg); color: var(--text-color);
+            text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.15s;
+        }
+        .link-mode-tab:first-child { border-radius: 6px 0 0 6px; }
+        .link-mode-tab:last-child  { border-radius: 0 6px 6px 0; border-left: none; }
+        .link-mode-tab.active { background: #667eea; color: white; border-color: #667eea; }
 
         /* ── SAVED URLS ── */
         .saved-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
@@ -466,14 +485,23 @@
                     oninput="onUrlInput()"></textarea>
             </div>
             <div class="examples-row">
-                <span class="ex-chip" onclick="loadExample('af_click')">AppsFlyer click</span>
-                <span class="ex-chip" onclick="loadExample('af_imp')">AppsFlyer impression</span>
+                <span class="ex-chip" onclick="loadExample('af_click')">AF click</span>
+                <span class="ex-chip" onclick="loadExample('af_onelink')">AF OneLink</span>
+                <span class="ex-chip" onclick="loadExample('af_imp')">AF impression</span>
                 <span class="ex-chip" onclick="loadExample('adj_click')">Adjust click</span>
                 <span class="ex-chip" onclick="loadExample('adj_imp')">Adjust impression</span>
                 <span class="ex-chip" onclick="loadExample('branch')">Branch</span>
                 <span class="ex-chip" onclick="loadExample('kochava_click')">Kochava click</span>
                 <span class="ex-chip" onclick="loadExample('kochava_imp')">Kochava impression</span>
                 <span class="ex-chip" onclick="loadExample('singular')">Singular</span>
+            </div>
+            <div class="link-mode-row" id="linkModeRow">
+                <span class="link-mode-label">AppsFlyer link type</span>
+                <div class="link-mode-tabs">
+                    <button class="link-mode-tab active" data-mode="regular" onclick="setLinkMode('regular')">Regular</button>
+                    <button class="link-mode-tab" data-mode="onelink" onclick="setLinkMode('onelink')">OneLink</button>
+                </div>
+                <span id="linkModeHint" style="font-size:9px;opacity:0.45;font-style:italic"></span>
             </div>
             <div class="btn-row">
                 <button class="calc-btn" onclick="validateUrl()">Validate URL</button>
@@ -498,11 +526,8 @@
                 <!-- MMP selector tabs -->
                 <div class="cfg-mmp-tabs" id="cfgMmpTabs"></div>
 
-                <!-- URL type tabs -->
-                <div class="cfg-ut-tabs">
-                    <button class="cfg-ut-tab active" data-type="click"      onclick="selectUrlType('click')">Click</button>
-                    <button class="cfg-ut-tab"        data-type="impression" onclick="selectUrlType('impression')">Impression</button>
-                </div>
+                <!-- URL type tabs (dynamic) -->
+                <div class="cfg-ut-tabs" id="cfgUtTabs"></div>
 
                 <!-- Required params -->
                 <div class="cfg-list-label">Required parameters</div>
@@ -689,12 +714,39 @@ var MMP = {
         {key:'idfa',           desc:'iOS device identifier',         macro:'{idfa}'}
       ]
     },
+    onelink: {
+      required: [
+        {key:'pid',     desc:'Media source / partner ID',         macro:'{pid}'},
+        {key:'c',       desc:'Campaign name',                     macro:'{campaign}'},
+        {key:'clickid', desc:'Click ID for postback attribution', macro:'{clickid}'}
+      ],
+      recommended: [
+        {key:'af_siteid',             desc:'Publisher / site ID',                    macro:'{af_siteid}'},
+        {key:'deep_link_value',       desc:'Deep link routing value',                macro:'{deep_link_value}'},
+        {key:'af_dp',                 desc:'Deep link URI scheme (app://path)',       macro:'myapp://path'},
+        {key:'af_web_dp',             desc:'Web fallback URL (desktop users)',        macro:'https://example.com'},
+        {key:'af_ios_url',            desc:'iOS fallback URL (no app installed)',     macro:'https://apps.apple.com/…'},
+        {key:'af_android_url',        desc:'Android fallback URL (no app installed)', macro:'https://play.google.com/…'},
+        {key:'is_retargeting',        desc:'Retargeting campaign flag',               macro:'true'},
+        {key:'af_reengagement_window',desc:'Retargeting window (days)',               macro:'30d'},
+        {key:'af_force_deeplink',     desc:'Force open app even if not installed',    macro:'true'},
+        {key:'af_adset',              desc:'Ad set name',                             macro:'{af_adset}'},
+        {key:'af_ad',                 desc:'Ad / creative name',                      macro:'{af_ad}'},
+        {key:'advertising_id',        desc:'Android advertising ID (GAID)',           macro:'{advertising_id}'},
+        {key:'idfa',                  desc:'iOS device identifier',                   macro:'{idfa}'},
+        {key:'af_r',                  desc:'Redirect URL (all platforms fallback)',    macro:'https://example.com'}
+      ]
+    },
     knownParams: [
       'pid','c','clickid','click_id','af_siteid','af_sub1','af_sub2','af_sub3','af_sub4','af_sub5',
       'af_adset','af_ad','af_adset_id','af_ad_id','af_c_id','af_click_lookback','af_viewthrough_lookback',
       'af_ip','af_ua','af_lang','idfa','advertising_id','af_prt','af_model','af_os_version',
       'af_keywords','af_dp','af_enc_cid','af_cost_model','af_cost_value','af_cost_currency',
-      'aggregate_id','af_reengagement_window','af_channel'
+      'aggregate_id','af_reengagement_window','af_channel',
+      'deep_link_value','deep_link_sub1','deep_link_sub2','deep_link_sub3','deep_link_sub4','deep_link_sub5',
+      'deep_link_sub6','deep_link_sub7','deep_link_sub8','deep_link_sub9','deep_link_sub10',
+      'af_web_dp','af_ios_url','af_android_url','af_force_deeplink','af_r','is_retargeting',
+      'af_param_forwarding','af_sub_siteid'
     ],
     knownMacros: [
       'af_siteid','af_sub1','af_sub2','af_sub3','af_sub4','af_sub5','af_pid',
@@ -702,6 +754,7 @@ var MMP = {
       'af_os_version','af_ua','af_lang','af_ip','af_ipa','af_prt',
       'click_id','clickid','c','campaign','country','date_tz','date',
       'aggregate_id','cs1','cs2','cs3','publisher_id','site_id',
+      'deep_link_value','deep_link_sub1','deep_link_sub2','deep_link_sub3',
       'fn:random_string','fn:random_number'
     ]
   },
@@ -850,7 +903,7 @@ var MMP = {
 
 // ── CONFIG SAVE / LOAD ───────────────────────────────────────────
 var CFG_KEY  = 'mu_mmp_config';
-var _CFG_KEYS = ['urlTypes','click','impression','knownParams','knownMacros'];
+var _CFG_KEYS = ['urlTypes','click','impression','onelink','knownParams','knownMacros'];
 var _cfgState = { mmpId: 'appsflyer', urlType: 'click' };
 
 function getConfigObject() {
@@ -890,7 +943,41 @@ function updateConfigBadge() {
   badge.style.borderColor = saved ? 'rgba(245,158,11,0.3)' : '';
 }
 
+// ── LINK MODE (Regular / OneLink) ────────────────────────────────
+var _linkMode = 'regular'; // 'regular' or 'onelink'
+
+function setLinkModeUI(mode) {
+  _linkMode = mode;
+  document.querySelectorAll('.link-mode-tab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.mode === mode);
+  });
+}
+function setLinkMode(mode) {
+  setLinkModeUI(mode);
+  document.getElementById('linkModeHint').textContent = '';
+  var url = document.getElementById('urlInput').value.trim();
+  if (url) validateUrl();
+}
+
 // ── VISUAL CONFIG RENDERING ──────────────────────────────────────
+
+function buildUrlTypeTabs() {
+  var container = document.getElementById('cfgUtTabs');
+  if (!container) return;
+  var mmp = MMP[_cfgState.mmpId];
+  var types = ['click','impression'];
+  if (mmp && mmp.onelink) types.push('onelink');
+  container.innerHTML = types.map(function(t, i) {
+    var label = t === 'click' ? 'Click' : (t === 'impression' ? 'Impression' : 'OneLink');
+    var cls = 'cfg-ut-tab' + (t === _cfgState.urlType ? ' active' : '');
+    var radius = '';
+    if (i === 0) radius = 'border-radius:6px 0 0 6px;';
+    else if (i === types.length - 1) radius = 'border-radius:0 6px 6px 0;';
+    else radius = 'border-radius:0;';
+    if (i > 0) radius += 'border-left:none;';
+    return '<button class="' + cls + '" data-type="' + t + '" style="' + radius + '" onclick="selectUrlType(\'' + t + '\')">' + label + '</button>';
+  }).join('');
+}
 
 function buildMmpTabs() {
   var container = document.getElementById('cfgMmpTabs');
@@ -955,13 +1042,16 @@ function selectMmpTab(id) {
   _cfgState.mmpId  = id;
   _cfgState.urlType = 'click';
   document.querySelectorAll('.cfg-mmp-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.id === id); });
-  document.querySelectorAll('.cfg-ut-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.type === 'click'); });
+  buildUrlTypeTabs();
   renderCfgPanel();
 }
 
 function selectUrlType(type) {
   readCfgTables();
   _cfgState.urlType = type;
+  // If MMP doesn't have this type yet, create empty stub
+  var mmp = MMP[_cfgState.mmpId];
+  if (!mmp[type]) mmp[type] = { required: [], recommended: [] };
   document.querySelectorAll('.cfg-ut-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.type === type); });
   renderCfgPanel();
 }
@@ -984,7 +1074,7 @@ function toggleConfigPanel() {
   var panel = document.getElementById('configPanel');
   var icon  = document.getElementById('configToggleIcon');
   var open  = panel.style.display !== 'none';
-  if (!open) { buildMmpTabs(); renderCfgPanel(); }
+  if (!open) { buildMmpTabs(); buildUrlTypeTabs(); renderCfgPanel(); }
   panel.style.display = open ? 'none' : '';
   icon.classList.toggle('open', !open);
 }
@@ -1046,6 +1136,7 @@ function resetConfig() {
 // ── EXAMPLES ────────────────────────────────────────────────────
 var EXAMPLES = {
   af_click:     'https://app.appsflyer.com/com.example.app?pid=facebook_int&c=summer_sale_2024&clickid={clickid}&af_siteid={af_siteid}&af_adset=retargeting_eu&af_adset_id={af_adset_id}&af_ad=banner_300x250&af_ad_id={af_ad_id}&af_c_id={af_c_id}&advertising_id={advertising_id}&idfa={idfa}',
+  af_onelink:   'https://example.onelink.me/A1b2?pid=partner_int&c=summer_retarget&clickid={clickid}&af_siteid={af_siteid}&af_adset=retarget_eu&af_ad=banner_v2&deep_link_value=promo_page&af_dp=myapp%3A%2F%2Fpromo&af_web_dp=https%3A%2F%2Fexample.com%2Fpromo&af_ios_url=https%3A%2F%2Fapps.apple.com%2Fapp%2Fid123&af_android_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.example&is_retargeting=true&af_reengagement_window=30d&advertising_id={advertising_id}&idfa={idfa}',
   af_imp:       'https://impression.appsflyer.com/com.example.app?pid=facebook_int&c=summer_sale_2024&af_siteid={af_siteid}&af_adset=retargeting_eu&af_ad=banner_300x250&advertising_id={advertising_id}&idfa={idfa}',
   adj_click:    'https://app.adjust.com/abc1234?campaign=black_friday&adgroup=ios_users&creative=video_15s&label={click_id}&idfa={idfa}&gps_adid={gps_adid}',
   adj_imp:      'https://view.adjust.com/abc1234?campaign=black_friday&adgroup=ios_users&creative=video_15s&idfa={idfa}&gps_adid={gps_adid}',
@@ -1301,7 +1392,34 @@ function validateUrl() {
 
   var profile  = mmpResult ? MMP[mmpResult.id] : null;
   var urlType  = mmpResult ? mmpResult.urlType  : null;
-  var typeConf = profile && urlType ? profile[urlType === 'deeplink' ? 'click' : urlType] : null;
+
+  // ── Link mode switch (Regular / OneLink) for AppsFlyer ──
+  var isAFDetected = mmpResult && mmpResult.id === 'appsflyer';
+  var linkModeRow  = document.getElementById('linkModeRow');
+  if (isAFDetected) {
+    linkModeRow.style.display = 'flex';
+    if (urlType === 'deeplink') {
+      setLinkModeUI('onelink');
+      document.getElementById('linkModeHint').textContent = '(auto-detected from domain)';
+    } else if (_linkMode === 'onelink') {
+      // user manually chose onelink but domain is regular — keep it
+      document.getElementById('linkModeHint').textContent = '';
+    } else {
+      setLinkModeUI('regular');
+      document.getElementById('linkModeHint').textContent = '';
+    }
+  } else {
+    linkModeRow.style.display = 'none';
+  }
+
+  // Choose config based on link mode
+  var effectiveType;
+  if (isAFDetected && _linkMode === 'onelink' && profile.onelink) {
+    effectiveType = 'onelink';
+  } else {
+    effectiveType = urlType === 'deeplink' ? 'click' : urlType;
+  }
+  var typeConf    = profile && effectiveType ? profile[effectiveType] : null;
   var required    = typeConf ? typeConf.required    : [];
   var recommended = typeConf ? typeConf.recommended : [];
   var knownParams = profile ? profile.knownParams : [];
@@ -1368,7 +1486,8 @@ function validateUrl() {
 
   // MMP banner
   if (profile) {
-    var utLabel = urlType && MMP[mmpResult.id].urlTypes[urlType] ? MMP[mmpResult.id].urlTypes[urlType].label : '';
+    var utLabel = (isAFDetected && _linkMode === 'onelink') ? 'OneLink'
+      : (urlType && MMP[mmpResult.id].urlTypes[urlType] ? MMP[mmpResult.id].urlTypes[urlType].label : '');
     var utClass = urlType === 'impression' ? 'utb-impression' : (urlType === 'click' || urlType === 'deeplink' ? 'utb-click' : 'utb-unknown');
     html += '<div class="mmp-banner">';
     html += '<div class="mmp-logo">' + profile.emoji + '</div>';
@@ -1386,6 +1505,39 @@ function validateUrl() {
   }
 
   if (isRawMode) html += '<div class="raw-notice">ℹ Parameters extracted via best-effort raw parsing — structural errors above must be fixed first</div>';
+
+  // ── OneLink-specific checks ──
+  if (isAFDetected && _linkMode === 'onelink') {
+    var olIssues = [];
+    // Short OneLink (no params) — can't fully validate
+    if (params.length === 0 && parsed) {
+      olIssues.push({sev:'info', msg:'This looks like a short OneLink URL. Parameters are configured in the OneLink template and cannot be validated from the URL alone. Use the long URL version for full validation.'});
+    }
+    // Retargeting without reengagement window
+    var hasRetargeting = params.some(function(p){ return p.key === 'is_retargeting' && p.raw === 'true'; });
+    var hasReengWindow = params.some(function(p){ return p.key === 'af_reengagement_window'; });
+    if (hasRetargeting && !hasReengWindow) {
+      olIssues.push({sev:'warn', msg:'is_retargeting=true but af_reengagement_window is missing. Default 30-day window will apply — set it explicitly to control the retargeting attribution window.'});
+    }
+    // af_dp check — should look like a URI scheme
+    var afDpParam = params.filter(function(p){ return p.key === 'af_dp'; })[0];
+    if (afDpParam && afDpParam.decoded && !/^[a-zA-Z][a-zA-Z0-9+.\-]*:\/\//.test(afDpParam.decoded)) {
+      olIssues.push({sev:'warn', msg:'af_dp value "' + afDpParam.decoded + '" does not look like a valid URI scheme (expected format: myapp://path). Deep linking may not work.'});
+    }
+    // af_force_deeplink without af_dp
+    var hasForceDeeplink = params.some(function(p){ return p.key === 'af_force_deeplink' && p.raw === 'true'; });
+    if (hasForceDeeplink && !afDpParam) {
+      olIssues.push({sev:'warn', msg:'af_force_deeplink=true but af_dp is missing. The app cannot be opened directly without a deep link URI scheme.'});
+    }
+    if (olIssues.length > 0) {
+      html += '<div class="struct-issues">';
+      olIssues.forEach(function(si) {
+        var icon = si.sev === 'err' ? '✗' : (si.sev === 'warn' ? '⚠' : 'ℹ');
+        html += '<div class="struct-issue ' + si.sev + '"><span class="struct-icon">' + icon + '</span><span>' + escH(si.msg) + '</span></div>';
+      });
+      html += '</div>';
+    }
+  }
 
   // Summary pills
   var errCount = structIssues.filter(function(i){ return i.sev === 'err'; }).length;

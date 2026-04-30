@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JSON Parser Explorer</title>
+<style>
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f4ef;
+    --bg-tertiary: #ebe9e0;
+    --bg-info: #e6f1fb;
+    --bg-danger: #fcebeb;
+    --bg-warning: #faeeda;
+    --bg-success: #eaf3de;
+    --text-primary: #1a1a1a;
+    --text-secondary: #5f5e5a;
+    --text-tertiary: #888780;
+    --text-info: #0c447c;
+    --text-danger: #791f1f;
+    --text-warning: #633806;
+    --text-success: #27500a;
+    --border-tertiary: rgba(0,0,0,0.12);
+    --border-secondary: rgba(0,0,0,0.22);
+    --border-primary: rgba(0,0,0,0.32);
+    --color-string: #1d9e75;
+    --color-number: #185fa5;
+    --color-boolean: #993c1d;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary: #1f1f1d;
+      --bg-secondary: #2a2a28;
+      --bg-tertiary: #161614;
+      --bg-info: #042c53;
+      --bg-danger: #501313;
+      --bg-warning: #412402;
+      --bg-success: #173404;
+      --text-primary: #f1efe8;
+      --text-secondary: #b4b2a9;
+      --text-tertiary: #888780;
+      --text-info: #b5d4f4;
+      --text-danger: #f7c1c1;
+      --text-warning: #fac775;
+      --text-success: #c0dd97;
+      --border-tertiary: rgba(255,255,255,0.14);
+      --border-secondary: rgba(255,255,255,0.24);
+      --border-primary: rgba(255,255,255,0.34);
+      --color-string: #5dcaa5;
+      --color-number: #85b7eb;
+      --color-boolean: #f0997b;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .app {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  header {
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-size: 22px;
+    font-weight: 500;
+    margin: 0 0 4px;
+  }
+  header p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  button, select, input[type="text"], textarea {
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    border: 0.5px solid var(--border-secondary);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    line-height: 1.2;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  button {
+    cursor: pointer;
+    background: transparent;
+  }
+  button:hover { background: var(--bg-secondary); border-color: var(--border-primary); }
+  button:active { transform: scale(0.98); }
+  button.primary {
+    font-weight: 500;
+    background: var(--bg-info);
+    color: var(--text-info);
+    border-color: transparent;
+  }
+  button.primary:hover { background: var(--bg-info); filter: brightness(0.95); }
+  input[type="text"], select, textarea {
+    height: 36px;
+  }
+  textarea {
+    height: auto;
+    min-height: 140px;
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 10px;
+    resize: vertical;
+  }
+  input[type="text"]:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--text-info);
+    box-shadow: 0 0 0 2px var(--bg-info);
+  }
+  label.row {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .error-box {
+    display: none;
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: var(--bg-danger);
+    color: var(--text-danger);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-family: var(--font-mono);
+    white-space: pre-wrap;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .stat-card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+  }
+  .stat-card .label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .stat-card .value {
+    font-size: 22px;
+    font-weight: 500;
+  }
+  .control-row {
+    display: flex; gap: 8px; align-items: center;
+    margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .control-row .label {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .panel {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .panel-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .panel-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .panel-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    padding: 2px 4px;
+    margin: 0;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    height: auto;
+  }
+  .panel-toggle:hover { background: var(--bg-primary); }
+  .panel-toggle .caret {
+    font-size: 10px;
+    color: var(--text-secondary);
+    width: 12px;
+    display: inline-block;
+    transition: transform 0.15s ease;
+  }
+  .panel-toggle[aria-expanded="false"] .caret {
+    transform: rotate(-90deg);
+  }
+  .panel.collapsed .panel-header {
+    margin-bottom: 0;
+  }
+  table.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  table.summary-table th {
+    text-align: left;
+    color: var(--text-tertiary);
+    font-weight: 500;
+    border-bottom: 0.5px solid var(--border-tertiary);
+    padding: 6px 10px;
+  }
+  table.summary-table td {
+    padding: 6px 10px;
+    border-bottom: 0.5px solid var(--border-tertiary);
+  }
+  table.summary-table tr:last-child td { border-bottom: none; }
+  .level-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .level-detail-grid > div {
+    background: var(--bg-primary);
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+  }
+  .level-detail-grid .l-lab {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-bottom: 2px;
+  }
+  .level-detail-grid .l-val {
+    font-weight: 500;
+    font-size: 16px;
+  }
+  .key-pill {
+    display: inline-block;
+    background: var(--bg-primary);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    margin: 2px 2px 2px 0;
+    border: 0.5px solid var(--border-tertiary);
+  }
+  .ctx-pill {
+    display: inline-block;
+    background: var(--bg-info);
+    color: var(--text-info);
+    padding: 1px 7px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    margin: 2px 3px 2px 0;
+    font-weight: 500;
+  }
+  .ctx-count {
+    margin-left: 4px;
+    opacity: 0.7;
+    font-weight: 400;
+  }
+  .ctx-more {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-style: italic;
+  }
+  .ctx-cell {
+    max-width: 320px;
+    line-height: 1.7;
+  }
+  .search-info {
+    display: none;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  #tree-container {
+    background: var(--bg-primary);
+    border: 0.5px solid var(--border-tertiary);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    max-height: 70vh;
+    overflow: auto;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+  .tree-node {
+    padding-left: 20px;
+    position: relative;
+  }
+  .tree-toggle {
+    position: absolute;
+    left: 2px; top: 3px;
+    width: 16px; height: 16px;
+    cursor: pointer;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: var(--text-secondary);
+    border-radius: 3px;
+  }
+  .tree-toggle:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+  .tree-line {
+    display: block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    cursor: default;
+  }
+  .tree-line:hover { background: var(--bg-secondary); }
+  .tree-line.has-action { cursor: pointer; }
+  .tree-key { color: var(--text-primary); font-weight: 500; }
+  .tree-index { color: var(--text-secondary); }
+  .tree-meta {
+    color: var(--text-tertiary);
+    font-size: 11px;
+    margin-left: 6px;
+  }
+  .tree-string { color: var(--color-string); }
+  .tree-number { color: var(--color-number); }
+  .tree-boolean { color: var(--color-boolean); }
+  .tree-null { color: var(--text-tertiary); font-style: italic; }
+  .tree-bracket { color: var(--text-secondary); }
+  .tree-children {
+    margin-left: 4px;
+    border-left: 0.5px dashed var(--border-tertiary);
+    padding-left: 10px;
+  }
+  .hidden { display: none !important; }
+  .search-hit {
+    background: var(--bg-warning);
+    color: var(--text-warning);
+    padding: 0 2px;
+    border-radius: 2px;
+  }
+  .level-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 3px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    margin-right: 8px;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    vertical-align: 1px;
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  .copy-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text-primary);
+    color: var(--bg-primary);
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 1000;
+  }
+  .copy-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .help-text {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 6px;
+  }
+  details summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 4px 0;
+  }
+  details summary:hover { color: var(--text-primary); }
+  .shortcuts {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    line-height: 1.8;
+  }
+  .shortcuts code {
+    background: var(--bg-secondary);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>JSON Parser Explorer</h1>
+    <p>Paste JSON, navigate the tree, search, and inspect structure level by level.</p>
+  </header>
+
+  <div class="toolbar">
+    <button id="btn-parse" class="primary">Parse JSON</button>
+    <button id="btn-sample">Load sample</button>
+    <button id="btn-format">Pretty-print input</button>
+    <button id="btn-minify">Minify input</button>
+    <button id="btn-clear">Clear</button>
+    <label class="row" style="margin-left: auto;">
+      <input type="checkbox" id="opt-jsonl" />
+      JSONL mode (one JSON per line)
+    </label>
+  </div>
+
+  <textarea id="json-input" placeholder='Paste your JSON here. Example: {"users":[{"name":"Ana","age":30}]}'></textarea>
+
+  <div id="error-box" class="error-box"></div>
+
+  <details style="margin-top: 8px;">
+    <summary>Keyboard shortcuts</summary>
+    <div class="shortcuts">
+      <code>Ctrl/Cmd + Enter</code> in the input — parse JSON<br>
+      Click any node line — copy its path to clipboard<br>
+      <code>Esc</code> — clear search
+    </div>
+  </details>
+
+  <div id="controls" style="display: none; margin-top: 20px;">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="label">Max depth</div><div class="value" id="stat-depth">0</div></div>
+      <div class="stat-card"><div class="label">Total nodes</div><div class="value" id="stat-nodes">0</div></div>
+      <div class="stat-card"><div class="label">Leaves (values)</div><div class="value" id="stat-leaves">0</div></div>
+      <div class="stat-card"><div class="label">Size</div><div class="value" id="stat-size">0</div></div>
+    </div>
+
+    <div class="control-row">
+      <span class="label">Level actions:</span>
+      <select id="level-select" style="min-width: 130px;"></select>
+      <button id="btn-expand-level">Expand level</button>
+      <button id="btn-collapse-level">Collapse level</button>
+      <button id="btn-expand-all">Expand all</button>
+      <button id="btn-collapse-all">Collapse all</button>
+    </div>
+
+    <div class="panel" id="summary-panel">
+      <div class="panel-header">
+        <button id="btn-toggle-summary" class="panel-toggle" aria-expanded="true" aria-controls="summary-body">
+          <span class="caret">▼</span>
+          <span class="panel-title">Level summary</span>
+        </button>
+        <select id="summary-level" style="min-width: 160px;"></select>
+        <span class="label" style="font-size: 12px;">Choose "All levels" for the overview, or pick one to inspect.</span>
+      </div>
+      <div id="summary-body">
+        <div id="summary-content"></div>
+      </div>
+    </div>
+
+    <div class="control-row">
+      <input type="text" id="search-input" placeholder="Search keys or values..." style="flex: 1; min-width: 200px;" />
+      <select id="search-mode" style="min-width: 140px;">
+        <option value="both">Keys & values</option>
+        <option value="keys">Keys only</option>
+        <option value="values">Values only</option>
+      </select>
+      <label class="row">
+        <input type="checkbox" id="search-case" /> Case sensitive
+      </label>
+      <label class="row">
+        <input type="checkbox" id="search-regex" /> Regex
+      </label>
+      <button id="btn-search-clear">Clear search</button>
+    </div>
+
+    <div id="search-info" class="search-info"></div>
+
+    <div class="control-row">
+      <button id="btn-copy-all">Copy formatted JSON</button>
+      <button id="btn-download">Download JSON</button>
+      <span class="help-text" style="margin-top: 0;">Tip: click any node line to copy its path.</span>
+    </div>
+
+    <div id="tree-container"></div>
+  </div>
+</div>
+
+<div class="copy-toast" id="toast">Copied</div>
+
+<script>
+(function() {
+  const $ = (id) => document.getElementById(id);
+  let parsedData = null;
+  let nodeIndex = [];
+  let levelStats = {};
+
+  const SAMPLE = {
+    "company": "Aftrad",
+    "founded": 2018,
+    "active": true,
+    "employees": [
+      { "id": 1, "name": "Ana López", "role": "Engineer", "skills": ["Python", "SQL", "React"], "salary": 52000 },
+      { "id": 2, "name": "Carlos Ruiz", "role": "Designer", "skills": ["Figma", "CSS"], "salary": 48000 },
+      { "id": 3, "name": "Marta Gil", "role": "Manager", "skills": ["Leadership", "Agile"], "salary": 65000 }
+    ],
+    "offices": {
+      "madrid":    { "address": "Gran Vía 1",          "headcount": 25, "open": true },
+      "sevilla":   { "address": "Av. Constitución 12", "headcount": 12, "open": true },
+      "barcelona": { "address": "Diagonal 500",        "headcount": 18, "open": false }
+    },
+    "metrics": { "revenue": 1850000, "growth": 0.23, "nps": null }
+  };
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function fmtSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  function getType(v) {
+    if (v === null) return 'null';
+    if (Array.isArray(v)) return 'array';
+    return typeof v;
+  }
+
+  function pathToString(path) {
+    if (path.length === 0) return '$';
+    let s = '$';
+    for (const seg of path) {
+      if (typeof seg === 'number') s += '[' + seg + ']';
+      else if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(seg)) s += '.' + seg;
+      else s += '["' + String(seg).replace(/"/g, '\\"') + '"]';
+    }
+    return s;
+  }
+
+  function showToast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 1400);
+  }
+
+  function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => showToast('Copied: ' + text));
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); showToast('Copied: ' + text); }
+      catch (e) { showToast('Copy failed'); }
+      document.body.removeChild(ta);
+    }
+  }
+
+  function buildTree(value, key, level, parentEl, path) {
+    const type = getType(value);
+    const node = { type, key, level, value, path, expanded: true, el: null };
+    nodeIndex.push(node);
+
+    if (!levelStats[level]) {
+      levelStats[level] = { objects: 0, arrays: 0, primitives: 0, keys: new Set(), nodeCount: 0, valueCounts: {}, pathPatterns: {}, parentContexts: {} };
+    }
+    levelStats[level].nodeCount++;
+    if (key !== null && key !== undefined && typeof key === 'string') {
+      levelStats[level].keys.add(key);
+    }
+
+    // Build a path pattern: replace numeric indices with [] to group siblings of the same array
+    const patternParts = path.map(seg => typeof seg === 'number' ? '[]' : seg);
+    let pattern;
+    if (patternParts.length === 0) {
+      pattern = '$ (root)';
+    } else {
+      pattern = '$';
+      for (const seg of patternParts) {
+        if (seg === '[]') pattern += '[]';
+        else pattern += '.' + seg;
+      }
+    }
+    levelStats[level].pathPatterns[pattern] = (levelStats[level].pathPatterns[pattern] || 0) + 1;
+
+    // Track parent context (the immediate parent key) for the overview column
+    if (path.length === 0) {
+      levelStats[level].parentContexts['(root)'] = (levelStats[level].parentContexts['(root)'] || 0) + 1;
+    } else {
+      const parentKey = path[path.length - 1];
+      // For numeric keys (array elements), use the parent's parent name to show "offers[]" instead of "[0]"
+      let ctx;
+      if (typeof parentKey === 'number') {
+        const grandparent = path.length >= 2 ? path[path.length - 2] : null;
+        ctx = grandparent !== null ? grandparent + '[]' : '[]';
+      } else {
+        ctx = parentKey;
+      }
+      levelStats[level].parentContexts[ctx] = (levelStats[level].parentContexts[ctx] || 0) + 1;
+    }
+
+    if (type === 'object') levelStats[level].objects++;
+    else if (type === 'array') levelStats[level].arrays++;
+    else {
+      levelStats[level].primitives++;
+      levelStats[level].valueCounts[type] = (levelStats[level].valueCounts[type] || 0) + 1;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'tree-node';
+    wrapper.dataset.level = level;
+    node.el = wrapper;
+
+    const line = document.createElement('div');
+    line.className = 'tree-line has-action';
+    line.title = 'Click to copy path: ' + pathToString(path);
+    line.addEventListener('click', (e) => {
+      if (e.target.classList.contains('tree-toggle')) return;
+      copyToClipboard(pathToString(path));
+    });
+
+    let badgeText = 'L' + level;
+    if (key !== null && key !== undefined) {
+      if (typeof key === 'number') {
+        badgeText += ' · [' + key + ']';
+      } else {
+        badgeText += ' · ' + key;
+      }
+    } else {
+      badgeText += ' · root';
+    }
+    let keyHtml = '<span class="level-badge">' + escapeHtml(badgeText) + '</span>';
+    if (key !== null && key !== undefined) {
+      if (typeof key === 'number') {
+        keyHtml += '<span class="tree-index">[' + key + ']</span>: ';
+      } else {
+        keyHtml += '<span class="tree-key">"' + escapeHtml(key) + '"</span>: ';
+      }
+    }
+
+    if (type === 'object' || type === 'array') {
+      const entries = type === 'array' ? value.map((v, i) => [i, v]) : Object.entries(value);
+      const open = type === 'array' ? '[' : '{';
+      const close = type === 'array' ? ']' : '}';
+      const count = entries.length;
+      const countLabel = count + (type === 'array' ? ' items' : ' keys');
+
+      const toggle = document.createElement('span');
+      toggle.className = 'tree-toggle';
+      toggle.textContent = '▼';
+      wrapper.appendChild(toggle);
+
+      const header = document.createElement('span');
+      const fullHeader = keyHtml + '<span class="tree-bracket">' + open + '</span>' +
+                        '<span class="tree-meta">' + countLabel + '</span>';
+      const collapsedHeader = keyHtml + '<span class="tree-bracket">' + open + ' ... ' + close + '</span>' +
+                             '<span class="tree-meta">' + countLabel + '</span>';
+      header.innerHTML = fullHeader;
+      line.appendChild(header);
+      wrapper.appendChild(line);
+
+      const childrenWrap = document.createElement('div');
+      childrenWrap.className = 'tree-children';
+      wrapper.appendChild(childrenWrap);
+
+      const closer = document.createElement('div');
+      closer.innerHTML = '<span class="tree-bracket" style="padding-left: 6px;">' + close + '</span>';
+      wrapper.appendChild(closer);
+
+      entries.forEach(([k, v]) => {
+        buildTree(v, k, level + 1, childrenWrap, path.concat([k]));
+      });
+
+      const setExpanded = (exp) => {
+        node.expanded = exp;
+        toggle.textContent = exp ? '▼' : '▶';
+        childrenWrap.classList.toggle('hidden', !exp);
+        closer.classList.toggle('hidden', !exp);
+        header.innerHTML = exp ? fullHeader : collapsedHeader;
+      };
+      node.setExpanded = setExpanded;
+
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setExpanded(!node.expanded);
+      });
+
+    } else {
+      let vStr;
+      if (type === 'string') vStr = '"' + escapeHtml(value) + '"';
+      else vStr = String(value);
+      const valHtml = '<span class="tree-' + type + '">' + vStr + '</span>' +
+                      '<span class="tree-meta">' + type + '</span>';
+      line.innerHTML = keyHtml + valHtml;
+      wrapper.appendChild(line);
+    }
+
+    parentEl.appendChild(wrapper);
+    return node;
+  }
+
+  function expandAncestors(node) {
+    let p = node.el.parentElement;
+    while (p) {
+      if (p.classList && p.classList.contains('tree-children')) {
+        const parentWrapper = p.parentElement;
+        if (parentWrapper && parentWrapper.classList.contains('tree-node')) {
+          const parentNode = nodeIndex.find(n => n.el === parentWrapper);
+          if (parentNode && parentNode.setExpanded && !parentNode.expanded) {
+            parentNode.setExpanded(true);
+          }
+        }
+      }
+      p = p.parentElement;
+    }
+  }
+
+  function render(data) {
+    nodeIndex = [];
+    levelStats = {};
+    const container = $('tree-container');
+    container.innerHTML = '';
+    buildTree(data, null, 0, container, []);
+
+    const levels = Object.keys(levelStats).map(Number);
+    const maxLevel = levels.length ? Math.max(...levels) : 0;
+    const totalNodes = nodeIndex.length;
+    const leaves = nodeIndex.filter(n => n.type !== 'object' && n.type !== 'array').length;
+    const size = new Blob([JSON.stringify(data)]).size;
+
+    $('stat-depth').textContent = maxLevel;
+    $('stat-nodes').textContent = totalNodes.toLocaleString();
+    $('stat-leaves').textContent = leaves.toLocaleString();
+    $('stat-size').textContent = fmtSize(size);
+
+    const levelSelect = $('level-select');
+    const summarySelect = $('summary-level');
+    levelSelect.innerHTML = '';
+    summarySelect.innerHTML = '<option value="all">All levels (overview)</option>';
+    for (let i = 0; i <= maxLevel; i++) {
+      const o1 = document.createElement('option');
+      o1.value = i; o1.textContent = 'Level ' + i;
+      levelSelect.appendChild(o1);
+      const o2 = document.createElement('option');
+      o2.value = i; o2.textContent = 'Level ' + i;
+      summarySelect.appendChild(o2);
+    }
+
+    renderSummary('all');
+    $('controls').style.display = 'block';
+  }
+
+  function formatContextPills(contextMap, maxItems) {
+    const entries = Object.entries(contextMap).sort((a, b) => b[1] - a[1]);
+    const shown = entries.slice(0, maxItems);
+    const html = shown.map(([ctx, count]) =>
+      '<span class="ctx-pill">' + escapeHtml(ctx) +
+      (count > 1 ? '<span class="ctx-count">×' + count + '</span>' : '') +
+      '</span>'
+    ).join(' ');
+    const more = entries.length > shown.length ? '<span class="ctx-more">+' + (entries.length - shown.length) + ' more</span>' : '';
+    return html + ' ' + more;
+  }
+
+  function renderSummary(levelKey) {
+    const target = $('summary-content');
+    if (levelKey === 'all') {
+      const sortedLevels = Object.keys(levelStats).sort((a, b) => +a - +b);
+      const rows = sortedLevels.map(lvl => {
+        const s = levelStats[lvl];
+        const ctx = formatContextPills(s.parentContexts, 4);
+        return '<tr>' +
+          '<td><strong>L' + lvl + '</strong></td>' +
+          '<td>' + s.nodeCount.toLocaleString() + '</td>' +
+          '<td>' + s.objects.toLocaleString() + '</td>' +
+          '<td>' + s.arrays.toLocaleString() + '</td>' +
+          '<td>' + s.primitives.toLocaleString() + '</td>' +
+          '<td>' + s.keys.size + '</td>' +
+          '<td class="ctx-cell">' + (ctx.trim() || '—') + '</td>' +
+        '</tr>';
+      }).join('');
+      target.innerHTML =
+        '<table class="summary-table">' +
+          '<thead><tr>' +
+            '<th>Level</th>' +
+            '<th>Nodes</th>' +
+            '<th>Objects</th>' +
+            '<th>Arrays</th>' +
+            '<th>Primitives</th>' +
+            '<th>Unique keys</th>' +
+            '<th>What\'s here (parent context)</th>' +
+          '</tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table>';
+    } else {
+      const s = levelStats[levelKey];
+      if (!s) {
+        target.innerHTML = '<em style="color: var(--text-tertiary);">No data at this level.</em>';
+        return;
+      }
+      const types = Object.entries(s.valueCounts).map(([t, c]) => '<span class="key-pill">' + t + ' × ' + c + '</span>').join(' ') || '<em style="color: var(--text-tertiary);">none</em>';
+      const keysList = Array.from(s.keys);
+      const shownKeys = keysList.slice(0, 50);
+      const keysHtml = shownKeys.length
+        ? shownKeys.map(k => '<span class="key-pill">' + escapeHtml(k) + '</span>').join('')
+        : '<em style="color: var(--text-tertiary);">No named keys at this level (likely array indices).</em>';
+
+      // Path patterns sorted by frequency
+      const patterns = Object.entries(s.pathPatterns).sort((a, b) => b[1] - a[1]);
+      const shownPatterns = patterns.slice(0, 20);
+      const patternsHtml = shownPatterns.map(([p, c]) =>
+        '<div style="display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 0.5px dashed var(--border-tertiary);">' +
+          '<code style="font-size: 11px; color: var(--text-primary);">' + escapeHtml(p) + '</code>' +
+          '<span style="font-size: 11px; color: var(--text-secondary);">' + c.toLocaleString() + '</span>' +
+        '</div>'
+      ).join('');
+      const morePatterns = patterns.length > shownPatterns.length
+        ? '<div style="font-size: 11px; color: var(--text-tertiary); padding: 4px 0;">+ ' + (patterns.length - shownPatterns.length) + ' more patterns</div>'
+        : '';
+
+      target.innerHTML =
+        '<div class="level-detail-grid">' +
+          '<div><div class="l-lab">Nodes</div><div class="l-val">' + s.nodeCount.toLocaleString() + '</div></div>' +
+          '<div><div class="l-lab">Objects</div><div class="l-val">' + s.objects.toLocaleString() + '</div></div>' +
+          '<div><div class="l-lab">Arrays</div><div class="l-val">' + s.arrays.toLocaleString() + '</div></div>' +
+          '<div><div class="l-lab">Primitives</div><div class="l-val">' + s.primitives.toLocaleString() + '</div></div>' +
+          '<div><div class="l-lab">Unique keys</div><div class="l-val">' + s.keys.size + '</div></div>' +
+        '</div>' +
+        '<div style="font-size: 11px; color: var(--text-tertiary); margin: 8px 0 4px;">Path patterns at this level (sorted by count)</div>' +
+        '<div style="background: var(--bg-primary); border-radius: var(--radius-sm); padding: 6px 10px; margin-bottom: 10px;">' +
+          patternsHtml + morePatterns +
+        '</div>' +
+        '<div style="font-size: 11px; color: var(--text-tertiary); margin: 8px 0 4px;">Value types</div>' +
+        '<div style="margin-bottom: 10px;">' + types + '</div>' +
+        '<div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 4px;">Keys' +
+          (keysList.length > shownKeys.length ? ' (showing first ' + shownKeys.length + ' of ' + keysList.length + ')' : '') +
+        '</div>' +
+        '<div style="line-height: 1.9;">' + keysHtml + '</div>';
+    }
+  }
+
+  function setExpandedAtLevel(level, expanded) {
+    nodeIndex.forEach(n => {
+      if (n.level === level && (n.type === 'object' || n.type === 'array') && n.setExpanded) {
+        if (n.expanded !== expanded) n.setExpanded(expanded);
+      }
+    });
+  }
+
+  function setAllExpanded(expanded) {
+    nodeIndex.forEach(n => {
+      if ((n.type === 'object' || n.type === 'array') && n.setExpanded) {
+        if (n.expanded !== expanded) n.setExpanded(expanded);
+      }
+    });
+  }
+
+  function clearSearch() {
+    nodeIndex.forEach(n => {
+      const line = n.el.querySelector(':scope > .tree-line');
+      if (line) {
+        line.querySelectorAll('.search-hit').forEach(h => {
+          const t = document.createTextNode(h.textContent);
+          h.replaceWith(t);
+        });
+      }
+    });
+    $('search-info').style.display = 'none';
+  }
+
+  function highlightInElement(el, matcher) {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const nodes = [];
+    let n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    nodes.forEach(textNode => {
+      const text = textNode.nodeValue;
+      const matches = matcher(text);
+      if (!matches.length) return;
+      const frag = document.createDocumentFragment();
+      let last = 0;
+      matches.forEach(m => {
+        if (m.start > last) frag.appendChild(document.createTextNode(text.slice(last, m.start)));
+        const span = document.createElement('span');
+        span.className = 'search-hit';
+        span.textContent = text.slice(m.start, m.end);
+        frag.appendChild(span);
+        last = m.end;
+      });
+      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      textNode.replaceWith(frag);
+    });
+  }
+
+  function doSearch() {
+    const term = $('search-input').value;
+    const mode = $('search-mode').value;
+    const caseSensitive = $('search-case').checked;
+    const useRegex = $('search-regex').checked;
+    clearSearch();
+    if (!term) return;
+
+    let matcher;
+    let testFn;
+    try {
+      if (useRegex) {
+        const re = new RegExp(term, caseSensitive ? 'g' : 'gi');
+        matcher = (text) => {
+          const out = [];
+          let m;
+          re.lastIndex = 0;
+          while ((m = re.exec(text)) !== null) {
+            if (m[0].length === 0) { re.lastIndex++; continue; }
+            out.push({ start: m.index, end: m.index + m[0].length });
+          }
+          return out;
+        };
+        testFn = (text) => {
+          const re2 = new RegExp(term, caseSensitive ? '' : 'i');
+          return re2.test(text);
+        };
+      } else {
+        const needle = caseSensitive ? term : term.toLowerCase();
+        matcher = (text) => {
+          const hay = caseSensitive ? text : text.toLowerCase();
+          const out = [];
+          let idx = hay.indexOf(needle);
+          while (idx !== -1) {
+            out.push({ start: idx, end: idx + needle.length });
+            idx = hay.indexOf(needle, idx + needle.length);
+          }
+          return out;
+        };
+        testFn = (text) => {
+          const hay = caseSensitive ? text : text.toLowerCase();
+          return hay.includes(needle);
+        };
+      }
+    } catch (e) {
+      $('search-info').style.display = 'block';
+      $('search-info').textContent = 'Invalid regex: ' + e.message;
+      return;
+    }
+
+    let hits = 0;
+    nodeIndex.forEach(n => {
+      let keyHit = false, valueHit = false;
+      if (mode !== 'values' && n.key !== null && n.key !== undefined) {
+        if (testFn(String(n.key))) keyHit = true;
+      }
+      if (mode !== 'keys' && n.type !== 'object' && n.type !== 'array') {
+        if (testFn(String(n.value))) valueHit = true;
+      }
+      if (keyHit || valueHit) {
+        hits++;
+        expandAncestors(n);
+        const line = n.el.querySelector(':scope > .tree-line');
+        if (line) highlightInElement(line, matcher);
+      }
+    });
+
+    const info = $('search-info');
+    info.style.display = 'block';
+    info.textContent = hits === 0
+      ? 'No matches found.'
+      : hits + ' match' + (hits === 1 ? '' : 'es') + ' found (matching branches expanded).';
+  }
+
+  function tryParse() {
+    const txt = $('json-input').value.trim();
+    const errBox = $('error-box');
+    errBox.style.display = 'none';
+    if (!txt) {
+      errBox.textContent = 'Please paste some JSON first.';
+      errBox.style.display = 'block';
+      return;
+    }
+    const isJsonl = $('opt-jsonl').checked;
+    try {
+      if (isJsonl) {
+        const lines = txt.split(/\r?\n/).filter(l => l.trim().length);
+        const arr = lines.map((line, i) => {
+          try { return JSON.parse(line); }
+          catch (e) { throw new Error('Line ' + (i + 1) + ': ' + e.message); }
+        });
+        parsedData = arr;
+      } else {
+        parsedData = JSON.parse(txt);
+      }
+      render(parsedData);
+    } catch (e) {
+      errBox.textContent = 'Invalid JSON: ' + e.message;
+      errBox.style.display = 'block';
+      $('controls').style.display = 'none';
+    }
+  }
+
+  $('btn-parse').addEventListener('click', tryParse);
+  $('btn-sample').addEventListener('click', () => {
+    $('opt-jsonl').checked = false;
+    $('json-input').value = JSON.stringify(SAMPLE, null, 2);
+    tryParse();
+  });
+  $('btn-clear').addEventListener('click', () => {
+    $('json-input').value = '';
+    $('controls').style.display = 'none';
+    $('error-box').style.display = 'none';
+  });
+  $('btn-format').addEventListener('click', () => {
+    try {
+      const txt = $('json-input').value.trim();
+      if (!txt) return;
+      if ($('opt-jsonl').checked) {
+        const lines = txt.split(/\r?\n/).filter(l => l.trim().length);
+        $('json-input').value = lines.map(l => JSON.stringify(JSON.parse(l))).join('\n');
+      } else {
+        const obj = JSON.parse(txt);
+        $('json-input').value = JSON.stringify(obj, null, 2);
+      }
+      $('error-box').style.display = 'none';
+    } catch (e) {
+      $('error-box').textContent = 'Cannot format: ' + e.message;
+      $('error-box').style.display = 'block';
+    }
+  });
+  $('btn-minify').addEventListener('click', () => {
+    try {
+      const txt = $('json-input').value.trim();
+      if (!txt) return;
+      if ($('opt-jsonl').checked) {
+        const lines = txt.split(/\r?\n/).filter(l => l.trim().length);
+        $('json-input').value = lines.map(l => JSON.stringify(JSON.parse(l))).join('\n');
+      } else {
+        $('json-input').value = JSON.stringify(JSON.parse(txt));
+      }
+      $('error-box').style.display = 'none';
+    } catch (e) {
+      $('error-box').textContent = 'Cannot minify: ' + e.message;
+      $('error-box').style.display = 'block';
+    }
+  });
+
+  $('btn-expand-level').addEventListener('click', () => setExpandedAtLevel(+$('level-select').value, true));
+  $('btn-collapse-level').addEventListener('click', () => setExpandedAtLevel(+$('level-select').value, false));
+  $('btn-expand-all').addEventListener('click', () => setAllExpanded(true));
+  $('btn-collapse-all').addEventListener('click', () => setAllExpanded(false));
+  $('summary-level').addEventListener('change', e => renderSummary(e.target.value));
+
+  $('btn-toggle-summary').addEventListener('click', () => {
+    const btn = $('btn-toggle-summary');
+    const body = $('summary-body');
+    const panel = $('summary-panel');
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+    body.classList.toggle('hidden', expanded);
+    panel.classList.toggle('collapsed', expanded);
+  });
+
+  let searchTimer = null;
+  $('search-input').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(doSearch, 200);
+  });
+  $('search-mode').addEventListener('change', doSearch);
+  $('search-case').addEventListener('change', doSearch);
+  $('search-regex').addEventListener('change', doSearch);
+  $('btn-search-clear').addEventListener('click', () => {
+    $('search-input').value = '';
+    clearSearch();
+  });
+
+  $('btn-copy-all').addEventListener('click', () => {
+    if (parsedData === null) return;
+    const txt = JSON.stringify(parsedData, null, 2);
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(txt).then(() => showToast('Copied formatted JSON'));
+    } else {
+      showToast('Clipboard unavailable');
+    }
+  });
+
+  $('btn-download').addEventListener('click', () => {
+    if (parsedData === null) return;
+    const blob = new Blob([JSON.stringify(parsedData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'data.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  $('json-input').addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') tryParse();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && $('search-input').value) {
+      $('search-input').value = '';
+      clearSearch();
+    }
+  });
+})();
+</script>
+</body>
+</html>

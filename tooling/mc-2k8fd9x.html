@@ -479,6 +479,8 @@
                         <option value="random_number">random_number</option>
                         <option value="random_string">random_string</option>
                         <option value="random_string_set">random_string_set</option>
+                        <option value="period_h">period_h</option>
+                        <option value="random_periodic_string_set">random_periodic_string_set</option>
                     </select>
                 </div>
 
@@ -687,6 +689,34 @@
                                    oninput="onStateChange()">
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- ── period_h: hours input ── -->
+            <div id="periodHSection" style="display:none;">
+                <div class="subsection">
+                    <div class="sub-title">Period configuration</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Period (hours)</label>
+                            <input type="number" class="form-input num" id="periodHours" value="6" min="1" step="0.5" oninput="onStateChange()">
+                        </div>
+                    </div>
+                    <span class="dtz-badge">⏱ Returns a numeric seed that stays the same within the period and changes after it ends</span>
+                </div>
+            </div>
+
+            <!-- ── random_periodic_string_set: period in hours ── -->
+            <div id="periodicPeriodSection" style="display:none;">
+                <div class="subsection">
+                    <div class="sub-title">Rotation period</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Period (hours)</label>
+                            <input type="number" class="form-input num" id="periodicPeriodHours" value="24" min="1" step="0.5" oninput="onStateChange()">
+                        </div>
+                    </div>
+                    <span class="dtz-badge">⏱ Content and size change once per period. Default: 24h (daily)</span>
                 </div>
             </div>
 
@@ -919,6 +949,8 @@ function evalSetCardinality(minCard, maxCard, seedVal) {
 // ════════════════════════════════════════
 
 function usesDateTz(state) {
+    // period_h and random_periodic_string_set are inherently time-based
+    if (state.fnType === 'period_h' || state.fnType === 'random_periodic_string_set') return true;
     const s = state.seed, c = state.cardinality;
     if (s.enabled && s.type === 'date_tz') return true;
     if (s.enabled && s.type === 'macro' && macroStrHasDate(s.macroStr || '')) return true;
@@ -936,6 +968,7 @@ function hasMacroSeed(state) {
 }
 
 function isFullyRandom(state) {
+    if (state.fnType === 'period_h' || state.fnType === 'random_periodic_string_set') return false;
     if (!state.seed.enabled) return true;
     if (state.seed.type === 'rn' && state.seed.rnSeedType === 'none') return true;
     return false;
@@ -984,28 +1017,47 @@ function buildFormulaString(state) {
     const suffix = state.suffix || '';
     const s   = seedToStr(state.seed);
     const min = state.min, max = state.max;
+    // For functions that require a seed param, use placeholder if none set
+    const seedOrPlaceholder = s || 'SEED';
 
     let formula;
-    if (state.fnType === 'random_number') {
+    if (state.fnType === 'period_h') {
+        const hours = state.periodHours || 6;
+        formula = `{fn:period_h(${hours})}`;
+    } else if (state.fnType === 'random_periodic_string_set') {
+        let cardPart;
+        if (state.setCardMode === 'simple') {
+            cardPart = `${state.setCardSimple},${state.setCardSimple}`;
+        } else if (state.setCardMode === 'range') {
+            cardPart = `${state.setCardMin},${state.setCardMax}`;
+        } else {
+            const cf = state.setCardFormula || '1';
+            cardPart = `${cf},${cf}`;
+        }
+        const periodH = state.periodicPeriodHours || 24;
+        if (periodH == 24) {
+            formula = `{fn:random_periodic_string_set(${min},${max},${seedOrPlaceholder},${cardPart})}`;
+        } else {
+            formula = `{fn:random_periodic_string_set(${min},${max},${seedOrPlaceholder},${cardPart},${periodH})}`;
+        }
+    } else if (state.fnType === 'random_number') {
         formula = s ? `{fn:random_number(${min},${max},${s})}` : `{fn:random_number(${min},${max})}`;
     } else if (state.fnType === 'random_string_set') {
-        const seedPart = s || '';
         if (state.setCardMode === 'simple') {
-            formula = `{fn:random_string_set(${min},${max},${seedPart},${state.setCardSimple})}`;
+            formula = `{fn:random_string_set(${min},${max},${seedOrPlaceholder},${state.setCardSimple})}`;
         } else if (state.setCardMode === 'range') {
-            formula = `{fn:random_string_set(${min},${max},${seedPart},${state.setCardMin},${state.setCardMax})}`;
+            formula = `{fn:random_string_set(${min},${max},${seedOrPlaceholder},${state.setCardMin},${state.setCardMax})}`;
         } else {
             // formula mode — embed as-is; fallback to 1 if empty
             const cf = state.setCardFormula || '1';
-            formula = `{fn:random_string_set(${min},${max},${seedPart},${cf})}`;
+            formula = `{fn:random_string_set(${min},${max},${seedOrPlaceholder},${cf})}`;
         }
     } else if (state.cardinality.enabled) {
         // random_string with cardinality → output as random_string_set
         const c = state.cardinality;
-        const seedPart = s || '';
         formula = c.type === 'static'
-            ? `{fn:random_string_set(${min},${max},${seedPart},${c.value},${c.value})}`
-            : `{fn:random_string_set(${min},${max},${seedPart},${cardToStr(c)})}`;
+            ? `{fn:random_string_set(${min},${max},${seedOrPlaceholder},${c.value},${c.value})}`
+            : `{fn:random_string_set(${min},${max},${seedOrPlaceholder},${cardToStr(c)})}`;
     } else {
         formula = s ? `{fn:random_string(${min},${max},${s})}` : `{fn:random_string(${min},${max})}`;
     }
@@ -1023,6 +1075,35 @@ function generateValues(state, dayOffset, combo) {
     const wrap   = v => prefix + String(v) + suffix;
     const seedVal = evalSeed(state.seed, dayOffset, combo);
     const charset = CHARSETS[state.charCase] || CHARSETS.mixed;
+
+    if (state.fnType === 'period_h') {
+        const val = getPeriodH(state.periodHours || 6, dayOffset);
+        return { cardinality: 1, values: [wrap(val)] };
+    }
+
+    if (state.fnType === 'random_periodic_string_set') {
+        const periodH = state.periodicPeriodHours || 24;
+        const periodSeed = String(seedVal || 'SEED') + '::ph' + getPeriodH(periodH, dayOffset);
+        let minCard, maxCard;
+        if (state.setCardMode === 'simple') {
+            minCard = maxCard = state.setCardSimple;
+        } else if (state.setCardMode === 'range') {
+            minCard = state.setCardMin; maxCard = state.setCardMax;
+        } else {
+            const cardTree = parseFormulaTree(state.setCardFormula || '');
+            if (cardTree) {
+                const res = execFormulaTree(cardTree, dayOffset, combo, 'mixed');
+                minCard = maxCard = res.values[0];
+            } else {
+                minCard = maxCard = 1;
+            }
+        }
+        const cardinality = evalSetCardinality(minCard, maxCard, periodSeed);
+        const values = [];
+        for (let i = 0; i < cardinality; i++)
+            values.push(wrap(genString(state.min, state.max, periodSeed, i, charset)));
+        return { cardinality, values };
+    }
 
     if (state.fnType === 'random_number') {
         return { cardinality: 1, values: [wrap(genNumber(state.min, state.max, seedVal))] };
@@ -1123,6 +1204,8 @@ function readState() {
         setCardMin:     parseInt(document.getElementById('setCardMin').value, 10) || 1,
         setCardMax:     parseInt(document.getElementById('setCardMax').value, 10) || 1,
         setCardFormula: document.getElementById('setCardFormula').value.trim(),
+        periodHours:         parseFloat(document.getElementById('periodHours').value) || 6,
+        periodicPeriodHours: parseFloat(document.getElementById('periodicPeriodHours').value) || 24,
     };
 }
 
@@ -1173,7 +1256,7 @@ function renderOutput() {
     const rnd        = isFullyRandom(state);
     const ctrl       = document.getElementById('outputControls');
     const outputArea = document.getElementById('outputArea');
-    const chipType   = state.fnType === 'random_number' ? 'num' : 'str';
+    const chipType   = (state.fnType === 'random_number' || state.fnType === 'period_h') ? 'num' : 'str';
     const days       = Math.max(1, Math.min(30, parseInt(document.getElementById('daysToShow').value, 10) || 10));
 
     ctrl.style.display = dtz ? 'flex' : 'none';
@@ -1343,18 +1426,43 @@ function onSetCardModeChange() {
 
 function onFnTypeChange() {
     const fn    = document.getElementById('fnType').value;
-    const isStr = fn === 'random_string' || fn === 'random_string_set';
-    const isSet = fn === 'random_string_set';
+    const isPeriodH  = fn === 'period_h';
+    const isPeriodic = fn === 'random_periodic_string_set';
+    const isStr = fn === 'random_string' || fn === 'random_string_set' || isPeriodic;
+    const isSet = fn === 'random_string_set' || isPeriodic;
 
-    document.getElementById('minLabel').textContent = isStr ? 'Min Length' : 'Min Number';
+    // period_h hides most controls — only shows its own section
+    const coreHide = isPeriodH;
+    document.getElementById('coreMin').parentElement.parentElement.style.display = coreHide ? 'none' : '';
+    document.getElementById('valuePrefix').parentElement.parentElement.style.display = coreHide ? 'none' : '';
+
+    // Seed toggle — hide for period_h (no seed concept) and random_periodic (seed is always required)
+    document.getElementById('seedEnabled').parentElement.style.display = isPeriodH ? 'none' : '';
+    if (isPeriodH) {
+        document.getElementById('seedEnabled').checked = false;
+        document.getElementById('seedArea').style.display = 'none';
+    }
+    // For random_periodic_string_set, seed is always on (required valueSeed)
+    if (isPeriodic) {
+        document.getElementById('seedEnabled').checked = true;
+        document.getElementById('seedArea').style.display = 'block';
+    }
+
+    document.getElementById('minLabel').textContent = isStr ? 'Min Length' : (isPeriodH ? 'Hours' : 'Min Number');
     document.getElementById('maxLabel').textContent = isStr ? 'Max Length' : 'Max Number';
 
     // Character case — string types only
     document.getElementById('caseGroup').style.display = isStr ? 'flex' : 'none';
 
     // Cardinality sections
-    document.getElementById('cardSection').style.display    = fn === 'random_string'     ? 'block' : 'none';
-    document.getElementById('setCardSection').style.display = fn === 'random_string_set' ? 'block' : 'none';
+    document.getElementById('cardSection').style.display    = fn === 'random_string' ? 'block' : 'none';
+    document.getElementById('setCardSection').style.display = (fn === 'random_string_set' || isPeriodic) ? 'block' : 'none';
+
+    // period_h section
+    document.getElementById('periodHSection').style.display = isPeriodH ? 'block' : 'none';
+
+    // periodic period section
+    document.getElementById('periodicPeriodSection').style.display = isPeriodic ? 'block' : 'none';
 
     if (fn !== 'random_string') {
         document.getElementById('cardEnabled').checked = false;

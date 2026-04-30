@@ -1312,7 +1312,9 @@ function renderOutput() {
         const macroValues  = getMacroSampleValues();
         const combos       = buildCombos(customMacros, macroValues);
 
-        if (combos.length === 0 && !hasDtz) {
+        const showTimeline = hasDtz || periodH;
+
+        if (combos.length === 0 && !showTimeline) {
             const res = generateValues(state, 0, {});
             outputArea.innerHTML = `
             <div class="day-card card-purple">
@@ -1328,7 +1330,7 @@ function renderOutput() {
         }
 
         let html = '';
-        if (hasDtz) {
+        if (showTimeline) {
             for (let i = 0; i < previewN; i++) {
                 const hOff    = periodH ? i : i * 24;
                 const dateStr = periodH ? formatHourDate(i) : getDateTzForHour(hOff);

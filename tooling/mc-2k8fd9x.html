@@ -819,14 +819,39 @@ function getDateTzForDay(dayOffset) {
     return d.toDateString();
 }
 
+// Same as getDateTzForDay but accepts hours
+function getDateTzForHour(hourOffset) {
+    const d = new Date();
+    d.setTime(d.getTime() + (hourOffset || 0) * 3600 * 1000);
+    return d.toDateString();
+}
+
 // {fn:period_h(X)} — returns a numeric value that stays the same within
 // the same X-hour period and changes only after the period ends.
-function getPeriodH(hours, dayOffset) {
+// hourOffset = number of hours from now (can be fractional)
+function getPeriodH(hours, hourOffset) {
     const now = new Date();
-    now.setDate(now.getDate() + dayOffset);
+    now.setTime(now.getTime() + (hourOffset || 0) * 3600 * 1000);
     const epoch = now.getTime();
     const periodMs = hours * 3600 * 1000;
     return Math.floor(epoch / periodMs);
+}
+
+function getDateForHour(hourOffset) {
+    const d = new Date();
+    d.setTime(d.getTime() + (hourOffset || 0) * 3600 * 1000);
+    return d;
+}
+
+function formatHourLabel(hourOffset) {
+    if (hourOffset === 0) return 'Now';
+    return `+${hourOffset}h`;
+}
+
+function formatHourDate(hourOffset) {
+    const d = getDateForHour(hourOffset);
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.toDateString()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function escHtml(str) {
@@ -859,10 +884,11 @@ function macroStrHasDate(str) {
     return false;
 }
 
+// dayOffset is in hours throughout the pipeline
 function evalMacroStr(str, dayOffset, combo) {
     return str.replace(/\{([^}]+)\}/g, (_, name) => {
         name = name.trim();
-        if (DATE_MACRO_NAMES.has(name)) return getDateTzForDay(dayOffset);
+        if (DATE_MACRO_NAMES.has(name)) return getDateTzForHour(dayOffset);
         return (combo && combo[name] !== undefined) ? combo[name] : `{${name}}`;
     });
 }
@@ -909,12 +935,12 @@ function genString(minLen, maxLen, seedVal, index, charset) {
 function evalSeed(s, dayOffset, combo) {
     if (!s.enabled) return null;
     switch (s.type) {
-        case 'date_tz': return getDateTzForDay(dayOffset);
+        case 'date_tz': return getDateTzForHour(dayOffset);
         case 'static':  return s.value || null;
         case 'macro':   return evalMacroStr(s.macroStr || '', dayOffset, combo || {});
         case 'rn': {
             let inner = null;
-            if (s.rnSeedType === 'date_tz') inner = getDateTzForDay(dayOffset);
+            if (s.rnSeedType === 'date_tz') inner = getDateTzForHour(dayOffset);
             if (s.rnSeedType === 'static')  inner = s.rnSeedValue || null;
             return genNumber(s.rnMin, s.rnMax, inner);
         }
@@ -928,7 +954,7 @@ function evalCardinality(c, dayOffset) {
         case 'static': return Math.max(1, parseInt(c.value, 10) || 1);
         case 'rn': {
             let inner = null;
-            if (c.rnSeedType === 'date_tz') inner = getDateTzForDay(dayOffset);
+            if (c.rnSeedType === 'date_tz') inner = getDateTzForHour(dayOffset);
             if (c.rnSeedType === 'static')  inner = c.rnSeedValue || null;
             return Math.max(1, genNumber(c.rnMin, c.rnMax, inner));
         }
@@ -947,6 +973,11 @@ function evalSetCardinality(minCard, maxCard, seedVal) {
 // ════════════════════════════════════════
 // State classification
 // ════════════════════════════════════════
+
+function usesPeriodH(state) {
+    if (state.fnType === 'period_h' || state.fnType === 'random_periodic_string_set') return true;
+    return false;
+}
 
 function usesDateTz(state) {
     // period_h and random_periodic_string_set are inherently time-based
@@ -1252,13 +1283,25 @@ function renderOutput() {
     document.getElementById('formulaPreview').textContent = buildFormulaString(state);
 
     const dtz        = usesDateTz(state);
+    const periodH    = usesPeriodH(state);
     const macroMode  = hasMacroSeed(state);
     const rnd        = isFullyRandom(state);
     const ctrl       = document.getElementById('outputControls');
     const outputArea = document.getElementById('outputArea');
     const chipType   = (state.fnType === 'random_number' || state.fnType === 'period_h') ? 'num' : 'str';
-    const days       = Math.max(1, Math.min(30, parseInt(document.getElementById('daysToShow').value, 10) || 10));
 
+    // When period_h is involved, show hours to preview; otherwise days
+    const daysCtrlGroup = document.getElementById('daysControlGroup');
+    if (periodH) {
+        daysCtrlGroup.querySelector('label').textContent = 'Hours to preview:';
+        document.getElementById('daysToShow').max = 168;
+    } else {
+        daysCtrlGroup.querySelector('label').textContent = 'Days to preview:';
+        document.getElementById('daysToShow').max = 30;
+    }
+
+    const maxN     = periodH ? 168 : 30;
+    const previewN = Math.max(1, Math.min(maxN, parseInt(document.getElementById('daysToShow').value, 10) || (periodH ? 24 : 10)));
     ctrl.style.display = dtz ? 'flex' : 'none';
 
     // ── Macro seed with custom macros ──────────────────────────────────
@@ -1286,16 +1329,17 @@ function renderOutput() {
 
         let html = '';
         if (hasDtz) {
-            for (let d = 0; d < days; d++) {
-                const dateStr = getDateTzForDay(d);
-                const dayLbl  = d === 0 ? 'Today' : `Day +${d}`;
+            for (let i = 0; i < previewN; i++) {
+                const hOff    = periodH ? i : i * 24;
+                const dateStr = periodH ? formatHourDate(i) : getDateTzForHour(hOff);
+                const lbl     = periodH ? formatHourLabel(i) : (i === 0 ? 'Today' : `Day +${i}`);
                 html += `
                 <div class="day-card">
                     <div class="day-card-header">
-                        <span class="day-label">${dayLbl}</span>
+                        <span class="day-label">${lbl}</span>
                         <span class="day-date">${dateStr}</span>
                     </div>
-                    <div class="matrix-rows">${renderComboRows(combos, state, d, chipType)}</div>
+                    <div class="matrix-rows">${renderComboRows(combos, state, hOff, chipType)}</div>
                 </div>`;
             }
         } else {
@@ -1314,17 +1358,19 @@ function renderOutput() {
         return;
     }
 
-    // ── date_tz (non-macro) ────────────────────────────────────────────
+    // ── Time-based (non-macro): period_h shows per hour, date_tz per day ──
     if (dtz) {
         let html = '';
-        for (let d = 0; d < days; d++) {
-            const res    = generateValues(state, d);
-            const dayLbl = d === 0 ? 'Today' : `Day +${d}`;
+        for (let i = 0; i < previewN; i++) {
+            const hOff    = periodH ? i : i * 24;
+            const res     = generateValues(state, hOff);
+            const dateStr = periodH ? formatHourDate(i) : getDateTzForHour(hOff);
+            const lbl     = periodH ? formatHourLabel(i) : (i === 0 ? 'Today' : `Day +${i}`);
             html += `
             <div class="day-card">
                 <div class="day-card-header">
-                    <span class="day-label">${dayLbl}</span>
-                    <span class="day-date">${getDateTzForDay(d)}</span>
+                    <span class="day-label">${lbl}</span>
+                    <span class="day-date">${dateStr}</span>
                     ${cardTag(res.cardinality, '')}
                 </div>
                 <div class="values-grid">${res.values.map(v => chipHtml(v, chipType)).join('')}</div>
@@ -1827,7 +1873,7 @@ function resolveParam(param, dayOffset, combo) {
     if (param.type === 'literal') return param.value;
     if (param.type === 'macro') {
         const name = param.name;
-        if (DATE_MACRO_NAMES.has(name)) return getDateTzForDay(dayOffset);
+        if (DATE_MACRO_NAMES.has(name)) return getDateTzForHour(dayOffset);
         return (combo && combo[name] !== undefined) ? combo[name] : `{${name}}`;
     }
     if (param.type === 'formula') return execFormulaTree(param.tree, dayOffset, combo, 'mixed').values[0];
@@ -1915,6 +1961,14 @@ function treeHasDateMacro(tree) {
     return tree.params.some(p =>
         (p.type === 'macro' && DATE_MACRO_NAMES.has(p.name)) ||
         (p.type === 'formula' && treeHasDateMacro(p.tree))
+    );
+}
+
+function treeHasPeriodH(tree) {
+    if (!tree) return false;
+    if (tree.fn === 'period_h' || tree.fn === 'random_periodic_string_set') return true;
+    return tree.params.some(p =>
+        p.type === 'formula' && treeHasPeriodH(p.tree)
     );
 }
 
@@ -2078,21 +2132,32 @@ function validateAndPreview() {
 
     const outputArea   = document.getElementById('valOutputArea');
     const hasDtz       = treeHasDateMacro(tree);
+    const periodH      = treeHasPeriodH(tree);
     const customMacros = [...extractCustomMacrosFromTree(tree)];
     const macroValues  = getValMacroValues();
-    const days         = Math.max(1, Math.min(30, parseInt(document.getElementById('valDaysToShow').value, 10) || 10));
+    const maxN         = periodH ? 168 : 30;
+    const previewN     = Math.max(1, Math.min(maxN, parseInt(document.getElementById('valDaysToShow').value, 10) || (periodH ? 24 : 10)));
     const chipType     = (tree.fn === 'random_number' || tree.fn === 'period_h') ? 'num' : 'str';
     const combos       = buildCombos(customMacros, macroValues);
+
+    // Update label for validator preview control
+    const valDaysCtrl = document.getElementById('valDaysControl');
+    if (valDaysCtrl) {
+        const lbl = valDaysCtrl.querySelector('label');
+        if (lbl) lbl.textContent = periodH ? 'Hours to preview:' : 'Days to preview:';
+        document.getElementById('valDaysToShow').max = periodH ? 168 : 30;
+    }
 
     let html = '';
 
     if (hasDtz) {
-        for (let d = 0; d < days; d++) {
-            const dateStr = getDateTzForDay(d);
-            const dayLbl  = d === 0 ? 'Today' : `Day +${d}`;
+        for (let i = 0; i < previewN; i++) {
+            const hOff    = periodH ? i : i * 24;
+            const dateStr = periodH ? formatHourDate(i) : getDateTzForHour(hOff);
+            const lbl     = periodH ? formatHourLabel(i) : (i === 0 ? 'Today' : `Day +${i}`);
             if (combos.length > 1) {
                 const rows = combos.map(combo => {
-                    const res   = execFormulaTree(tree, d, combo, 'mixed');
+                    const res   = execFormulaTree(tree, hOff, combo, 'mixed');
                     const label = Object.entries(combo).map(([k, v]) => `${k}=${v}`).join(', ');
                     return `<div class="matrix-row">
                         <span class="matrix-label">${escHtml(label)}</span>
@@ -2100,13 +2165,13 @@ function validateAndPreview() {
                     </div>`;
                 }).join('');
                 html += `<div class="day-card"><div class="day-card-header">
-                    <span class="day-label">${dayLbl}</span>
+                    <span class="day-label">${lbl}</span>
                     <span class="day-date">${dateStr}</span>
                 </div><div class="matrix-rows">${rows}</div></div>`;
             } else {
-                const res = execFormulaTree(tree, d, combos[0] || {}, 'mixed');
+                const res = execFormulaTree(tree, hOff, combos[0] || {}, 'mixed');
                 html += `<div class="day-card"><div class="day-card-header">
-                    <span class="day-label">${dayLbl}</span>
+                    <span class="day-label">${lbl}</span>
                     <span class="day-date">${dateStr}</span>
                     ${cardTag(res.cardinality, '')}
                 </div><div class="values-grid">${res.values.map(v => chipHtml(v, chipType)).join('')}</div></div>`;

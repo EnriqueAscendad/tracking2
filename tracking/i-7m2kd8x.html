@@ -788,6 +788,10 @@
                         placeholder="🔍 Search parameters by name or value..."
                         oninput="filterUrlParams()"
                     >
+                    <label style="display: inline-flex; align-items: center; gap: 6px; margin-top: -8px; margin-bottom: 8px; font-size: 13px; color: var(--text-color); cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="showEmptyParams" onchange="filterUrlParams()" style="cursor: pointer;">
+                        Show only empty parameters
+                    </label>
                     <div id="urlParamsContainer">
                         <div class="empty-state">Enter a tracking URL above to see its parameters here.</div>
                     </div>
@@ -1245,7 +1249,7 @@
                         const eq = pair.indexOf('=');
                         const key = eq === -1 ? decodeURIComponent(pair) : decodeURIComponent(pair.slice(0, eq));
                         const val = eq === -1 ? '' : decodeURIComponent(pair.slice(eq + 1).replace(/\+/g, ' '));
-                        if (key) params[key] = val;
+                        if (key && key !== 'search') params[key] = val; // Exclude "search" parameter used for auto-search
                     });
                 }
             } catch (e) { /* ignore malformed */ }
@@ -1289,11 +1293,14 @@
             }
 
             const term = document.getElementById('urlParamSearch').value.toLowerCase().trim();
-            const filtered = term
-                ? keys.filter(k =>
+            const showEmptyOnly = document.getElementById('showEmptyParams').checked;
+            const filtered = keys.filter(k => {
+                const matchesSearch = !term ||
                     k.toLowerCase().includes(term) ||
-                    String(_cachedParams[k]).toLowerCase().includes(term))
-                : keys;
+                    String(_cachedParams[k]).toLowerCase().includes(term);
+                const matchesEmpty = !showEmptyOnly || _cachedParams[k] === '';
+                return matchesSearch && matchesEmpty;
+            });
 
             if (filtered.length === 0) {
                 container.innerHTML = '<div class="empty-state">No parameters match your search.</div>';
@@ -1342,7 +1349,8 @@
             // Collect remaining params (excluding offer/publisher keys already shown)
             const knownKeys = new Set([
                 'offer_id','offer','o',
-                'publisher_id','pub_id','aff_id','p'
+                'publisher_id','pub_id','aff_id','p',
+                'search'
             ]);
             const extra = [];
             try {

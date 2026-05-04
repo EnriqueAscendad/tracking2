@@ -1024,13 +1024,17 @@
             <div class="section">
                 <div class="section-title">🔖 Query Parameters (<span id="paramCount">0</span>)</div>
                 <div class="search-container">
-                    <input 
-                        type="text" 
-                        id="paramSearch" 
-                        class="search-input" 
+                    <input
+                        type="text"
+                        id="paramSearch"
+                        class="search-input"
                         placeholder="🔍 Search parameters by name or value..."
                         onkeyup="filterParameters()"
                     >
+                    <label style="display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 13px; color: var(--text-color); cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="showEmptyParams" onchange="filterParameters()" style="cursor: pointer;">
+                        Show only empty parameters
+                    </label>
                 </div>
                 <div id="paramsContainer"></div>
             </div>
@@ -1341,21 +1345,26 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             '</div>';
         }
 
-        // Filter parameters based on search input
+        // Filter parameters based on search input and empty checkbox
         function filterParameters() {
             const searchTerm = document.getElementById('paramSearch').value.toLowerCase();
-            
+            const showEmptyOnly = document.getElementById('showEmptyParams').checked;
+
             if (!window.allRegularParams) return;
 
-            if (searchTerm === '') {
+            if (searchTerm === '' && !showEmptyOnly) {
                 renderRegularParams(window.allRegularParams);
                 return;
             }
 
             const filtered = {};
             Object.entries(window.allRegularParams).forEach(([key, value]) => {
-                if (key.toLowerCase().includes(searchTerm) || 
-                    value.toLowerCase().includes(searchTerm)) {
+                const matchesSearch = searchTerm === '' ||
+                    key.toLowerCase().includes(searchTerm) ||
+                    value.toLowerCase().includes(searchTerm);
+                const matchesEmpty = !showEmptyOnly || value === '';
+
+                if (matchesSearch && matchesEmpty) {
                     filtered[key] = value;
                 }
             });

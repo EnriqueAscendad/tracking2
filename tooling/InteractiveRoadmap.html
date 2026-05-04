@@ -15,7 +15,7 @@
   --int:#e07420; --int-bg:rgba(224,116,32,0.11); --int-border:rgba(224,116,32,0.38);
   --tbd-border:rgba(120,120,120,0.28);
   --danger:#dc2626; --warn:#d97706; --ok:#059669;
-  --W:52px; --LABEL:226px; --TEAM:68px; --ROW:34px;
+  --W:56px; --LABEL:226px; --TEAM:68px; --ROW:34px;
   transition: background .2s, color .2s;
 }
 
@@ -82,7 +82,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .tab.active{color:var(--text);border-bottom-color:var(--dev)}
 .pane{display:none;flex:1;overflow:hidden}
 .pane.active{display:flex;flex-direction:column}
-.gantt-thead{flex-shrink:0;display:flex;height:40px;background:var(--bg3);border-bottom:1px solid var(--border2)}
+.gantt-thead{flex-shrink:0;display:flex;height:48px;background:var(--bg3);border-bottom:1px solid var(--border2)}
 .gantt-thead-left{flex-shrink:0;width:calc(var(--LABEL) + var(--TEAM));border-right:1px solid var(--border);display:flex;align-items:center;padding:0 16px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace}
 .week-head{flex-shrink:0;width:var(--W);display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1px solid var(--border);cursor:pointer}
 .week-head:hover{background:var(--bg4)}
@@ -149,6 +149,16 @@ html.light .mig-req{background:rgba(185,28,28,.1);color:#b91c1c}
 .bar-ms{position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none}
 .resize-handle{position:absolute;right:0;top:0;width:6px;height:100%;cursor:ew-resize;z-index:5;border-radius:0 4px 4px 0}
 .resize-handle:hover,.resize-handle.active{background:rgba(128,128,128,0.3)}
+.resize-handle-left{position:absolute;left:0;top:0;width:6px;height:100%;cursor:ew-resize;z-index:5;border-radius:4px 0 0 4px}
+.resize-handle-left:hover,.resize-handle-left.active{background:rgba(128,128,128,0.3)}
+.bar.dragging-bar{cursor:grabbing;opacity:.7;z-index:10}
+.wc .day-line{position:absolute;top:0;bottom:0;width:1px;background:var(--border);pointer-events:none}
+.wc{border-right:1.5px solid var(--border2)!important}
+.week-head{border-right:1.5px solid var(--border2)!important}
+.wh-days{display:flex;width:100%;padding:0}
+.wh-days span{font-size:7px;color:var(--muted);font-family:'DM Mono',monospace;width:calc(var(--W)/5);text-align:center;line-height:1;writing-mode:vertical-lr;text-orientation:mixed;display:inline-flex;align-items:center;justify-content:center;padding:1px 0}
+.wh-days span.day-today{color:var(--dev);font-weight:700}
+.week-head{height:auto;min-height:48px;padding:3px 0 2px}
 .ms-overall{margin-bottom:20px;padding:16px 20px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)}
 .ms-overall-label{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px}
 .ms-overall-bar{height:10px;background:var(--bg4);border-radius:5px;overflow:hidden}
@@ -238,8 +248,10 @@ select option{background:var(--bg3)}
       Add Section
     </button>
     <div class="sep"></div>
-    <button class="tbtn" onclick="shiftAll(-1)">← −1w</button>
-    <button class="tbtn" onclick="shiftAll(1)">+1w →</button>
+    <button class="tbtn" onclick="shiftAll(-1)">← −1d</button>
+    <button class="tbtn" onclick="shiftAll(1)">+1d →</button>
+    <button class="tbtn" onclick="shiftAll(-7)">← −1w</button>
+    <button class="tbtn" onclick="shiftAll(7)">+1w →</button>
     <button class="tbtn" onclick="addWeek(-2)">− weeks</button>
     <button class="tbtn" onclick="addWeek(2)">+ weeks</button>
     <div class="sep"></div>
@@ -323,12 +335,12 @@ select option{background:var(--bg3)}
       </div>
       <div class="form-row-3">
         <div class="form-group">
-          <label class="form-label">Start week</label>
-          <input class="form-input" id="f-start" type="number" min="1" max="30" value="1">
+          <label class="form-label">Start date</label>
+          <input class="form-input" id="f-start" type="date">
         </div>
         <div class="form-group">
-          <label class="form-label">Duration (weeks)</label>
-          <input class="form-input" id="f-dur" type="number" min="1" max="20" value="4">
+          <label class="form-label">Duration (days)</label>
+          <input class="form-input" id="f-dur" type="number" min="1" max="200" value="20">
         </div>
         <div class="form-group">
           <label class="form-label">Style</label>
@@ -344,8 +356,8 @@ select option{background:var(--bg3)}
           <input class="form-input" id="f-rel" placeholder="e.g. 14 May">
         </div>
         <div class="form-group">
-          <label class="form-label">Milestone week</label>
-          <input class="form-input" id="f-ms" type="number" min="0" placeholder="(week number)">
+          <label class="form-label">Milestone date</label>
+          <input class="form-input" id="f-ms" type="date">
         </div>
       </div>
       <div class="form-row">
@@ -508,38 +520,100 @@ select option{background:var(--bg3)}
 let START = new Date('2026-04-06');
 let WEEKS = 16;
 
-// Auto-realign was removed — tasks are stored as week-offsets from START,
-// so silently shifting START on load corrupts every task's milestone date.
-// Users can explicitly click ⏱ Realign instead; that function now snaps
-// START to this week's Monday AND keeps task offsets consistent with the
-// original plan dates stored in M.
+// Day-level granularity: s/dur are in BUSINESS days (Mon-Fri), not weeks
+const BIZ_DAYS = 5;       // business days per week
+const W_PX = 56;          // pixels per week column
+const D_PX = W_PX / BIZ_DAYS;  // 11.2px per business day
+const TOTAL_DAYS = () => WEEKS * BIZ_DAYS;
 
+// ── Business-day ↔ calendar-date conversions ──
+// bizDay 1 = START (Monday), 2 = Tue, ..., 5 = Fri, 6 = next Mon, etc.
+function bizDayToCalOffset(d){
+  const wk = Math.floor((d - 1) / BIZ_DAYS);
+  const dow = (d - 1) % BIZ_DAYS; // 0=Mon..4=Fri
+  return wk * 7 + dow;
+}
+function dayToDateObj(d){
+  const dt = new Date(START);
+  dt.setDate(dt.getDate() + bizDayToCalOffset(d));
+  return dt;
+}
+function dateFromDay(d){
+  return dayToDateObj(d).toISOString().slice(0, 10);
+}
+function dayFromDate(iso){
+  const dt = new Date(iso);
+  const cal = Math.round((dt - START) / 864e5);
+  const wk = Math.floor(cal / 7);
+  let dow = cal % 7; // 0=Mon..6=Sun
+  if(dow < 0) dow += 7;
+  if(dow >= BIZ_DAYS) dow = BIZ_DAYS - 1; // snap weekends to Friday
+  return Math.max(1, wk * BIZ_DAYS + dow + 1);
+}
+function formatDay(d){ const dt=dayToDateObj(d); return `${dt.getDate()}/${dt.getMonth()+1}`; }
+function formatDayFull(d){ const dt=dayToDateObj(d); const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return `${dt.getDate()} ${m[dt.getMonth()]}`; }
+function dayToPx(d){ return (d - 1) * D_PX; }
+function daySpanPx(dur){ return dur * D_PX; }
+function pxToDay(px){ return Math.max(1, Math.round(px / D_PX) + 1); }
 
+// ── Migration helpers ──
+// Old week-based → business days
+function migrateWeeksToDays(data){
+  data.forEach(t => {
+    if(t.sec) return;
+    t.s = (t.s - 1) * BIZ_DAYS + 1;
+    t.dur = t.dur * BIZ_DAYS;
+    if(t.ms) t.ms = (t.ms - 1) * BIZ_DAYS + 1;
+  });
+}
+// Old 7-day calendar → business days
+function migrateCalToBiz(data){
+  data.forEach(t => {
+    if(t.sec) return;
+    const calS = t.s - 1; // 0-based calendar offset
+    const wkS = Math.floor(calS / 7);
+    let dowS = calS % 7;
+    if(dowS >= BIZ_DAYS) dowS = BIZ_DAYS - 1;
+    t.s = Math.max(1, wkS * BIZ_DAYS + dowS + 1);
+    t.dur = Math.max(1, Math.round(t.dur * BIZ_DAYS / 7));
+    if(t.ms){
+      const calM = t.ms - 1;
+      const wkM = Math.floor(calM / 7);
+      let dowM = calM % 7;
+      if(dowM >= BIZ_DAYS) dowM = BIZ_DAYS - 1;
+      t.ms = Math.max(1, wkM * BIZ_DAYS + dowM + 1);
+    }
+  });
+}
+
+// Legacy week helpers (still used for header columns)
 function wk(ds){ const d=new Date(ds); return Math.max(1,Math.round((d-START)/(7*864e5))+1); }
 function wkDate(w){ const d=new Date(START); d.setDate(d.getDate()+(w-1)*7); return `${d.getDate()}/${d.getMonth()+1}`; }
-function wkMonth(w){ const d=new Date(START); d.setDate(d.getDate()+(w-1)*7); return ['jan','feb','mar','apr','may','jun','jul','aug'][d.getMonth()]; }
-function wkMonthFull(w){ const d=new Date(START); d.setDate(d.getDate()+(w-1)*7); return ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG'][d.getMonth()]; }
+function wkMonth(w){ const d=new Date(START); d.setDate(d.getDate()+(w-1)*7); return ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'][d.getMonth()]; }
+function wkMonthFull(w){ const d=new Date(START); d.setDate(d.getDate()+(w-1)*7); return ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()]; }
 
-// Milestone week numbers — kept as a var so they auto-update when START shifts
-let M = { apr23:wk('2026-04-23'), apr27:wk('2026-04-27'), apr30:wk('2026-04-30'), may1:wk('2026-05-01'), may14:wk('2026-05-14'), jun4:wk('2026-06-04'), jun14:wk('2026-06-14'), jun25:wk('2026-06-25') };
+// Milestone day numbers
+let M = {};
 function recomputeM(){
-  M.apr23 = wk('2026-04-23'); M.apr27 = wk('2026-04-27'); M.apr30 = wk('2026-04-30');
-  M.may1  = wk('2026-05-01'); M.may14 = wk('2026-05-14');
-  M.jun4  = wk('2026-06-04'); M.jun14 = wk('2026-06-14'); M.jun25 = wk('2026-06-25');
+  ['2026-04-23','2026-04-27','2026-04-30','2026-05-01','2026-05-14','2026-06-04','2026-06-14','2026-06-25'].forEach(ds => {
+    const key = ds.replace(/-/g,'').slice(4);
+    M[key] = dayFromDate(ds);
+  });
 }
+recomputeM();
 
-// Dynamically compute the current week from today's date
 function getTodayWk(){
   const today = new Date();
-  const diffMs = today - START;
-  const wk = Math.floor(diffMs / (7*86400000)) + 1;
-  return wk;
+  return Math.floor((today - START) / (7*86400000)) + 1;
+}
+function getTodayDay(){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return dayFromDate(today.toISOString().slice(0,10));
 }
 let TODAY_WK = getTodayWk();
+let TODAY_DAY = getTodayDay();
 
-// Realign the START date so the view is centered on "now".
-// Because tasks are stored as week-offsets, shifting START also needs to
-// shift every task's s/ms by the same delta — otherwise milestones drift.
 function realignToToday(){
   const today = new Date();
   const dow = today.getDay();
@@ -548,20 +622,21 @@ function realignToToday(){
   newStart.setDate(today.getDate() + offsetToMon);
   newStart.setHours(0,0,0,0);
 
-  const deltaWeeks = Math.round((newStart - START) / (7*86400000));
-  if(deltaWeeks === 0){ toast('Already aligned to today'); return; }
+  const deltaCalDays = Math.round((newStart - START) / 864e5);
+  if(deltaCalDays === 0){ toast('Already aligned to today'); return; }
+  const deltaBizDays = Math.round(deltaCalDays / 7) * BIZ_DAYS;
 
-  // Shift every task's s and ms by -deltaWeeks so calendar dates stay put
   DATA.forEach(t => {
     if(t.sec) return;
-    t.s = t.s - deltaWeeks;
-    if(t.ms) t.ms = t.ms - deltaWeeks;
+    t.s = t.s - deltaBizDays;
+    if(t.ms) t.ms = t.ms - deltaBizDays;
   });
   START = newStart;
   recomputeM();
   TODAY_WK = getTodayWk();
+  TODAY_DAY = getTodayDay();
   renderGantt();
-  toast(`Roadmap realigned — shifted by ${deltaWeeks} week${Math.abs(deltaWeeks)!==1?'s':''}`);
+  toast(`Roadmap realigned — shifted by ${deltaDays} day${Math.abs(deltaDays)!==1?'s':''}`);
 }
 
 // Each item: {sec} for section header, or task object
@@ -588,34 +663,44 @@ function statusDot(s){
 
 function renderGantt(){
   document.getElementById('weeksLabel').textContent = WEEKS + ' weeks';
+  TODAY_WK = getTodayWk();
+  TODAY_DAY = getTodayDay();
   const ti = document.getElementById('todayIndicator');
   if(ti){
     const today = new Date();
     const todayStr = today.getDate() + '/' + (today.getMonth()+1);
     if(TODAY_WK >= 1 && TODAY_WK <= WEEKS){
-      ti.textContent = `● Today: W${TODAY_WK} (${todayStr})`;
+      ti.textContent = `● Today: W${TODAY_WK} · ${todayStr} (day ${TODAY_DAY})`;
     } else {
-      ti.textContent = `● Today: ${todayStr} — outside range (W${TODAY_WK})`;
+      ti.textContent = `● Today: ${todayStr} — outside range`;
     }
   }
-  // Header weeks
+  // Header weeks with day sub-labels
   const hw = document.getElementById('headerWeeks');
   hw.innerHTML='';
-  let lastMonth='';
   for(let w=1;w<=WEEKS;w++){
-    const month=wkMonthFull(w);
     const mc='m-'+wkMonth(w);
     const isToday=(w===TODAY_WK);
     const div=document.createElement('div');
     div.className='week-head'+(isToday?' today':'');
     div.style.flexShrink='0';
     div.style.width='var(--W)';
-    div.innerHTML=`<span class="wh-num ${mc}">W${w}</span><span class="wh-date">${wkDate(w)}</span>`;
+    // Business day sub-labels (Mon-Fri)
+    let dayHtml='';
+    for(let d=0;d<BIZ_DAYS;d++){
+      const dayN = (w-1)*BIZ_DAYS + d + 1;
+      const dt = dayToDateObj(dayN);
+      const dn = dt.getDate();
+      const isTodayDay = (dayN === TODAY_DAY);
+      dayHtml += `<span${isTodayDay?' class="day-today"':''}>${dn}</span>`;
+    }
+    div.innerHTML=`<span class="wh-num ${mc}">W${w}</span><div class="wh-days">${dayHtml}</div>`;
     hw.appendChild(div);
   }
   // Body
   const body=document.getElementById('ganttBody');
   body.innerHTML='';
+  const maxDay = TOTAL_DAYS();
   DATA.forEach((item,idx)=>{
     if(item.sec){
       const row=document.createElement('div');
@@ -628,8 +713,7 @@ function renderGantt(){
     row.className='task-row';
     row.dataset.id=item.id;
     row.draggable=true;
-    row.className='task-row';
-    // drag events
+    // row drag-reorder events
     row.addEventListener('dragstart',e=>{dragSrcId=item.id;row.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
     row.addEventListener('dragend',()=>{row.classList.remove('dragging');document.querySelectorAll('.drag-over').forEach(r=>r.classList.remove('drag-over'));});
     row.addEventListener('dragover',e=>{e.preventDefault();row.classList.add('drag-over');});
@@ -640,30 +724,39 @@ function renderGantt(){
     left.className='t-left';
     left.innerHTML=`<div class='t-label-wrap'><span class='dh'>⋮⋮</span>${statusDot(item.status||'todo')}<span class='t-label' title='${item.l}' onclick="openEditTask('${item.id}')">${item.l}</span>${item.migRequired?'<span class="mig-req" title="Required for migration">mig</span>':''}</div><div class='t-team'><span class='badge badge-${item.team}'>${item.team}</span></div>`;
     row.appendChild(left);
-    
-    
-    // right: weeks + bar
+
+    // right: week cells + bar at day precision
     const right=document.createElement('div');
     right.className='t-weeks';right.style.position='relative';
-    // week cells background
     for(let w=1;w<=WEEKS;w++){
       const cell=document.createElement('div');
       cell.className='wc'+(w===TODAY_WK?' today-col':'');
+      // Individual day gridlines at exact pixel positions
+      for(let d=1;d<BIZ_DAYS;d++){
+        const ln=document.createElement('div');
+        ln.className='day-line';
+        ln.style.left=(d*D_PX)+'px';
+        cell.appendChild(ln);
+      }
       right.appendChild(cell);
     }
-    // bar overlay
-    const s=Math.max(1,Math.min(item.s,WEEKS));
-    const e=Math.min(s+item.dur-1,WEEKS);
-    if(s<=WEEKS){
-      const W=52; // px
+    // bar overlay at day precision
+    const sDay=Math.max(1, item.s);
+    const eDay=Math.min(sDay + item.dur - 1, maxDay);
+    if(sDay <= maxDay && eDay >= 1){
       const bar=document.createElement('div');
       bar.className='bar '+barCls(item);
       bar.dataset.taskId=item.id;
-      bar.style.left=((s-1)*W+2)+'px';
-      bar.style.width=((e-s+1)*W-4)+'px';
+      const barLeft = dayToPx(sDay) + 1;
+      const barWidth = Math.max(D_PX - 2, daySpanPx(eDay - sDay + 1) - 2);
+      bar.style.left=barLeft+'px';
+      bar.style.width=barWidth+'px';
       bar.style.position='absolute';
-      bar.textContent=item.dur>=3?(item.rel||''):'';
-      if(item.ms&&item.ms>=s&&item.ms<=e){
+      // Show label if bar is wide enough
+      const startStr = formatDayFull(sDay);
+      const endStr = formatDayFull(eDay);
+      bar.textContent = barWidth > 50 ? (item.rel || `${startStr}–${endStr}`) : '';
+      if(item.ms && item.ms >= sDay && item.ms <= eDay){
         const ms=document.createElement('span');
         ms.className='bar-ms';ms.textContent='◆';
         bar.appendChild(ms);
@@ -673,14 +766,29 @@ function renderGantt(){
       const jiraE=(item.jira||'').replace(/'/g,"&#39;");
       const trafficE=(item.traffic||'').replace(/'/g,"&#39;");
       const srcE=(item.offerSource||'').replace(/'/g,"&#39;");
+      const ttDate = `${startStr} → ${endStr} (${item.dur}d)`;
       bar.addEventListener('mouseenter',ev=>{
-        showTT(ev,item.l,item.rel||'',noteE,depsE,jiraE,trafficE,srcE);
+        showTT(ev,item.l,ttDate,noteE,depsE,jiraE,trafficE,srcE);
         highlightBarDeps(item.id);
       });
       bar.addEventListener('mouseleave',()=>{hideTT();clearBarHighlights();});
       bar.addEventListener('mousemove',moveTT);
-      bar.addEventListener('click',()=>openEditTask(item.id));
-      // resize handle
+      // Bar drag to move — distinguish from click
+      let barDragStarted = false;
+      bar.addEventListener('mousedown',ev=>{
+        if(ev.target.classList.contains('resize-handle')||ev.target.classList.contains('resize-handle-left')) return;
+        barDragStarted = false;
+        startBarDrag(ev, item, ()=>{ barDragStarted = true; });
+      });
+      bar.addEventListener('click',ev=>{
+        if(!barDragStarted) openEditTask(item.id);
+      });
+      // Left resize handle
+      const lh=document.createElement('div');
+      lh.className='resize-handle-left';
+      lh.addEventListener('mousedown',ev=>{ev.stopPropagation();startResizeLeft(ev,item);});
+      bar.appendChild(lh);
+      // Right resize handle
       const rh=document.createElement('div');
       rh.className='resize-handle';
       rh.addEventListener('mousedown',ev=>{ev.stopPropagation();startResize(ev,item);});
@@ -691,9 +799,7 @@ function renderGantt(){
     body.appendChild(row);
   });
 
-  // Re-render dependency arrows + today line if applicable
   if(DEPS_VISIBLE){
-    // Defer so layout finishes
     requestAnimationFrame(renderDependencyArrows);
   }
   renderTodayLine();
@@ -704,12 +810,10 @@ function renderTodayLine(){
   if(!body) return;
   const old = document.getElementById('todayLine');
   if(old) old.remove();
-  if(TODAY_WK < 1 || TODAY_WK > WEEKS) return;
+  if(TODAY_DAY < 1 || TODAY_DAY > TOTAL_DAYS()) return;
 
-  // Find the pixel X of today's week (week cell width = 52px, plus label offset)
-  const W = 52;
-  const LABEL_PX = 226 + 68; // LABEL + TEAM widths
-  const x = LABEL_PX + (TODAY_WK - 0.5) * W - 1;
+  const LABEL_PX = 226 + 68;
+  const x = LABEL_PX + dayToPx(TODAY_DAY) + D_PX * 0.5;
   const line = document.createElement('div');
   line.id = 'todayLine';
   line.className = 'today-line';
@@ -718,25 +822,74 @@ function renderTodayLine(){
   body.appendChild(line);
 }
 
-// ── RESIZE ───────────────────────────────────────────────────
+// ── RESIZE (right edge) ─────────────────────────────────────
 function startResize(ev,task){
   ev.preventDefault();
-  const W=52;
   const startX=ev.clientX;
   const startDur=task.dur;
   const rh=ev.target;
   rh.classList.add('active');
   function onMove(e){
     const dx=e.clientX-startX;
-    const dw=Math.round(dx/W);
-    task.dur=Math.max(1,startDur+dw);
+    const dd=Math.round(dx/D_PX);
+    task.dur=Math.max(1,startDur+dd);
     renderGantt();
   }
   function onUp(){
     rh.classList.remove('active');
     document.removeEventListener('mousemove',onMove);
     document.removeEventListener('mouseup',onUp);
-    toast('Duration updated to '+task.dur+' week'+(task.dur>1?'s':''));
+    toast(`Duration: ${task.dur} day${task.dur>1?'s':''} (${formatDayFull(task.s)} → ${formatDayFull(task.s+task.dur-1)})`);
+  }
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+}
+
+// ── RESIZE (left edge — changes start, keeps end fixed) ─────
+function startResizeLeft(ev,task){
+  ev.preventDefault();
+  const startX=ev.clientX;
+  const origS=task.s;
+  const origEnd=task.s+task.dur; // exclusive end day
+  const lh=ev.target;
+  lh.classList.add('active');
+  function onMove(e){
+    const dx=e.clientX-startX;
+    const dd=Math.round(dx/D_PX);
+    const newS=Math.max(1,origS+dd);
+    const newDur=origEnd-newS;
+    if(newDur>=1){ task.s=newS; task.dur=newDur; renderGantt(); }
+  }
+  function onUp(){
+    lh.classList.remove('active');
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
+    toast(`Start: ${formatDayFull(task.s)}, ${task.dur}d`);
+  }
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+}
+
+// ── BAR DRAG (move entire bar) ──────────────────────────────
+function startBarDrag(ev,task,onDragStartCb){
+  ev.preventDefault();
+  const startX=ev.clientX;
+  const origS=task.s;
+  const origMs=task.ms;
+  let moved=false;
+  function onMove(e){
+    const dx=e.clientX-startX;
+    const dd=Math.round(dx/D_PX);
+    if(dd!==0 && !moved){ moved=true; if(onDragStartCb) onDragStartCb(); }
+    if(!moved) return;
+    task.s=Math.max(1,origS+dd);
+    if(origMs) task.ms=origMs+(task.s-origS);
+    renderGantt();
+  }
+  function onUp(){
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
+    if(moved) toast(`Moved to ${formatDayFull(task.s)} (${task.dur}d)`);
   }
   document.addEventListener('mousemove',onMove);
   document.addEventListener('mouseup',onUp);
@@ -759,7 +912,8 @@ function shiftAll(delta){
     if(!t.sec){ t.s=Math.max(1,t.s+delta); if(t.ms) t.ms=Math.max(1,t.ms+delta); }
   });
   renderGantt();
-  toast('All tasks shifted '+(delta>0?'+':'')+delta+' week'+(Math.abs(delta)>1?'s':''));
+  const unit = Math.abs(delta)>=7 ? `${Math.round(delta/7)} week${Math.abs(delta)>=14?'s':''}` : `${delta} day${Math.abs(delta)>1?'s':''}`;
+  toast('All tasks shifted '+(delta>0?'+':'')+unit);
 }
 function addWeek(delta){
   WEEKS=Math.max(8,Math.min(32,WEEKS+delta));
@@ -1075,8 +1229,8 @@ function openAddTask(){
   document.getElementById('f-traffic').value='ANY';
   document.getElementById('f-src').value='ANY';
   document.getElementById('f-milestone').value='';
-  document.getElementById('f-start').value='1';
-  document.getElementById('f-dur').value='4';
+  document.getElementById('f-start').value=dateFromDay(1);
+  document.getElementById('f-dur').value='20';
   document.getElementById('f-rel').value='';
   document.getElementById('f-ms').value='';
   document.getElementById('f-note').value='';
@@ -1099,10 +1253,10 @@ function openEditTask(id){
   document.getElementById('f-traffic').value=task.traffic||'ANY';
   document.getElementById('f-src').value=task.offerSource||'ANY';
   document.getElementById('f-milestone').value=task.milestone||'';
-  document.getElementById('f-start').value=task.s;
+  document.getElementById('f-start').value=dateFromDay(task.s);
   document.getElementById('f-dur').value=task.dur;
   document.getElementById('f-rel').value=task.rel||'';
-  document.getElementById('f-ms').value=task.ms||'';
+  document.getElementById('f-ms').value=task.ms ? dateFromDay(task.ms) : '';
   document.getElementById('f-note').value=task.note||'';
   document.getElementById('f-deps').value=(task.deps||[]).join(', ');
   document.getElementById('f-cls').value=task.cls||'';
@@ -1118,10 +1272,12 @@ function saveTask(){
   if(!label){alert('Task name is required.');return;}
   const team=document.getElementById('f-team').value;
   const section=document.getElementById('f-section').value;
-  const s=parseInt(document.getElementById('f-start').value)||1;
-  const dur=parseInt(document.getElementById('f-dur').value)||4;
+  const startVal=document.getElementById('f-start').value;
+  const s=startVal ? dayFromDate(startVal) : 1;
+  const dur=parseInt(document.getElementById('f-dur').value)||20;
   const rel=document.getElementById('f-rel').value.trim();
-  const ms=parseInt(document.getElementById('f-ms').value)||null;
+  const msVal=document.getElementById('f-ms').value;
+  const ms=msVal ? dayFromDate(msVal) : null;
   const note=document.getElementById('f-note').value.trim();
   const deps=document.getElementById('f-deps').value.split(',').map(x=>x.trim()).filter(Boolean);
   const cls=document.getElementById('f-cls').value;
@@ -1253,7 +1409,7 @@ let _pendingImportData = null;
 
 function openDataModal(){
   // Populate export panel
-  const payload = JSON.stringify({data: DATA, weeks: WEEKS}, null, 2);
+  const payload = JSON.stringify({data: DATA, weeks: WEEKS, dayMode: true, bizDays: true}, null, 2);
   const sizeKB = (new Blob([payload]).size / 1024).toFixed(1);
   const tasks = DATA.filter(d=>!d.sec).length;
   const sections = DATA.filter(d=>d.sec).length;
@@ -1280,7 +1436,7 @@ function switchDataTab(tab){
 }
 
 function exportJSON(){
-  const payload = JSON.stringify({data: DATA, weeks: WEEKS}, null, 2);
+  const payload = JSON.stringify({data: DATA, weeks: WEEKS, dayMode: true, bizDays: true}, null, 2);
   const blob = new Blob([payload], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1361,6 +1517,13 @@ function importJSON(){
   if(!_pendingImportData) return;
   DATA = _pendingImportData.data;
   if(_pendingImportData.weeks) WEEKS = _pendingImportData.weeks;
+  if(!_pendingImportData.dayMode){
+    console.log('[Import] Converting week-based data to business days');
+    migrateWeeksToDays(DATA);
+  } else if(!_pendingImportData.bizDays){
+    console.log('[Import] Converting 7-day calendar to business days');
+    migrateCalToBiz(DATA);
+  }
   closeModal('dataModal');
   renderGantt();
   renderMilestones();
@@ -1388,7 +1551,7 @@ function toggleTheme(){
 const SAVE_KEY = 'roadmap_v8';
 function saveData(){
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify({data: DATA, weeks: WEEKS}));
+    localStorage.setItem(SAVE_KEY, JSON.stringify({data: DATA, weeks: WEEKS, dayMode: true, bizDays: true}));
     const el = document.getElementById('saveIndicator');
     if(el){ el.innerHTML = '<span style="color:var(--ok)">✓ Saved</span>'; setTimeout(()=>el.textContent='',2500); }
     toast('Changes saved');
@@ -1402,9 +1565,14 @@ function loadData(){
     if(parsed.data && Array.isArray(parsed.data) && parsed.data.length > 0){
       DATA = parsed.data;
       if(parsed.weeks) WEEKS = parsed.weeks;
-      // Log sample task to verify data quality
-      const sample = DATA.find(t=>t.id==='d-stats-aftrad');
-      console.log('[Init] Loaded from localStorage. Tasks:', DATA.filter(t=>!t.sec).length, 'Sample d-stats-aftrad:', sample ? {rel:sample.rel, migRequired:sample.migRequired} : 'NOT FOUND');
+      if(!parsed.dayMode){
+        console.log('[Migration] Converting week-based data to business days');
+        migrateWeeksToDays(DATA);
+      } else if(!parsed.bizDays){
+        console.log('[Migration] Converting 7-day calendar to business days');
+        migrateCalToBiz(DATA);
+      }
+      console.log('[Init] Loaded from localStorage. Tasks:', DATA.filter(t=>!t.sec).length);
       return true;
     }
   } catch(e){ console.warn('Could not load saved data:', e); }

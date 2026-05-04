@@ -1234,6 +1234,7 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             const regularParams = {};
             
             Object.entries(params).forEach(([key, value]) => {
+                if (key === 'search') return; // Exclude the "search" parameter used for auto-search
                 if (priorityKeys.includes(key)) {
                     priorityParams[key] = value;
                 } else {

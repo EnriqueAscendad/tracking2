@@ -39,6 +39,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             min-height: 100vh; padding: 20px; transition: background 0.3s ease;
+            color: var(--text-color);
         }
         .container {
             max-width: 960px; margin: 0 auto;
@@ -260,15 +261,28 @@
         body.dark-mode .param-hint { color: #a5b4fc; }
         .status-badge {
             font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
-            text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;
+            letter-spacing: 0.3px; white-space: nowrap;
         }
         .badge-req-ok { background: rgba(34,197,94,0.12);  color: #16a34a; border: 1px solid rgba(34,197,94,0.3); }
         .badge-rec-ok { background: rgba(245,158,11,0.10); color: #b45309; border: 1px solid rgba(245,158,11,0.25); }
         .badge-extra  { background: var(--section-bg); color: var(--text-color); border: 1px solid var(--border-color); opacity: 0.7; }
+        .badge-custom { background: rgba(99,102,241,0.10); color: #4f46e5; border: 1px solid rgba(99,102,241,0.3); }
+        body.dark-mode .badge-custom { color: #a5b4fc; background: rgba(165,180,252,0.08); border-color: rgba(165,180,252,0.25); }
+        .param-filters { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+        .param-filter-btn {
+            font-size: 9px; font-weight: 600; padding: 3px 8px; border-radius: 4px;
+            border: 1px solid var(--border-color); background: var(--section-bg);
+            color: var(--text-color); cursor: pointer; opacity: 0.6; transition: all 0.15s;
+        }
+        .param-filter-btn:hover { opacity: 0.9; }
+        .param-filter-btn.active { opacity: 1; border-color: #667eea; background: rgba(102,126,234,0.1); color: #667eea; }
+        body.dark-mode .param-filter-btn.active { border-color: #a5b4fc; color: #a5b4fc; background: rgba(165,180,252,0.1); }
         .badge-typo   { background: rgba(239,68,68,0.10); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); }
         .badge-wmacro { background: rgba(239,68,68,0.10); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); }
         body.dark-mode .badge-req-ok { color: #4ade80; background: rgba(74,222,128,0.08); }
         body.dark-mode .badge-rec-ok { color: #fbbf24; background: rgba(251,191,36,0.08); }
+        .badge-static { background: rgba(245,158,11,0.10); color: #b45309; border: 1px solid rgba(245,158,11,0.25); }
+        body.dark-mode .badge-static { color: #fbbf24; background: rgba(251,191,36,0.08); border-color: rgba(251,191,36,0.25); }
         body.dark-mode .badge-typo, body.dark-mode .badge-wmacro { color: #f87171; background: rgba(248,113,113,0.08); }
         .issues-cell { display: flex; flex-direction: column; gap: 3px; }
         .copy-val-btn {
@@ -472,6 +486,7 @@
     <div style="display:flex;border-bottom:2px solid var(--border-color);background:var(--section-bg);padding:0 20px;flex-wrap:wrap;">
         <button class="top-tab active" id="tab-validator" onclick="switchTab('validator')">🔗 URL Validator</button>
         <button class="top-tab" id="tab-chimera"   onclick="switchTab('chimera')">🔄 Chimera Check</button>
+        <button class="top-tab" id="tab-translator" onclick="switchTab('translator')">🔀 Chimera → Aftrad</button>
         <button class="top-tab" id="tab-compare"   onclick="switchTab('compare')">⚖️ URL Compare</button>
     </div>
 
@@ -638,6 +653,42 @@
         </div>
     </div>
 
+    <!-- ═══════════════════════════════════════ CHIMERA → AFTRAD TRANSLATOR ═════════════════════ -->
+    <div class="content" id="pane-translator" style="display:none">
+        <div class="section">
+            <div class="section-title">Chimera → Aftrad Translator</div>
+            <p style="font-size:11px;color:var(--text-color);opacity:0.65;margin-bottom:12px;line-height:1.6;">
+                Paste a <strong>Chimera tracking URL</strong> and translate its macros to <strong>Aftrad-compliant</strong> format. Chimera macros like <code style="font-family:monospace;background:var(--section-bg);padding:1px 4px;border-radius:3px">{tid}</code>, <code style="font-family:monospace;background:var(--section-bg);padding:1px 4px;border-radius:3px">{ip}</code>, <code style="font-family:monospace;background:var(--section-bg);padding:1px 4px;border-radius:3px">{ua}</code> will be replaced with their Aftrad equivalents.
+            </p>
+            <div class="form-group">
+                <label>Chimera Tracking URL</label>
+                <textarea class="form-input" id="translatorInput" rows="5"
+                    placeholder="Paste your Chimera URL here…"
+                    oninput="onTranslatorInput()"></textarea>
+            </div>
+            <div class="examples-row" style="margin-bottom:4px">
+                <span class="ex-chip" onclick="loadTranslatorExample('af')">AppsFlyer (Chimera)</span>
+                <span class="ex-chip" onclick="loadTranslatorExample('singular')">Singular (Chimera)</span>
+            </div>
+            <div class="btn-row">
+                <button class="calc-btn" onclick="translateChimera()">Translate</button>
+                <button class="calc-btn secondary" onclick="clearTranslator()">Clear</button>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-title">Translated URL</div>
+            <div id="translatorOutput">
+                <div class="result-placeholder"><div class="icon">🔀</div><p>Paste a Chimera URL above and click Translate</p></div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-title">Translation Details</div>
+            <div id="translatorDetails">
+                <div class="result-placeholder"><div class="icon">📋</div><p>Parameter-by-parameter translation will appear here</p></div>
+            </div>
+        </div>
+    </div>
+
     <!-- ═══════════════════════════════════════ URL COMPARE ════════════════════════════════════════ -->
     <div class="content" id="pane-compare" style="display:none">
         <div class="section">
@@ -688,7 +739,7 @@ var MMP = {
       required: [
         {key:'pid',     desc:'Media source / partner ID',        macro:'{pid}'},
         {key:'c',       desc:'Campaign name',                    macro:'{campaign}'},
-        {key:'clickid', desc:'Click ID for postback attribution', macro:'{clickid}'}
+        {key:'clickid', aliases:['click_id'], desc:'Click ID for postback attribution', macro:'{click_id}'}
       ],
       recommended: [
         {key:'af_siteid',          desc:'Publisher / site ID',          macro:'{af_siteid}'},
@@ -718,7 +769,7 @@ var MMP = {
       required: [
         {key:'pid',     desc:'Media source / partner ID',         macro:'{pid}'},
         {key:'c',       desc:'Campaign name',                     macro:'{campaign}'},
-        {key:'clickid', desc:'Click ID for postback attribution', macro:'{clickid}'}
+        {key:'clickid', aliases:['click_id'], desc:'Click ID for postback attribution', macro:'{click_id}'}
       ],
       recommended: [
         {key:'af_siteid',             desc:'Publisher / site ID',                    macro:'{af_siteid}'},
@@ -746,14 +797,19 @@ var MMP = {
       'deep_link_value','deep_link_sub1','deep_link_sub2','deep_link_sub3','deep_link_sub4','deep_link_sub5',
       'deep_link_sub6','deep_link_sub7','deep_link_sub8','deep_link_sub9','deep_link_sub10',
       'af_web_dp','af_ios_url','af_android_url','af_force_deeplink','af_r','is_retargeting',
-      'af_param_forwarding','af_sub_siteid'
+      'af_param_forwarding','af_sub_siteid',
+      'affiliate_click_id','source','offer','landing','search','hour','timestamp',
+      'publisher_id','creative','experiment_click'
     ],
     knownMacros: [
       'af_siteid','af_sub1','af_sub2','af_sub3','af_sub4','af_sub5','af_pid',
       'af_adset','af_ad','af_adset_id','af_ad_id','af_c_id','af_model',
       'af_os_version','af_ua','af_lang','af_ip','af_ipa','af_prt',
+      'af_device_model','af_sub_siteid',
       'click_id','clickid','c','campaign','country','date_tz','date',
-      'aggregate_id','cs1','cs2','cs3','publisher_id','site_id',
+      'aggregate_id','publisher_id','site_id','affiliate_id','affiliate_click_id',
+      'source','source_plain','sub_source','sub_source_plain',
+      'offer_id','request_timestamp','creative',
       'deep_link_value','deep_link_sub1','deep_link_sub2','deep_link_sub3',
       'fn:random_string','fn:random_number'
     ]
@@ -1135,8 +1191,8 @@ function resetConfig() {
 
 // ── EXAMPLES ────────────────────────────────────────────────────
 var EXAMPLES = {
-  af_click:     'https://app.appsflyer.com/com.example.app?pid=facebook_int&c=summer_sale_2024&clickid={clickid}&af_siteid={af_siteid}&af_adset=retargeting_eu&af_adset_id={af_adset_id}&af_ad=banner_300x250&af_ad_id={af_ad_id}&af_c_id={af_c_id}&advertising_id={advertising_id}&idfa={idfa}',
-  af_onelink:   'https://example.onelink.me/A1b2?pid=partner_int&c=summer_retarget&clickid={clickid}&af_siteid={af_siteid}&af_adset=retarget_eu&af_ad=banner_v2&deep_link_value=promo_page&af_dp=myapp%3A%2F%2Fpromo&af_web_dp=https%3A%2F%2Fexample.com%2Fpromo&af_ios_url=https%3A%2F%2Fapps.apple.com%2Fapp%2Fid123&af_android_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.example&is_retargeting=true&af_reengagement_window=30d&advertising_id={advertising_id}&idfa={idfa}',
+  af_click:     'https://app.appsflyer.com/com.example.app?pid=facebook_int&c=summer_sale_2024&clickid={click_id}&af_siteid={af_siteid}&af_adset=retargeting_eu&af_adset_id={af_adset_id}&af_ad=banner_300x250&af_ad_id={af_ad_id}&af_c_id={af_c_id}&advertising_id={advertising_id}&idfa={idfa}',
+  af_onelink:   'https://example.onelink.me/A1b2?pid=partner_int&c=summer_retarget&clickid={click_id}&af_siteid={af_siteid}&af_adset=retarget_eu&af_ad=banner_v2&deep_link_value=promo_page&af_dp=myapp%3A%2F%2Fpromo&af_web_dp=https%3A%2F%2Fexample.com%2Fpromo&af_ios_url=https%3A%2F%2Fapps.apple.com%2Fapp%2Fid123&af_android_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.example&is_retargeting=true&af_reengagement_window=30d&advertising_id={advertising_id}&idfa={idfa}',
   af_imp:       'https://impression.appsflyer.com/com.example.app?pid=facebook_int&c=summer_sale_2024&af_siteid={af_siteid}&af_adset=retargeting_eu&af_ad=banner_300x250&advertising_id={advertising_id}&idfa={idfa}',
   adj_click:    'https://app.adjust.com/abc1234?campaign=black_friday&adgroup=ios_users&creative=video_15s&label={click_id}&idfa={idfa}&gps_adid={gps_adid}',
   adj_imp:      'https://view.adjust.com/abc1234?campaign=black_friday&adgroup=ios_users&creative=video_15s&idfa={idfa}&gps_adid={gps_adid}',
@@ -1323,6 +1379,10 @@ function checkValueMacros(paramKey, rawValue, knownMacros, knownParams) {
     var macroName = m[1];
     // Skip complex expressions like fn:random_string(...)
     if (macroName.indexOf('(') >= 0 || macroName.indexOf(':') >= 0) continue;
+    // Only flag unknown macros when a profile is loaded (non-empty known lists)
+    if (knownMacros.length === 0 && knownParams.length === 0) continue;
+    // Recognize custom/cs/sub pattern macros (e.g. {custom1}, {cs4}, {af_sub3})
+    if (/^(custom|cs|af_sub)\d+$/.test(macroName)) continue;
     var inMacros  = knownMacros.indexOf(macroName) >= 0;
     var inParams  = knownParams.indexOf(macroName) >= 0;
     if (!inMacros && !inParams) {
@@ -1354,8 +1414,196 @@ function checkValueMacros(paramKey, rawValue, knownMacros, knownParams) {
     // Static value where a macro is expected for certain params
     var macroExpected = ['clickid','click_id','idfa','advertising_id','gps_adid','af_siteid','site_id','device_id'];
     if (macroExpected.indexOf(paramKey) >= 0 && macros.length === 0 && rawValue.length > 0 && !isPlaceholder(rawValue)) {
-      issues.push({type:'warn', msg:'Static value — "' + paramKey + '" usually contains a dynamic macro like {' + paramKey + '}'});
+      var suggestedMacro = paramKey === 'clickid' ? 'click_id' : paramKey;
+      issues.push({type:'warn', msg:'Static value — "' + paramKey + '" usually contains a dynamic macro like {' + suggestedMacro + '}'});
     }
+  }
+  return issues;
+}
+
+// ── FORMULA MACRO VALIDATOR (ported from mc-2k8fd9x.html) ────────
+function splitTopLevelParams(str) {
+  var params = [], depth = 0, start = 0;
+  for (var i = 0; i < str.length; i++) {
+    if (str[i] === '{') depth++;
+    else if (str[i] === '}') depth--;
+    else if (str[i] === ',' && depth === 0) {
+      params.push(str.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  params.push(str.slice(start).trim());
+  return params.filter(function(p){ return p.length > 0; });
+}
+
+function parseFormulaTree(str) {
+  str = (str || '').trim();
+  var m = str.match(/^\{fn:([a-z_]+)\(([\s\S]*)\)\}$/);
+  if (!m) return null;
+  var rawParams = m[2].length ? splitTopLevelParams(m[2]) : [];
+  return { fn: m[1], params: rawParams.map(parseFormulaParam) };
+}
+
+function parseFormulaParam(str) {
+  str = str.trim();
+  if (/^\{fn:/.test(str)) {
+    var tree = parseFormulaTree(str);
+    return tree ? { type:'formula', tree:tree } : { type:'unknown', raw:str };
+  }
+  if (/^\{[^}]+\}$/.test(str)) return { type:'macro', name:str.slice(1,-1).trim() };
+  var n = Number(str);
+  if (!isNaN(n) && str !== '') return { type:'number', value:n };
+  return { type:'literal', value:str };
+}
+
+var FORMULA_VALID_FNS = {
+  random_number:              { min:2, max:3 },
+  random_string:              { min:2, max:3 },
+  random_string_set:          { min:4, max:5 },
+  period_h:                   { min:1, max:1 },
+  random_periodic_string_set: { min:5, max:6 }
+};
+
+function formulaParamToStr(p) {
+  if (!p) return '?';
+  if (p.type === 'number')  return String(p.value);
+  if (p.type === 'macro')   return '{' + p.name + '}';
+  if (p.type === 'literal') return p.value;
+  if (p.type === 'formula') return '{fn:' + p.tree.fn + '(' + p.tree.params.map(formulaParamToStr).join(',') + ')}';
+  return p.raw || '?';
+}
+
+function validateFormulaTree(tree, depth) {
+  depth = depth || 0;
+  var errors = [];
+  if (!tree) { errors.push('Could not parse formula'); return errors; }
+  var spec = FORMULA_VALID_FNS[tree.fn];
+  if (!spec) { errors.push('Unknown function: ' + tree.fn); return errors; }
+  var pc = tree.params.length;
+  if (pc < spec.min || pc > spec.max) {
+    errors.push(tree.fn + ' expects ' + spec.min + '–' + spec.max + ' params, got ' + pc);
+    return errors;
+  }
+  // period_h: single numeric param > 0
+  if (tree.fn === 'period_h') {
+    var p0 = tree.params[0];
+    if (p0.type === 'formula') {
+      validateFormulaTree(p0.tree, depth+1).forEach(function(e){ errors.push('(hours) '+e); });
+    } else if (p0.type !== 'number') {
+      errors.push('period_h: hours must be a positive number');
+    } else if (p0.value <= 0) {
+      errors.push('period_h: hours must be > 0');
+    }
+    return errors;
+  }
+  // random_periodic_string_set(minLen, maxLen, valueSeed, minSize, maxSize[, period_in_hours])
+  if (tree.fn === 'random_periodic_string_set') {
+    for (var i = 0; i < 2; i++) {
+      if (tree.params[i].type !== 'number')
+        errors.push('Param ' + (i+1) + ' (' + (i===0?'minLen':'maxLen') + ') must be a number');
+    }
+    if (tree.params[0].type === 'number' && tree.params[1].type === 'number' && tree.params[0].value > tree.params[1].value)
+      errors.push('minLen (' + tree.params[0].value + ') must be ≤ maxLen (' + tree.params[1].value + ')');
+    var seed = tree.params[2];
+    if (seed.type === 'formula') {
+      if (seed.tree.fn !== 'random_number' && seed.tree.fn !== 'period_h')
+        errors.push('valueSeed formula must be random_number or period_h');
+      else validateFormulaTree(seed.tree, depth+1).forEach(function(e){ errors.push('(seed) '+e); });
+    }
+    var minSize = tree.params[3];
+    if (minSize.type === 'formula') {
+      if (minSize.tree.fn !== 'random_number') errors.push('minSize formula must be random_number');
+      else validateFormulaTree(minSize.tree, depth+1).forEach(function(e){ errors.push('(minSize) '+e); });
+    } else if (minSize.type !== 'number') {
+      errors.push('minSize must be a number or {fn:random_number(...)}');
+    }
+    var maxSize = tree.params[4];
+    if (maxSize.type !== 'number') errors.push('maxSize must be a number');
+    else if (minSize.type === 'number' && minSize.value > maxSize.value)
+      errors.push('minSize (' + minSize.value + ') must be ≤ maxSize (' + maxSize.value + ')');
+    if (pc === 6) {
+      var period = tree.params[5];
+      if (period.type === 'formula') validateFormulaTree(period.tree, depth+1).forEach(function(e){ errors.push('(period) '+e); });
+      else if (period.type !== 'number') errors.push('period_in_hours must be a positive number');
+      else if (period.value <= 0) errors.push('period_in_hours must be > 0');
+    }
+    return errors;
+  }
+  // random_number, random_string, random_string_set: params 0 & 1 must be numbers
+  for (var j = 0; j < 2; j++) {
+    if (tree.params[j].type !== 'number')
+      errors.push('Param ' + (j+1) + ' of ' + tree.fn + ' must be a number');
+  }
+  if (tree.params[0].type === 'number' && tree.params[1].type === 'number' && tree.params[0].value > tree.params[1].value)
+    errors.push('Min (' + tree.params[0].value + ') must be ≤ Max (' + tree.params[1].value + ')');
+  // seed param (index 2) for random_number / random_string
+  if (pc >= 3 && tree.fn !== 'random_string_set') {
+    var s2 = tree.params[2];
+    if (s2.type === 'formula') {
+      if (s2.tree.fn !== 'random_number' && s2.tree.fn !== 'period_h')
+        errors.push('Nested seed must be random_number or period_h');
+      else validateFormulaTree(s2.tree, depth+1).forEach(function(e){ errors.push('(seed) '+e); });
+    }
+  }
+  // random_string_set specifics
+  if (tree.fn === 'random_string_set') {
+    var s3 = tree.params[2];
+    if (s3.type === 'formula') {
+      if (s3.tree.fn !== 'random_number' && s3.tree.fn !== 'period_h')
+        errors.push('Nested seed must be random_number or period_h');
+      else validateFormulaTree(s3.tree, depth+1).forEach(function(e){ errors.push('(seed) '+e); });
+    }
+    var card = tree.params[3];
+    if (card.type === 'formula') {
+      if (card.tree.fn !== 'random_number') errors.push('Cardinality formula must be random_number');
+      else validateFormulaTree(card.tree, depth+1).forEach(function(e){ errors.push('(cardinality) '+e); });
+    } else if (card.type !== 'number') {
+      errors.push('Cardinality must be a number or {fn:random_number(...)}');
+    }
+    if (pc === 5) {
+      var maxCard = tree.params[4];
+      if (maxCard.type !== 'number') errors.push('Max cardinality must be a number');
+      else if (card.type === 'number' && card.value > maxCard.value)
+        errors.push('Min cardinality (' + card.value + ') must be ≤ Max cardinality (' + maxCard.value + ')');
+    }
+  }
+  return errors;
+}
+
+// Check parameter values for {fn:...} formula macros and validate their structure
+function checkFormulaInValue(rawValue) {
+  var issues = [];
+  var formulaRx = /\{fn:[a-z_]+\([^)]*(?:\{[^}]*\}[^)]*)*\)\}/g;
+  // More robust: find all {fn:...} blocks accounting for nesting
+  var i = 0, val = rawValue;
+  while (i < val.length) {
+    var fnStart = val.indexOf('{fn:', i);
+    if (fnStart < 0) break;
+    // Find matching closing brace
+    var depth = 0, end = fnStart;
+    for (var k = fnStart; k < val.length; k++) {
+      if (val[k] === '{') depth++;
+      else if (val[k] === '}') { depth--; if (depth === 0) { end = k; break; } }
+    }
+    if (depth !== 0) {
+      issues.push({ type:'formula-err', msg:'Unclosed {fn:...} formula macro' });
+      break;
+    }
+    var formulaStr = val.substring(fnStart, end + 1);
+    var tree = parseFormulaTree(formulaStr);
+    if (!tree) {
+      issues.push({ type:'formula-err', msg:'Invalid formula syntax: ' + formulaStr });
+    } else {
+      var errors = validateFormulaTree(tree);
+      if (errors.length === 0) {
+        issues.push({ type:'formula-ok', msg:'Valid formula: {fn:' + tree.fn + '(…)}' });
+      } else {
+        errors.forEach(function(e) {
+          issues.push({ type:'formula-err', msg:'Formula error: ' + e });
+        });
+      }
+    }
+    i = end + 1;
   }
   return issues;
 }
@@ -1441,28 +1689,48 @@ function validateUrl() {
   }
 
   var presentKeys = params.map(function(p){ return p.key; });
-  var missingRequired    = required.filter(function(r){ return presentKeys.indexOf(r.key) < 0; });
-  var missingRecommended = recommended.filter(function(r){ return presentKeys.indexOf(r.key) < 0; });
+  function matchesKeyOrAlias(rule, key) {
+    if (rule.key === key) return true;
+    return rule.aliases && rule.aliases.indexOf(key) >= 0;
+  }
+  var missingRequired    = required.filter(function(r){ return !presentKeys.some(function(k){ return matchesKeyOrAlias(r, k); }); });
+  var missingRecommended = recommended.filter(function(r){ return !presentKeys.some(function(k){ return matchesKeyOrAlias(r, k); }); });
 
   // Classify and annotate each param
   params.forEach(function(p) {
-    var reqMatch = required.filter(function(r){ return r.key === p.key; })[0];
-    var recMatch = recommended.filter(function(r){ return r.key === p.key; })[0];
-    if (reqMatch)      p.status = 'req-ok';
-    else if (recMatch) p.status = 'rec-ok';
-    else               p.status = 'extra';
+    var reqMatch = required.filter(function(r){ return matchesKeyOrAlias(r, p.key); })[0];
+    var recMatch = recommended.filter(function(r){ return matchesKeyOrAlias(r, p.key); })[0];
+    // Detect custom/cs/af_sub/empty pattern keys
+    var isPatternKey = /^(custom|cs|af_sub|empty|click_param)\d*$/.test(p.key);
+    if (reqMatch)           p.status = 'req-ok';
+    else if (recMatch)      p.status = 'rec-ok';
+    else if (isPatternKey)  p.status = 'custom';
+    else                    p.status = 'extra';
 
     p.isEmpty       = p.raw === '';
     p.isPlaceholder = isPlaceholder(p.raw);
-
-    // Typo check on param name
-    if (!reqMatch && !recMatch && knownParams.indexOf(p.key) < 0) {
+    if (!reqMatch && !recMatch && knownParams.indexOf(p.key) < 0 && !isPatternKey) {
       var suggestion = fuzzyFind(p.key, knownParams, Math.min(4, Math.floor(p.key.length / 3)));
       p.typoSuggestion = suggestion || null;
     }
 
-    // Macro value checks
-    p.macroIssues = checkValueMacros(p.key, p.raw, knownMacros, knownParams);
+    // Macro value checks (use decoded value to handle %7B/%7D encoded braces)
+    p.macroIssues = checkValueMacros(p.key, p.decoded || p.raw, knownMacros, knownParams);
+
+    // Static value warning: if a required/recommended param expects a dynamic macro
+    // but the value contains no macros, flag it
+    var profileMatch = reqMatch || recMatch;
+    if (profileMatch && profileMatch.macro && /^\{.+\}$/.test(profileMatch.macro)
+        && !p.isEmpty && !p.isPlaceholder && p.raw.length > 0) {
+      var hasMacro = /\{[^}]+\}/.test(p.raw);
+      if (!hasMacro) {
+        p.staticValue = true;
+        p.expectedMacro = profileMatch.macro;
+      }
+    }
+
+    // Formula macro validation ({fn:...} patterns)
+    p.formulaIssues = checkFormulaInValue(p.raw);
   });
 
   // ── RENDER ──────────────────────────────────────────────────────
@@ -1544,6 +1812,9 @@ function validateUrl() {
   var paramTypos = params.filter(function(p){ return p.typoSuggestion; }).length;
   var wrongMacros = params.filter(function(p){ return p.macroIssues && p.macroIssues.some(function(i){ return i.type === 'wrong-macro'; }); }).length;
   var placeholders = params.filter(function(p){ return p.isPlaceholder; }).length;
+  var staticValues = params.filter(function(p){ return p.staticValue; }).length;
+  var formulaErrors = params.filter(function(p){ return p.formulaIssues && p.formulaIssues.some(function(i){ return i.type === 'formula-err'; }); }).length;
+  var formulaOk = params.filter(function(p){ return p.formulaIssues && p.formulaIssues.some(function(i){ return i.type === 'formula-ok'; }); }).length;
 
   html += '<div class="summary-row">';
   html += '<span class="summary-pill pill-info">🔢 ' + params.length + ' param' + (params.length !== 1 ? 's' : '') + '</span>';
@@ -1561,6 +1832,12 @@ function validateUrl() {
     html += '<span class="summary-pill pill-warn">⚠ ' + wrongMacros + ' wrong macro' + (wrongMacros > 1 ? 's' : '') + ' in values</span>';
   if (placeholders > 0)
     html += '<span class="summary-pill pill-warn">⚠ ' + placeholders + ' unfilled placeholder' + (placeholders > 1 ? 's' : '') + '</span>';
+  if (staticValues > 0)
+    html += '<span class="summary-pill pill-warn">⚠ ' + staticValues + ' static value' + (staticValues > 1 ? 's' : '') + '</span>';
+  if (formulaErrors > 0)
+    html += '<span class="summary-pill pill-miss">✗ ' + formulaErrors + ' invalid formula' + (formulaErrors > 1 ? 's' : '') + '</span>';
+  if (formulaOk > 0 && formulaErrors === 0)
+    html += '<span class="summary-pill pill-ok">✓ ' + formulaOk + ' formula' + (formulaOk > 1 ? 's' : '') + ' valid</span>';
   html += '</div>';
 
   // Missing required params (with macro)
@@ -1591,51 +1868,77 @@ function validateUrl() {
     html += '</div>';
   }
 
-  // URL colorized breakdown (only if properly parsed)
-  if (parsed && params.length > 0) {
-    html += '<div class="url-breakdown"><span class="url-base">' + escH(parsed.origin + parsed.pathname) + '</span><span class="url-sep">?</span>';
-    params.forEach(function(p, i) {
-      if (i > 0) html += '<span class="url-sep">&amp;</span>';
-      html += '<span class="url-key">' + escH(p.key) + '</span><span class="url-eq">=</span><span class="url-val">' + escH(p.raw) + '</span>';
-    });
-    html += '</div>';
-  }
-
-  // Params table
+  // Params table with filters
   if (params.length > 0) {
-    html += '<table class="params-table"><thead><tr><th>Parameter</th><th>Value</th><th>Issues / Status</th><th></th></tr></thead><tbody>';
+    // Compute filter categories for each param
+    params.forEach(function(p) {
+      p._cats = [p.status]; // req-ok, rec-ok, custom, extra
+      if (p.isEmpty) p._cats.push('empty');
+      if (p.staticValue) p._cats.push('static');
+      if (p.typoSuggestion || (p.macroIssues && p.macroIssues.length > 0) ||
+          (p.formulaIssues && p.formulaIssues.some(function(f){ return f.type === 'formula-err'; })))
+        p._cats.push('errors');
+    });
+
+    // Filter buttons
+    html += '<div class="param-filters" id="paramFilters">';
+    html += '<button class="param-filter-btn active" data-filter="all" onclick="filterParamTable(\'all\')">All</button>';
+    html += '<button class="param-filter-btn" data-filter="errors" onclick="filterParamTable(\'errors\')">Errors</button>';
+    html += '<button class="param-filter-btn" data-filter="empty" onclick="filterParamTable(\'empty\')">Empty values</button>';
+    html += '<button class="param-filter-btn" data-filter="rec-ok" onclick="filterParamTable(\'rec-ok\')">Recommended</button>';
+    html += '<button class="param-filter-btn" data-filter="extra" onclick="filterParamTable(\'extra\')">Extra</button>';
+    html += '<button class="param-filter-btn" data-filter="custom" onclick="filterParamTable(\'custom\')">Custom</button>';
+    html += '<button class="param-filter-btn" data-filter="static" onclick="filterParamTable(\'static\')">Static</button>';
+    html += '</div>';
+
+    html += '<table class="params-table" id="paramsTable"><thead><tr><th>Parameter</th><th>Value</th><th>Status</th><th>Issues</th><th></th></tr></thead><tbody>';
     params.forEach(function(p, idx) {
       var keyClass = p.typoSuggestion ? 'param-key typo' : 'param-key';
       var valClass = p.isEmpty ? 'param-val empty' : (p.isPlaceholder ? 'param-val placeholder' : 'param-val');
       var valText  = p.isEmpty ? '(empty)' : escH(p.raw);
       var decoded  = (p.decoded !== p.raw && !p.isEmpty) ? '<div class="param-hint">↳ ' + escH(p.decoded) + '</div>' : '';
 
-      var issuesHtml = '<div class="issues-cell">';
+      // Status column
+      var statusHtml = '';
       if (p.status === 'req-ok')
-        issuesHtml += '<span class="status-badge badge-req-ok">Required ✓</span>';
+        statusHtml = '<span class="status-badge badge-req-ok">Required ✓</span>';
       else if (p.status === 'rec-ok')
-        issuesHtml += '<span class="status-badge badge-rec-ok">Recommended ✓</span>';
-      else if (p.typoSuggestion)
-        issuesHtml += '<span class="status-badge badge-typo">Typo? → ' + escH(p.typoSuggestion) + '</span>';
+        statusHtml = '<span class="status-badge badge-rec-ok">Recommended ✓</span>';
+      else if (p.status === 'custom')
+        statusHtml = '<span class="status-badge badge-custom">Custom</span>';
       else
-        issuesHtml += '<span class="status-badge badge-extra">Extra</span>';
+        statusHtml = '<span class="status-badge badge-extra">Extra</span>';
 
+      // Issues column
+      var issuesHtml = '<div class="issues-cell">';
+      if (p.typoSuggestion)
+        issuesHtml += '<span class="status-badge badge-typo">Typo? → ' + escH(p.typoSuggestion) + '</span>';
+      if (p.staticValue)
+        issuesHtml += '<span class="status-badge badge-static">Static value — expected ' + escH(p.expectedMacro) + '</span>';
       if (p.isPlaceholder)
-        issuesHtml += '<span class="status-badge badge-wmacro" style="margin-top:2px">Unfilled placeholder</span>';
+        issuesHtml += '<span class="status-badge badge-wmacro">Unfilled placeholder</span>';
       if (p.isEmpty)
-        issuesHtml += '<span class="status-badge badge-wmacro" style="margin-top:2px">Empty value</span>';
+        issuesHtml += '<span class="status-badge badge-wmacro">Empty value</span>';
 
       (p.macroIssues || []).forEach(function(mi) {
-        issuesHtml += '<span class="status-badge badge-wmacro" style="margin-top:2px">' + escH(mi.msg) + '</span>';
+        issuesHtml += '<span class="status-badge badge-wmacro">' + escH(mi.msg) + '</span>';
       });
 
+      (p.formulaIssues || []).forEach(function(fi) {
+        if (fi.type === 'formula-ok') {
+          issuesHtml += '<span class="status-badge badge-req-ok">' + escH(fi.msg) + '</span>';
+        } else {
+          issuesHtml += '<span class="status-badge badge-wmacro">' + escH(fi.msg) + '</span>';
+        }
+      });
       issuesHtml += '</div>';
 
-      html += '<tr>';
+      html += '<tr data-cats="' + escH(p._cats.join(' ')) + '">';
       html += '<td><span class="' + keyClass + '">' + escH(p.key) + '</span>';
       if (p.typoSuggestion) html += '<div class="param-hint">→ ' + escH(p.typoSuggestion) + '?</div>';
       html += '</td>';
       html += '<td><span class="' + valClass + '">' + valText + '</span>' + decoded + '</td>';
+      html += '<td>' + statusHtml + '</td>';
       html += '<td>' + issuesHtml + '</td>';
       html += '<td><button class="copy-val-btn" title="Copy value" onclick="copyVal(' + idx + ')">📋</button></td>';
       html += '</tr>';
@@ -1647,6 +1950,20 @@ function validateUrl() {
 
   document.getElementById('resultsContent').innerHTML = html;
   window._lastParams = params;
+}
+
+function filterParamTable(cat) {
+  var btns = document.querySelectorAll('.param-filter-btn');
+  btns.forEach(function(b){ b.classList.toggle('active', b.dataset.filter === cat); });
+  var rows = document.querySelectorAll('#paramsTable tbody tr');
+  rows.forEach(function(row) {
+    if (cat === 'all') {
+      row.style.display = '';
+    } else {
+      var cats = (row.getAttribute('data-cats') || '').split(' ');
+      row.style.display = cats.indexOf(cat) >= 0 ? '' : 'none';
+    }
+  });
 }
 
 function copyVal(idx) {
@@ -1773,7 +2090,7 @@ function toggleTheme() {
 // TAB SWITCHING
 // ══════════════════════════════════════════════════════════════
 function switchTab(name) {
-  ['validator','chimera','compare'].forEach(function(t) {
+  ['validator','chimera','translator','compare'].forEach(function(t) {
     var pane = document.getElementById('pane-' + t);
     var tab  = document.getElementById('tab-' + t);
     if (pane) pane.style.display = t === name ? '' : 'none';
@@ -2056,6 +2373,203 @@ function validateChimera() {
   html += '</tbody></table>';
 
   resultsEl.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════
+// CHIMERA → AFTRAD TRANSLATOR
+// ══════════════════════════════════════════════════════════════
+
+// Build macro translation map: Chimera macro → Aftrad macro
+var CHIMERA_TO_AFTRAD = {
+  '{tid}':            '{click_id}',
+  '{att_info}':       '{aggregate_id}',
+  '{ip}':             '{af_ip}',
+  '{ua}':             '{af_ua}',
+  '{device_os}':      '{af_os_version}',
+  '{device_version}': '{af_os_version}',
+  '{device_model}':   '{af_model}',
+  '{lang}':           '{af_lang}',
+  '{androidid}':      '{advertising_id}',
+  '{iosidfa}':        '{idfa}',
+  '{gaid}':           '{advertising_id}',
+  '{siteid}':         '{af_siteid}',
+  '{os_version}':     '{os_version}',
+  '{os_veion}':       '{os_version}'
+};
+
+// Singular param key → AF standard key mapping
+var SINGULAR_KEY_TO_AF = {
+  'cl':        'clickid',
+  'psn':       'af_siteid',
+  'pssid':     'af_sub_siteid',
+  've':        'af_os_version',
+  'lc':        'af_lang',
+  'p':         'pid'
+};
+
+function loadTranslatorExample(k) {
+  document.getElementById('translatorInput').value = CHIMERA_EXAMPLES[k] || '';
+  translateChimera();
+}
+function clearTranslator() {
+  document.getElementById('translatorInput').value = '';
+  document.getElementById('translatorOutput').innerHTML = '<div class="result-placeholder"><div class="icon">🔀</div><p>Paste a Chimera URL above and click Translate</p></div>';
+  document.getElementById('translatorDetails').innerHTML = '<div class="result-placeholder"><div class="icon">📋</div><p>Parameter-by-parameter translation will appear here</p></div>';
+}
+function onTranslatorInput() {
+  var v = document.getElementById('translatorInput').value.trim();
+  if (v.startsWith('http') && v.indexOf('?') > 0) translateChimera();
+}
+
+function translateChimeraValue(val) {
+  var translated = val;
+  var changes = [];
+  // Replace each known Chimera macro with Aftrad equivalent
+  Object.keys(CHIMERA_TO_AFTRAD).forEach(function(chim) {
+    if (translated.indexOf(chim) >= 0) {
+      var aftrad = CHIMERA_TO_AFTRAD[chim];
+      translated = translated.split(chim).join(aftrad);
+      changes.push({ from: chim, to: aftrad });
+    }
+  });
+  return { translated: translated, changes: changes };
+}
+
+function translateChimera() {
+  var raw = document.getElementById('translatorInput').value.trim();
+  if (!raw) return;
+
+  // Parse params from the raw URL
+  var qIdx = raw.indexOf('?');
+  var baseUrl = qIdx >= 0 ? raw.substring(0, qIdx) : raw;
+  var qs = qIdx >= 0 ? raw.substring(qIdx + 1) : '';
+  var params = [];
+  qs.split('&').forEach(function(pair) {
+    var eq = pair.indexOf('=');
+    if (eq > 0) {
+      var k = pair.substring(0, eq);
+      var v = pair.substring(eq + 1);
+      try { v = decodeURIComponent(v); } catch(e) {}
+      params.push({ key: k, rawValue: v });
+    }
+  });
+
+  // Detect if Singular
+  var domain = '';
+  try { domain = (new URL(raw.replace(/\{[^}]*\}/g,'_').replace(/\[[^\]]*\]/g,'_'))).hostname; } catch(e){}
+  var isSingular = domain.indexOf('sng.link') >= 0 || domain.indexOf('singular') >= 0;
+
+  // Translate each param
+  var translatedParams = [];
+  var totalChanges = 0;
+  var keyChanges = 0;
+
+  params.forEach(function(p) {
+    var result = translateChimeraValue(p.rawValue);
+    var newKey = p.key;
+    var keyChanged = false;
+
+    // Optionally map Singular keys to AF standard
+    if (isSingular && SINGULAR_KEY_TO_AF[p.key]) {
+      newKey = SINGULAR_KEY_TO_AF[p.key];
+      keyChanged = true;
+      keyChanges++;
+    }
+
+    var valueChanged = result.changes.length > 0;
+    if (valueChanged) totalChanges += result.changes.length;
+
+    translatedParams.push({
+      origKey: p.key,
+      newKey: newKey,
+      origValue: p.rawValue,
+      newValue: result.translated,
+      valueChanges: result.changes,
+      keyChanged: keyChanged,
+      changed: keyChanged || valueChanged
+    });
+  });
+
+  // Build translated URL string
+  var translatedUrl = baseUrl + '?' + translatedParams.map(function(p) {
+    return p.newKey + '=' + encodeURIComponent(p.newValue).replace(/%7B/gi,'{').replace(/%7D/gi,'}').replace(/%5B/gi,'[').replace(/%5D/gi,']').replace(/%23/g,'#').replace(/%3A/g,':');
+  }).join('&');
+
+  // Render translated URL output
+  var outHtml = '';
+  var unchangedCount = translatedParams.filter(function(p){ return !p.changed; }).length;
+  var changedCount = translatedParams.filter(function(p){ return p.changed; }).length;
+
+  outHtml += '<div class="summary-row">';
+  outHtml += '<span class="summary-pill pill-info">🔢 ' + params.length + ' params</span>';
+  if (totalChanges > 0) outHtml += '<span class="summary-pill pill-warn">🔀 ' + totalChanges + ' macro translation' + (totalChanges > 1 ? 's' : '') + '</span>';
+  if (keyChanges > 0) outHtml += '<span class="summary-pill pill-warn">🔑 ' + keyChanges + ' key rename' + (keyChanges > 1 ? 's' : '') + '</span>';
+  if (unchangedCount > 0) outHtml += '<span class="summary-pill pill-ok">✓ ' + unchangedCount + ' unchanged</span>';
+  if (totalChanges === 0 && keyChanges === 0) outHtml += '<span class="summary-pill pill-ok">✓ Already Aftrad-compliant</span>';
+  outHtml += '</div>';
+
+  // Show the translated URL in a copyable box
+  outHtml += '<div class="url-breakdown" style="margin-bottom:8px;cursor:pointer" onclick="copyTranslatedUrl()" title="Click to copy">';
+  outHtml += '<span class="url-base">' + escH(baseUrl) + '</span><span class="url-sep">?</span>';
+  translatedParams.forEach(function(p, i) {
+    if (i > 0) outHtml += '<span class="url-sep">&amp;</span>';
+    var keyStyle = p.keyChanged ? ' style="color:#b45309;font-weight:700"' : '';
+    var valChanged = p.valueChanges.length > 0;
+    var valStyle = valChanged ? ' style="color:#16a34a;font-weight:700"' : '';
+    outHtml += '<span class="url-key"' + keyStyle + '>' + escH(p.newKey) + '</span><span class="url-eq">=</span><span' + valStyle + '>' + escH(p.newValue) + '</span>';
+  });
+  outHtml += '</div>';
+  outHtml += '<button class="calc-btn secondary" onclick="copyTranslatedUrl()" style="font-size:10px;padding:5px 14px;">📋 Copy Translated URL</button>';
+
+  document.getElementById('translatorOutput').innerHTML = outHtml;
+
+  // Store for copy
+  window._translatedUrl = translatedUrl;
+
+  // Render details table
+  var detHtml = '<table class="diff-table"><thead><tr><th>Param Key</th><th>Chimera (original)</th><th>Aftrad (translated)</th><th>Status</th></tr></thead><tbody>';
+
+  translatedParams.forEach(function(p) {
+    var rowClass = p.changed ? 'diff-changed' : 'diff-both';
+    var badge, badgeClass;
+    if (p.keyChanged && p.valueChanges.length > 0) {
+      badge = 'Key + Value'; badgeClass = 'diff-badge-chg';
+    } else if (p.keyChanged) {
+      badge = 'Key renamed'; badgeClass = 'diff-badge-chg';
+    } else if (p.valueChanges.length > 0) {
+      badge = 'Translated'; badgeClass = 'diff-badge-chg';
+    } else {
+      badge = 'Unchanged'; badgeClass = 'diff-badge-both';
+    }
+
+    var keyDisplay = p.keyChanged
+      ? '<span style="text-decoration:line-through;opacity:0.5">' + escH(p.origKey) + '</span> → <strong>' + escH(p.newKey) + '</strong>'
+      : escH(p.origKey);
+
+    detHtml += '<tr class="' + rowClass + '">';
+    detHtml += '<td>' + keyDisplay + '</td>';
+    detHtml += '<td style="max-width:240px;word-break:break-all"><code style="font-size:11px">' + escH(p.origValue) + '</code></td>';
+    detHtml += '<td style="max-width:240px;word-break:break-all"><code style="font-size:11px">' + escH(p.newValue) + '</code></td>';
+    detHtml += '<td><span class="diff-badge ' + badgeClass + '">' + badge + '</span>';
+    if (p.valueChanges.length > 0) {
+      p.valueChanges.forEach(function(c) {
+        detHtml += '<div style="font-size:10px;margin-top:3px;opacity:0.7"><code>' + escH(c.from) + '</code> → <code>' + escH(c.to) + '</code></div>';
+      });
+    }
+    detHtml += '</td></tr>';
+  });
+
+  detHtml += '</tbody></table>';
+  document.getElementById('translatorDetails').innerHTML = detHtml;
+}
+
+function copyTranslatedUrl() {
+  if (!window._translatedUrl) return;
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(window._translatedUrl);
+  } else {
+    copyFallback(window._translatedUrl);
+  }
 }
 
 // ══════════════════════════════════════════════════════════════

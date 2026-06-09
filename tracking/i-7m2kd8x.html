@@ -633,6 +633,99 @@
             letter-spacing: 0.3px;
             vertical-align: middle;
         }
+
+        /* Adjust Callbacks Section */
+        .callbacks-container {
+            background: linear-gradient(135deg, #eb5757 0%, #ff8a65 100%);
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(235, 87, 87, 0.2);
+        }
+
+        .callbacks-title {
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .callback-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 10px;
+            border-radius: 6px;
+            border-left: 4px solid #eb5757;
+            margin-bottom: 6px;
+        }
+
+        .callback-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .callback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .callback-name {
+            font-weight: 700;
+            color: #eb5757;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .callback-copy-btn {
+            background: #eb5757;
+            color: white;
+            border: none;
+            padding: 3px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 700;
+            transition: background 0.2s;
+            text-transform: uppercase;
+        }
+
+        .callback-copy-btn:hover {
+            background: #d32f2f;
+        }
+
+        .callback-url {
+            color: #555;
+            font-size: 10px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            max-height: 36px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+
+        body.dark-mode .callbacks-container {
+            background: linear-gradient(135deg, #7f1d1d 0%, #9a3412 100%);
+        }
+
+        body.dark-mode .callback-card {
+            background: #2d3748;
+            border-left-color: #ef4444;
+        }
+
+        body.dark-mode .callback-name {
+            color: #fca5a5;
+        }
+
+        body.dark-mode .callback-url {
+            color: #e4e6eb;
+        }
+
+        body.dark-mode .callback-copy-btn {
+            background: #ef4444;
+        }
     </style>
 </head>
 <body>
@@ -767,6 +860,14 @@
 
                 <!-- Tab: URL Parameters -->
                 <div id="tab-params" class="tab-content">
+                    <!-- Adjust Callbacks (shown when detected in URL) -->
+                    <div id="callbacksSection" style="display: none;">
+                        <div class="callbacks-container">
+                            <div class="callbacks-title">🔗 Adjust Callbacks (embedded in URL)</div>
+                            <div id="callbacksContainer"></div>
+                        </div>
+                    </div>
+
                     <!-- Impression Source (from current page URL) -->
                     <div class="impression-source" id="impressionSource">
                         <div class="impression-source-item">
@@ -1233,12 +1334,16 @@
         // --- URL Parameters Tab ---
         const MACRO_PARAMS = new Set(['app_id', 'site', 'source', 'sub_source']);
 
+        // Regex to detect Adjust callback parameters
+        const CALLBACK_PATTERN = /^(install_callback|rejected_install_callback|reattribution_callback|rejected_reattribution_callback|session_callback|event_callback_.+)$/;
+
         function buildUrlParamsMap() {
             const baseUrl = document.getElementById('trackingUrl').value.trim();
             const params = {};
+            const callbacks = {};
             const macroSet = new Set();
 
-            if (!baseUrl) return { params, macroSet };
+            if (!baseUrl) return { params, callbacks, macroSet };
 
             // Parse base URL params
             try {
@@ -1249,7 +1354,12 @@
                         const eq = pair.indexOf('=');
                         const key = eq === -1 ? decodeURIComponent(pair) : decodeURIComponent(pair.slice(0, eq));
                         const val = eq === -1 ? '' : decodeURIComponent(pair.slice(eq + 1).replace(/\+/g, ' '));
-                        if (key && key !== 'search') params[key] = val; // Exclude "search" parameter used for auto-search
+                        if (!key || key === 'search') return;
+                        if (CALLBACK_PATTERN.test(key)) {
+                            callbacks[key] = val;
+                        } else {
+                            params[key] = val;
+                        }
                     });
                 }
             } catch (e) { /* ignore malformed */ }
@@ -1269,18 +1379,57 @@
                 }
             });
 
-            return { params, macroSet };
+            return { params, callbacks, macroSet };
         }
 
         // Cached params for the current tracking URL (rebuilt on URL/macro change)
         let _cachedParams = {};
+        let _cachedCallbacks = {};
         let _cachedMacroSet = new Set();
 
         function renderUrlParams() {
-            const { params, macroSet } = buildUrlParamsMap();
+            const { params, callbacks, macroSet } = buildUrlParamsMap();
             _cachedParams = params;
+            _cachedCallbacks = callbacks;
             _cachedMacroSet = macroSet;
+            displayCallbacks(callbacks);
             filterUrlParams();
+        }
+
+        // Display Adjust callback parameters
+        function displayCallbacks(callbackParams) {
+            const section = document.getElementById('callbacksSection');
+            const container = document.getElementById('callbacksContainer');
+            const keys = Object.keys(callbackParams);
+
+            if (keys.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+
+            const callbackLabels = {
+                'install_callback': 'Install',
+                'rejected_install_callback': 'Rejected Install',
+                'reattribution_callback': 'Reattribution',
+                'rejected_reattribution_callback': 'Rejected Reattribution',
+                'session_callback': 'Session'
+            };
+
+            container.innerHTML = keys.map(key => {
+                const decodedUrl = decodeURIComponent(callbackParams[key]);
+                const label = callbackLabels[key] || key.replace('event_callback_', 'Event: ').replace(/_/g, ' ');
+                return `
+                    <div class="callback-card">
+                        <div class="callback-header">
+                            <span class="callback-name">${escapeHtml(label)}</span>
+                            <button class="callback-copy-btn" data-url="${escapeHtml(decodedUrl)}">Copy URL</button>
+                        </div>
+                        <div class="callback-url">${escapeHtml(decodedUrl)}</div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function filterUrlParams() {
@@ -1346,18 +1495,29 @@
                 publisherEl.classList.remove('not-detected');
             }
 
-            // Collect remaining params (excluding offer/publisher keys already shown)
+            // Collect remaining params (excluding offer/publisher keys and callbacks)
             const knownKeys = new Set([
                 'offer_id','offer','o',
                 'publisher_id','pub_id','aff_id','p',
                 'search'
             ]);
             const extra = [];
+            const pageCallbacks = {};
             try {
                 new URLSearchParams(search).forEach((val, key) => {
-                    if (!knownKeys.has(key)) extra.push({ key, val });
+                    if (knownKeys.has(key)) return;
+                    if (CALLBACK_PATTERN.test(key)) {
+                        pageCallbacks[key] = val;
+                    } else {
+                        extra.push({ key, val });
+                    }
                 });
             } catch(e) {}
+
+            // Display callbacks from page URL if present
+            if (Object.keys(pageCallbacks).length > 0) {
+                displayCallbacks(pageCallbacks);
+            }
 
             if (extra.length > 0) {
                 const container = document.getElementById('impExtraParams');
@@ -1381,6 +1541,18 @@
                 navigator.clipboard.writeText(value).then(() => {
                     const orig = btn.textContent;
                     btn.textContent = '✓';
+                    setTimeout(() => { btn.textContent = orig; }, 1200);
+                }).catch(() => {});
+            });
+
+            // Copy handler for callback URLs
+            document.getElementById('callbacksContainer').addEventListener('click', function(e) {
+                const btn = e.target.closest('button.callback-copy-btn');
+                if (!btn) return;
+                const url = btn.dataset.url;
+                navigator.clipboard.writeText(url).then(() => {
+                    const orig = btn.textContent;
+                    btn.textContent = '✓ Copied';
                     setTimeout(() => { btn.textContent = orig; }, 1200);
                 }).catch(() => {});
             });

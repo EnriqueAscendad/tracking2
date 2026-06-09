@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="version" content="2.3.0">
+    <meta name="version" content="2.4.0">
     <title>Ad Tracker Pro - URL Parameter Testing Tool</title>
 
     <!-- Security Meta Tags -->
@@ -411,6 +411,99 @@
 
         .hidden {
             display: none !important;
+        }
+
+        /* Adjust Callbacks Section */
+        .callbacks-container {
+            background: linear-gradient(135deg, #eb5757 0%, #ff8a65 100%);
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(235, 87, 87, 0.2);
+        }
+
+        .callbacks-title {
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .callback-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 10px;
+            border-radius: 6px;
+            border-left: 4px solid #eb5757;
+            margin-bottom: 6px;
+        }
+
+        .callback-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .callback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .callback-name {
+            font-weight: 700;
+            color: #eb5757;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .callback-use-btn {
+            background: #eb5757;
+            color: white;
+            border: none;
+            padding: 3px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 700;
+            transition: background 0.2s;
+            text-transform: uppercase;
+        }
+
+        .callback-use-btn:hover {
+            background: #d32f2f;
+        }
+
+        .callback-url {
+            color: #555;
+            font-size: 10px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            max-height: 36px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+
+        body.dark-mode .callbacks-container {
+            background: linear-gradient(135deg, #7f1d1d 0%, #9a3412 100%);
+        }
+
+        body.dark-mode .callback-card {
+            background: #2d3748;
+            border-left-color: #ef4444;
+        }
+
+        body.dark-mode .callback-name {
+            color: #fca5a5;
+        }
+
+        body.dark-mode .callback-url {
+            color: #e4e6eb;
+        }
+
+        body.dark-mode .callback-use-btn {
+            background: #ef4444;
         }
 
         .priority-params {
@@ -912,7 +1005,7 @@
             </div>
             <h1>🔍 Ad Tracker Pro</h1>
             <p>Professional URL parameter testing and tracking analysis</p>
-            <p style="opacity: 0.7; font-size: 10px; margin-top: 1px;">v2.3.0</p>
+            <p style="opacity: 0.7; font-size: 10px; margin-top: 1px;">v2.4.0</p>
         </div>
 
         <div class="content">
@@ -1012,6 +1105,14 @@
                 <div class="postback-status" id="postbackStatus"></div>
             </div>
 
+            <!-- Adjust Callbacks Section -->
+            <div class="section" id="callbacksSection" style="display: none;">
+                <div class="callbacks-container">
+                    <div class="callbacks-title">🔗 Adjust Callbacks (embedded in URL)</div>
+                    <div id="callbacksContainer"></div>
+                </div>
+            </div>
+
             <!-- Priority Parameters Section -->
             <div class="section" id="prioritySection" style="display: none;">
                 <div class="priority-params">
@@ -1098,6 +1199,15 @@
 https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG456
                     </div>
                     <button class="copy-btn" onclick="loadTestUrl()">Load Sample URL</button>
+                </div>
+                <div class="info-box" style="margin-top: 10px;">
+                    <div class="info-label">Sample Adjust URL (with embedded callbacks)</div>
+                    <div class="info-value" style="margin-bottom: 10px; font-size: 11px;">
+?click_id=CLK123&offer=42&campaign=black_friday&adgroup=ios_users&creative=video_15s
+&install_callback=https%3A%2F%2Fmordor.aftrad-event.com%2Fapi%2Fv1%2Fevents%3Fclick_id%3D{click_id}%26event_parameter%3Dinstall
+&session_callback=https%3A%2F%2Fmordor.aftrad-event.com%2Fapi%2Fv1%2Fevents%3Fclick_id%3D{click_id}%26event_parameter%3Dsession
+                    </div>
+                    <button class="copy-btn" onclick="loadAdjustTestUrl()">Load Adjust Sample</button>
                 </div>
             </div>
         </div>
@@ -1220,7 +1330,11 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                 'offer_id', 'offer', 'o',  // offer_id aliases
                 'publisher_id', 'pid', 'aff_id_plain', 'p',  // publisher_id aliases
                 'dvp',
-                'dvun'
+                'dvun',
+                // Adjust MMP parameters
+                'campaign', 'adgroup', 'creative', 'label',
+                'idfa', 'gps_adid', 'android_id', 'oaid',
+                'af_siteid', 'advertiser_id', 'advertiser_id_plain'
             ];
 
             // Define parameter mapping for transformation indicators
@@ -1230,21 +1344,32 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
                 'o': 'offer_id',
                 'pid': 'publisher_id',
                 'aff_id_plain': 'publisher_id',
-                'p': 'publisher_id'
+                'p': 'publisher_id',
+                // Adjust: label is used as the click identifier for postback
+                'label': 'click_id'
             };
             
-            // Separate priority and regular parameters
+            // Regex to detect Adjust callback parameters
+            const callbackPattern = /^(install_callback|rejected_install_callback|reattribution_callback|rejected_reattribution_callback|session_callback|event_callback_.+)$/;
+
+            // Separate priority, callback, and regular parameters
             const priorityParams = {};
+            const callbackParams = {};
             const regularParams = {};
-            
+
             Object.entries(params).forEach(([key, value]) => {
                 if (key === 'search') return; // Exclude the "search" parameter used for auto-search
-                if (priorityKeys.includes(key)) {
+                if (callbackPattern.test(key)) {
+                    callbackParams[key] = value;
+                } else if (priorityKeys.includes(key)) {
                     priorityParams[key] = value;
                 } else {
                     regularParams[key] = value;
                 }
             });
+
+            // Display Adjust callbacks section
+            displayCallbacks(callbackParams);
             
             const totalCount = Object.keys(params).length;
             const regularCount = Object.keys(regularParams).length;
@@ -1302,6 +1427,96 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             
             // Update postback preview when params change
             updatePostbackPreview();
+        }
+
+        // Display Adjust callback parameters
+        function displayCallbacks(callbackParams) {
+            const section = document.getElementById('callbacksSection');
+            const container = document.getElementById('callbacksContainer');
+            const keys = Object.keys(callbackParams);
+
+            if (keys.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+
+            // Friendly names for callback types
+            const callbackLabels = {
+                'install_callback': 'Install',
+                'rejected_install_callback': 'Rejected Install',
+                'reattribution_callback': 'Reattribution',
+                'rejected_reattribution_callback': 'Rejected Reattribution',
+                'session_callback': 'Session'
+            };
+
+            container.innerHTML = keys.map(key => {
+                const decodedUrl = decodeURIComponent(callbackParams[key]);
+                const label = callbackLabels[key] || key.replace('event_callback_', 'Event: ').replace(/_/g, ' ');
+                const safeKey = escapeHtml(key);
+                return `
+                    <div class="callback-card">
+                        <div class="callback-header">
+                            <span class="callback-name">${escapeHtml(label)}</span>
+                            <button class="callback-use-btn" onclick="useCallback('${safeKey}')">Use for Postback</button>
+                        </div>
+                        <div class="callback-url">${escapeHtml(decodedUrl)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Use an Adjust callback to populate the postback section
+        function useCallback(paramKey) {
+            const urlParams = getUrlParams();
+            const rawValue = urlParams[paramKey];
+            if (!rawValue) return;
+
+            const decodedUrl = decodeURIComponent(rawValue);
+            const qIdx = decodedUrl.indexOf('?');
+
+            if (qIdx === -1) {
+                // No query string — put entire URL as base
+                document.getElementById('postbackBaseUrl').value = decodedUrl;
+                document.getElementById('postbackParamsTemplate').value = '';
+            } else {
+                document.getElementById('postbackBaseUrl').value = decodedUrl.substring(0, qIdx);
+                document.getElementById('postbackParamsTemplate').value = decodedUrl.substring(qIdx + 1);
+            }
+
+            // Auto-fill event_parameter from callback type
+            const eventParamInput = document.getElementById('eventParameter');
+            if (paramKey === 'install_callback') {
+                eventParamInput.value = 'install';
+            } else if (paramKey === 'rejected_install_callback') {
+                eventParamInput.value = 'rejected_install';
+            } else if (paramKey === 'reattribution_callback') {
+                eventParamInput.value = 'reattribution';
+            } else if (paramKey === 'rejected_reattribution_callback') {
+                eventParamInput.value = 'rejected_reattribution';
+            } else if (paramKey === 'session_callback') {
+                eventParamInput.value = 'session';
+            } else if (paramKey.startsWith('event_callback_')) {
+                eventParamInput.value = paramKey.replace('event_callback_', '');
+            }
+
+            // Save and update preview
+            saveField('postbackBaseUrl');
+            saveField('postbackParamsTemplate');
+            toggleClearBtn(document.getElementById('postbackBaseUrl'));
+            toggleClearBtn(document.getElementById('postbackParamsTemplate'));
+            updatePostbackPreview();
+
+            // Show confirmation
+            const statusDiv = document.getElementById('postbackStatus');
+            statusDiv.className = 'postback-status success';
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = '✅ Postback populated from Adjust callback: ' + paramKey;
+            setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
+
+            // Scroll to postback section
+            document.querySelector('.postback-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         // Render regular parameters (used by both initial display and filtering)
@@ -1469,8 +1684,22 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
 
         // Load test URL
         function loadTestUrl() {
-            const testUrl = window.location.origin + window.location.pathname + 
+            const testUrl = window.location.origin + window.location.pathname +
                 '?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG456&source=google&sub_source=search&placement=top&app_name=TestApp&custom1=value1&dvp=Mellon&dvun=Mairon';
+            window.location.href = testUrl;
+        }
+
+        // Load Adjust sample URL (with embedded callbacks)
+        function loadAdjustTestUrl() {
+            const cbBase = encodeURIComponent('https://mordor.aftrad-event.com/api/v1/events');
+            const cbParams = 'click_id%3D{click_id}%26aggregated_id%3D{aggregated_id}%26event_parameter%3D{event_parameter}%26payout%3D{payout}%26advertiser_id%3D{advertiser_id_plain}';
+            const testUrl = window.location.origin + window.location.pathname +
+                '?click_id=CLK123&offer=42&af_siteid=pub_99&campaign=black_friday&adgroup=ios_users&creative=video_15s&aggregate_id=AGG789' +
+                '&install_callback=' + cbBase + '%3F' + cbParams +
+                '&rejected_install_callback=' + cbBase + '%3F' + cbParams +
+                '&reattribution_callback=' + cbBase + '%3F' + cbParams +
+                '&session_callback=' + cbBase + '%3F' + cbParams +
+                '&event_callback_ftd=' + cbBase + '%3Fclick_id%3D{click_id}%26aggregated_id%3D{aggregated_id}%26event_parameter%3Dftd%26payout%3D{payout}%26advertiser_id%3D{advertiser_id_plain}';
             window.location.href = testUrl;
         }
 
@@ -1643,11 +1872,23 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
         function resolveTemplate(template, extraParams) {
             const urlParams = getUrlParams();
             const macros = {
-                'click_id': urlParams['click_id'] || '',
+                'click_id': urlParams['click_id'] || urlParams['label'] || '',
                 'aggregate_id': urlParams['aggregate_id'] || urlParams['aggregated_id'] || '',
                 'aggregated_id': urlParams['aggregated_id'] || urlParams['aggregate_id'] || '',
                 'event_parameter': document.getElementById('eventParameter').value,
-                'payout': document.getElementById('payout').value
+                'payout': document.getElementById('payout').value,
+                // Aftrad params that appear in callback URLs
+                'advertiser_id': urlParams['advertiser_id'] || '',
+                'advertiser_id_plain': urlParams['advertiser_id_plain'] || urlParams['advertiser_id'] || '',
+                // Adjust MMP macros
+                'campaign': urlParams['campaign'] || '',
+                'adgroup': urlParams['adgroup'] || '',
+                'creative': urlParams['creative'] || '',
+                'label': urlParams['label'] || '',
+                'idfa': urlParams['idfa'] || '',
+                'gps_adid': urlParams['gps_adid'] || '',
+                'android_id': urlParams['android_id'] || '',
+                'oaid': urlParams['oaid'] || ''
             };
             let resolved = template.replace(/\{(\w+)\}/g, (m, key) => {
                 return macros.hasOwnProperty(key) ? encodeURIComponent(macros[key]) : encodeURIComponent(urlParams[key] || '');
@@ -1674,11 +1915,23 @@ https://lalalala.com?publisher_id=7&offer_id=15&click_id=ABC123&aggregate_id=AGG
             // For preview, show macros as-is if no real value available
             const urlParams = getUrlParams();
             const macros = {
-                'click_id': urlParams['click_id'] || '{click_id}',
+                'click_id': urlParams['click_id'] || urlParams['label'] || '{click_id}',
                 'aggregate_id': urlParams['aggregate_id'] || urlParams['aggregated_id'] || '{aggregate_id}',
                 'aggregated_id': urlParams['aggregated_id'] || urlParams['aggregate_id'] || '{aggregated_id}',
                 'event_parameter': document.getElementById('eventParameter').value || '{event_parameter}',
-                'payout': document.getElementById('payout').value || '{payout}'
+                'payout': document.getElementById('payout').value || '{payout}',
+                // Aftrad params that appear in callback URLs
+                'advertiser_id': urlParams['advertiser_id'] || '{advertiser_id}',
+                'advertiser_id_plain': urlParams['advertiser_id_plain'] || urlParams['advertiser_id'] || '{advertiser_id_plain}',
+                // Adjust MMP macros
+                'campaign': urlParams['campaign'] || '{campaign}',
+                'adgroup': urlParams['adgroup'] || '{adgroup}',
+                'creative': urlParams['creative'] || '{creative}',
+                'label': urlParams['label'] || '{label}',
+                'idfa': urlParams['idfa'] || '{idfa}',
+                'gps_adid': urlParams['gps_adid'] || '{gps_adid}',
+                'android_id': urlParams['android_id'] || '{android_id}',
+                'oaid': urlParams['oaid'] || '{oaid}'
             };
             const preview = template.replace(/\{(\w+)\}/g, (m, key) => {
                 if (macros.hasOwnProperty(key)) return encodeURIComponent(macros[key]);
